@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-nt:             rgb(55, 53, 47);
+  --color-nt-muted:       rgba(55, 53, 47, 0.65);
+  --color-nt-soft:        rgba(55, 53, 47, 0.45);
+  --color-nt-hint:        rgba(55, 53, 47, 0.25);
+  --color-nt-hover:       rgba(55, 53, 47, 0.06);
+  --color-nt-hover-strong:rgba(55, 53, 47, 0.10);
+  --color-nt-divider:     rgba(55, 53, 47, 0.09);
+  --color-nt-accent:      rgb(35, 131, 226);
+  --color-nt-danger:      #e03e3e;
+  --color-nt-danger-bg:   rgba(224, 62, 62, 0.08);
+}
+
+html, body, #app { min-height: 100vh; }
+
+body {
+  color: var(--color-nt);
+  background: #fff;
+  font-family:
+    "SF Pro", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Inter", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+
+::-webkit-scrollbar      { width: 10px; height: 10px; }
+::-webkit-scrollbar-track{ background: transparent; }
+::-webkit-scrollbar-thumb{ background: rgba(55,53,47,0.18); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(55,53,47,0.30); }
+
+:focus-visible {
+  outline: 2px solid var(--color-nt-accent);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+/* 写内容的地方不要蓝色聚焦框,保留其它控件的可访问性 */
+input:focus-visible,
+textarea:focus-visible,
+[contenteditable]:focus-visible { outline: none; }
+
+::selection { background: rgba(35,131,226,0.22); }
+

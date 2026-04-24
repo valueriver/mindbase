@@ -1,0 +1,66 @@
+/**
+ * 复制这份文件到 `wrangler.jsonc`,按注释逐项改成你自己的值。
+ * `wrangler.jsonc` 已 gitignore,所有机密只留在本地。
+ *
+ * 需要准备 4 样东西:
+ *   1) Cloudflare account_id
+ *        npx wrangler whoami
+ *   2) D1 数据库(返回的 database_id 填下面)
+ *        npx wrangler d1 create mindbase
+ *   3) R2 桶(名字跟 bucket_name 保持一致就行)
+ *        npx wrangler r2 bucket create mindbase-images
+ *   4) Google OAuth Web Client ID
+ *        https://console.cloud.google.com/apis/credentials
+ *        建好之后把 http://localhost:5173 和你的线上域名都加到
+ *        "Authorized JavaScript origins",否则 GSI 登录按钮不会出
+ *
+ * JWT_SECRET 随便生成一串长串:
+ *   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mindbase",
+	"account_id": "<YOUR_CLOUDFLARE_ACCOUNT_ID>",
+	"compatibility_date": "2025-10-04",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "server/index.js",
+	"assets": {
+		"not_found_handling": "single-page-application"
+	},
+	"observability": {
+		"enabled": true
+	},
+
+	// 不绑自定义域名就把整个 "routes" 段删掉,Cloudflare 会自动给一个
+	// <name>.<your-subdomain>.workers.dev 的测试地址。
+	// 要绑自己的域名(比如 notes.example.com):
+	//   1) 先在 Cloudflare 控制台 → Websites 把域名托管进来
+	//   2) 下面 pattern 换成要绑的域名
+	//   3) npm run deploy 之后 Cloudflare 会自动帮你配好 DNS + 证书
+	"routes": [
+		{
+			"pattern": "<YOUR_DOMAIN>",
+			"custom_domain": true
+		}
+	],
+
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "mindbase",
+			"database_id": "<YOUR_D1_DATABASE_ID>"
+		}
+	],
+
+	"r2_buckets": [
+		{
+			"binding": "IMAGES",
+			"bucket_name": "mindbase-images"
+		}
+	],
+
+	"vars": {
+		"GOOGLE_CLIENT_ID": "<YOUR_GOOGLE_OAUTH_CLIENT_ID>.apps.googleusercontent.com",
+		"JWT_SECRET": "<GENERATE_A_LONG_RANDOM_STRING>"
+	}
+}

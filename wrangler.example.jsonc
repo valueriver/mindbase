@@ -8,7 +8,7 @@
  *   2) D1 数据库(返回的 database_id 填下面)
  *        npx wrangler d1 create mindbase
  *   3) R2 桶(名字跟 bucket_name 保持一致就行)
- *        npx wrangler r2 bucket create mindbase-images
+ *        npx wrangler r2 bucket create mindbase
  *   4) Google OAuth Web Client ID
  *        https://console.cloud.google.com/apis/credentials
  *        建好之后把 http://localhost:5173 和你的线上域名都加到
@@ -59,7 +59,7 @@
 	"r2_buckets": [
 		{
 			"binding": "IMAGES",
-			"bucket_name": "mindbase-images"
+			"bucket_name": "mindbase"
 		}
 	],
 

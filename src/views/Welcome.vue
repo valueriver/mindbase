@@ -1,10 +1,11 @@
 <template>
   <div class="flex min-h-screen flex-col items-center justify-center px-6">
+    <img src="/favicon.svg" alt="" class="mb-3 h-14 w-14" />
     <h1 class="text-3xl font-bold tracking-tight text-nt">MindBase</h1>
 
     <div ref="btnHost" class="mt-8 flex min-h-[44px] items-center justify-center" />
 
-    <p v-if="error" class="mt-4 text-sm text-nt-danger">{{ error }}</p>
+    <p v-if="error" class="mt-4 max-w-64 text-center text-sm text-nt-danger">{{ error }}</p>
   </div>
 </template>
 
@@ -20,6 +21,10 @@ const btnHost = ref(null)
 const error   = ref('')
 
 onMounted(async () => {
+  if (!GOOGLE_CLIENT_ID) {
+    error.value = '后端未配置 GOOGLE_CLIENT_ID,请检查 wrangler.jsonc'
+    return
+  }
   try {
     const google = await loadGoogleSdk()
     google.accounts.id.initialize({
@@ -41,7 +46,7 @@ onMounted(async () => {
       text:  'signin_with',
       width: 260,
     })
-  } catch (e) {
+  } catch {
     error.value = 'Google 登录组件加载失败'
   }
 })

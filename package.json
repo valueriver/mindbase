@@ -1,7 +1,7 @@
 {
 	"name": "mindbase",
 	"version": "0.1.0",
-	"description": "A minimal, Notion-style nested notes app self-hosted on Cloudflare Workers + D1 + R2",
+	"description": "自建笔记 · AI 协作 · Notion 风格",
 	"license": "MIT",
 	"private": true,
 	"type": "module",

@@ -35,3 +35,6 @@ wrangler.jsonc
 .dev.vars*
 .env*
 !.env.example
+
+# 由 scripts/build-skill.mjs 生成的 skill zip
+public/skills/

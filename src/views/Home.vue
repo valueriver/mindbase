@@ -60,6 +60,7 @@
           :notes="notes"
           @add-notebook="onAddNotebook"
           @add-note="onAddNote"
+          @reorder="onReorder"
         />
       </template>
     </main>
@@ -87,7 +88,7 @@ import Cover from '@/components/Cover.vue'
 import CoverPicker from '@/components/CoverPicker.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
 import ItemList from '@/components/ItemList.vue'
-import { apiRoot, apiNotebook, apiNote } from '@/api/client'
+import { apiRoot, apiNotebook, apiNote, apiItems } from '@/api/client'
 
 const router = useRouter()
 
@@ -180,6 +181,17 @@ async function onAddNote() {
     const { note } = await apiNote.create({ notebook_id: null })
     router.push({ name: 'note', params: { id: note.id } })
   } catch (e) { alert(e.message || '创建失败') }
+}
+
+async function onReorder(items) {
+  try {
+    await apiItems.reorder({ parent_id: null, items })
+    // 拉一遍最新的 sort_order,保证状态一致
+    await load()
+  } catch (e) {
+    alert(e.message || '排序失败')
+    await load() // 失败也回到服务端真值,避免前端乱序
+  }
 }
 
 onMounted(load)

@@ -70,6 +70,7 @@
           :notes="notes"
           @add-notebook="onAddNotebook"
           @add-note="onAddNote"
+          @reorder="onReorder"
         />
       </template>
     </main>
@@ -109,7 +110,7 @@ import CoverPicker from '@/components/CoverPicker.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
 import ItemList from '@/components/ItemList.vue'
 import Popover from '@/components/Popover.vue'
-import { apiNotebook, apiNote } from '@/api/client'
+import { apiNotebook, apiNote, apiItems } from '@/api/client'
 
 const props = defineProps({ id: { type: String, required: true } })
 const router = useRouter()
@@ -232,6 +233,16 @@ async function onDeleteNotebook() {
     await apiNotebook.remove(props.id)
     router.back()
   } catch (e) { alert(e.message || '删除失败') }
+}
+
+async function onReorder(items) {
+  try {
+    await apiItems.reorder({ parent_id: props.id, items })
+    await load()
+  } catch (e) {
+    alert(e.message || '排序失败')
+    await load()
+  }
 }
 
 watch(() => props.id, load, { immediate: true })

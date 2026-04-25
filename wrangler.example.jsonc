@@ -25,7 +25,11 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "server/index.js",
 	"assets": {
-		"not_found_handling": "single-page-application"
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application",
+		// /api/* 和 /i/* 直接走 Worker(跳过静态资源查找,API 路径少一次开销)
+		// 其余路径仍按 assets-first → SPA fallback 处理
+		"run_worker_first": ["/api/*", "/i/*"]
 	},
 	"observability": {
 		"enabled": true

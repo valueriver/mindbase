@@ -5,7 +5,10 @@ import { handleRootApi } from './root.js'
 import { handleNotebookApi } from './notebooks.js'
 import { handleNoteApi } from './notes.js'
 import { handleImageApi } from './images.js'
-import { handleExportApi } from './export.js'
+import { handleTokenApi } from './tokens.js'
+import { handleSearchApi } from './search.js'
+import { handleAiApi } from './ai.js'
+import { handleItemApi } from './items.js'
 
 export async function handleApiRoutes(request, env, url) {
   const path = url.pathname
@@ -53,8 +56,26 @@ export async function handleApiRoutes(request, env, url) {
       return fail('not_found', 404)
     }
 
-    if (path.startsWith('/api/export')) {
-      const r = await handleExportApi(request, env, path, method)
+    if (path.startsWith('/api/tokens')) {
+      const r = await handleTokenApi(request, env, path, method)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/search')) {
+      const r = await handleSearchApi(request, env, path, method, url)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/ai')) {
+      const r = await handleAiApi(request, env, path, method)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/items')) {
+      const r = await handleItemApi(request, env, path, method)
       if (r) return r
       return fail('not_found', 404)
     }

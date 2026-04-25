@@ -51,3 +51,15 @@ export const apiNote = {
   update: (id, patch)                        => api.patch(`/api/notes/${id}`, patch),
   remove: (id)                               => api.delete(`/api/notes/${id}`),
 }
+
+export const apiTokens = {
+  list:   ()     => api.get('/api/tokens'),
+  create: (name) => api.post('/api/tokens', { name }),
+  remove: (id)   => api.delete(`/api/tokens/${id}`),
+}
+
+export const apiItems = {
+  // items: [{ kind: 'notebook'|'note', id: string }]
+  reorder: ({ parent_id = null, items }) =>
+    api.post('/api/items/reorder', { parent_id, items }),
+}

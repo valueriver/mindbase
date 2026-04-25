@@ -15,6 +15,9 @@ export default {
       return handleApiRoutes(request, env, url)
     }
 
+    // 其它路径走 assets,assets 又找不到时根据 wrangler.jsonc 的
+    // not_found_handling: single-page-application 配置,自动 fallback 到 index.html
+    if (env.ASSETS) return env.ASSETS.fetch(request)
     return new Response(null, { status: 404 })
   },
 }

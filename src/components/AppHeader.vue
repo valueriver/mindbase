@@ -39,9 +39,9 @@
       <button
         type="button"
         class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
-        @click="onExport"
+        @click="onOpenAi"
       >
-        <span>⬇</span> 导出数据
+        <span>🤖</span> AI 授权
       </button>
       <button
         type="button"
@@ -63,8 +63,8 @@ import { useAuth, logout } from '@/composables/useAuth'
 const router = useRouter()
 const { user } = useAuth()
 
-const avatarBtn = ref(null)
-const menuOpen  = ref(false)
+const avatarBtn  = ref(null)
+const menuOpen   = ref(false)
 const menuAnchor = ref(null)
 
 function toggleMenu() {
@@ -82,9 +82,8 @@ async function onLogout() {
   router.replace({ name: 'welcome' })
 }
 
-function onExport() {
+function onOpenAi() {
   menuOpen.value = false
-  // 直接跳转 URL 让浏览器按 Content-Disposition 下载,不用额外 anchor
-  window.location.href = '/api/export'
+  router.push({ name: 'ai' })
 }
 </script>

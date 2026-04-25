@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { TOKEN_COOKIE, TOKEN_EXPIRATION, TOKEN_MAX_AGE } from '../../config.js'
+import { isApiTokenShape } from './api-token.js'
+import { findTokenByValue, touchToken } from '../../repository/token.js'
 
 const ALG = 'HS256'
 
@@ -56,6 +58,26 @@ export const getUserFromRequest = async (request, env) => {
   }
   if (!token) return null
 
+  // AI 授权令牌(mb_ 开头):明文直接比对
+  if (isApiTokenShape(token)) {
+    if (!env?.DB) return null
+    const row = await findTokenByValue(env.DB, token)
+    if (!row) return null
+    // 顺手更新 last_used_at;失败不影响鉴权
+    touchToken(env.DB, row.token_id).catch(err =>
+      console.error('touchToken failed', err?.message)
+    )
+    return {
+      id:         row.user_id,
+      name:       row.name  || '',
+      email:      row.email || '',
+      avatar:     row.avatar_url || '',
+      isApiToken: true,
+      scope:      row.scope || 'read',
+    }
+  }
+
+  // 普通 cookie/JWT
   const payload = await verifyJwt(env, token)
   if (!payload?.sub) return null
 

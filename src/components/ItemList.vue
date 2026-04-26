@@ -81,7 +81,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
-import { beginDrag, endDrag } from '@/composables/useTreeDrag'
+import { beginDrag, endDrag, dragState, setHoverTarget } from '@/composables/useTreeDrag'
 
 const props = defineProps({
   notebooks:  { type: Array, default: () => [] },
@@ -91,7 +91,7 @@ const props = defineProps({
   // null = 根层级(首页)
   parentId:   { type: String, default: null },
 })
-const emit = defineEmits(['add-notebook', 'add-note', 'reorder', 'nest'])
+const emit = defineEmits(['add-notebook', 'add-note', 'reorder', 'nest', 'move'])
 
 // 移动端长按 200ms 才触发拖动,避免点击/滚动误触发;桌面 0ms 立即响应
 const touchDelay = 200
@@ -137,6 +137,43 @@ const clearHover = () => {
   }
 }
 
+// ─── 移动端 touch 追踪 ────────────────────────────────────────
+// 桌面端 native HTML5 dragenter/leave 已经在 Breadcrumb 自管。
+// 移动端用 SortableJS fallback 模式,native drag events 不触发,
+// 我们自己挂 touchmove + elementFromPoint 找面包屑 drop target,
+// 把 hover 状态写到全局 dragState.hoverTarget 让 Breadcrumb 高亮。
+let touchMoveHandler = null
+let touchHoverEl = null
+
+function attachTouchTracker() {
+  if (touchMoveHandler) return
+  touchMoveHandler = (te) => {
+    const t = te.touches[0]
+    if (!t) return
+    const el = document.elementFromPoint(t.clientX, t.clientY)
+    const dropEl = el?.closest?.('[data-mb-drop]') || null
+    if (dropEl === touchHoverEl) return
+    touchHoverEl = dropEl
+    if (!dropEl) {
+      setHoverTarget(null)
+    } else {
+      setHoverTarget({
+        kind: dropEl.dataset.mbDropKind,
+        id: dropEl.dataset.mbDropId || null,
+      })
+    }
+  }
+  document.addEventListener('touchmove', touchMoveHandler, { passive: true })
+}
+
+function detachTouchTracker() {
+  if (touchMoveHandler) {
+    document.removeEventListener('touchmove', touchMoveHandler)
+    touchMoveHandler = null
+  }
+  touchHoverEl = null
+}
+
 function onDragStart(e) {
   const idx = e.oldIndex
   const item = merged.value[idx]
@@ -145,6 +182,7 @@ function onDragStart(e) {
   nestTarget.value = null
   clearHover()
   beginDrag({ kind: item.kind, id: item.id, parentId: props.parentId })
+  attachTouchTracker()
 }
 
 /**
@@ -197,18 +235,27 @@ function onMove(evt) {
 }
 
 function onDragEnd(e) {
-  endDrag()
+  detachTouchTracker()
   clearHover()
-  const target = nestTarget.value
+
+  // 在 endDrag 清空之前抓 hoverTarget(移动端拖到面包屑用)
+  const breadcrumbHover = dragState.hoverTarget
   const dragged = dragging.value
+  const inListNest = nestTarget.value
+
+  endDrag()
   nestTarget.value = null
   dragging.value = null
 
-  if (target && dragged) {
-    emit('nest', { kind: dragged.kind, id: dragged.id, target })
+  // 优先级:面包屑 move > 列表内嵌套 nest > 同级重排
+  if (breadcrumbHover && dragged) {
+    emit('move', { kind: dragged.kind, id: dragged.id, target: breadcrumbHover })
     return
   }
-
+  if (inListNest && dragged) {
+    emit('nest', { kind: dragged.kind, id: dragged.id, target: inListNest })
+    return
+  }
   if (e.oldIndex === e.newIndex) return
   emit('reorder', merged.value.map(item => ({ kind: item.kind, id: item.id })))
 }

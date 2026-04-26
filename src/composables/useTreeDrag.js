@@ -18,6 +18,12 @@ export const dragState = reactive({
    * - 在首页(根)被拖出去的子项,parent 是 null
    */
   parentId: null,
+  /**
+   * 移动端 touch 拖动期间共享的 hover target — 用于 Breadcrumb 高亮。
+   * 桌面端 native dragenter/dragleave 已经在 Breadcrumb 内自管,这字段
+   * 主要给 touch 路径用。格式:{ kind: 'home' | 'notebook', id: string | null }
+   */
+  hoverTarget: null,
 })
 
 export const beginDrag = ({ kind, id, parentId }) => {
@@ -25,6 +31,7 @@ export const beginDrag = ({ kind, id, parentId }) => {
   dragState.kind = kind
   dragState.id = id
   dragState.parentId = parentId ?? null
+  dragState.hoverTarget = null
 }
 
 export const endDrag = () => {
@@ -32,4 +39,9 @@ export const endDrag = () => {
   dragState.kind = null
   dragState.id = null
   dragState.parentId = null
+  dragState.hoverTarget = null
+}
+
+export const setHoverTarget = (target) => {
+  dragState.hoverTarget = target
 }

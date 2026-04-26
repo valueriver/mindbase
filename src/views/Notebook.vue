@@ -73,6 +73,7 @@
           @add-note="onAddNote"
           @reorder="onReorder"
           @nest="onNest"
+          @move="onMove"
         />
       </template>
     </main>

@@ -3,6 +3,8 @@
     <!-- 首页:可作为根级 drop target -->
     <router-link
       :to="{ name: 'home' }"
+      data-mb-drop
+      data-mb-drop-kind="home"
       class="rounded-sm px-1.5 py-0.5 transition-colors"
       :class="dropTargetClass(homeDropState)"
       @dragenter.prevent="onEnter('home', null, $event)"
@@ -20,6 +22,9 @@
       <router-link
         v-if="item.to"
         :to="item.to"
+        data-mb-drop
+        data-mb-drop-kind="notebook"
+        :data-mb-drop-id="item.id"
         class="flex max-w-64 items-center gap-1 truncate rounded-sm px-1.5 py-0.5 transition-colors"
         :class="dropTargetClass(getDropState(item.id))"
         @dragenter.prevent="onEnter('notebook', item.id, $event)"
@@ -57,14 +62,17 @@ const emit = defineEmits(['move'])
 // 用引用计数才能正确判断"完全离开"。每个 target id 各自一份。
 const enterCounts = reactive({})
 
+// hover 信号来源:桌面 native dragenter/leave(enterCounts)+ 移动端 touchmove(dragState.hoverTarget)
 const homeDropState = computed(() => ({
   active: dragState.active && canDropTo('home', null),
-  hover: (enterCounts['__home__'] || 0) > 0,
+  hover: (enterCounts['__home__'] || 0) > 0
+    || dragState.hoverTarget?.kind === 'home',
 }))
 
 const getDropState = (id) => ({
   active: dragState.active && canDropTo('notebook', id),
-  hover: (enterCounts[id] || 0) > 0,
+  hover: (enterCounts[id] || 0) > 0
+    || (dragState.hoverTarget?.kind === 'notebook' && dragState.hoverTarget?.id === id),
 })
 
 const dropTargetClass = (state) => {

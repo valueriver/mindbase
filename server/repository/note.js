@@ -33,23 +33,25 @@ export const listNotesIn = async (db, userId, notebookId) => {
 const nullableFlag = (value) => (value === undefined ? 0 : 1)
 
 export const updateNote = async (db, id, { title, content, icon, cover, notebookId, sortOrder }) => {
+  // notebook_id 必须用 CASE WHEN flag,而不是 COALESCE。
+  // COALESCE(null, col) 等于 col,会让"明确移到根(notebook_id = NULL)"被当成"不改"。
   await db.prepare(
     `UPDATE notes
         SET title       = COALESCE(?2, title),
             content     = COALESCE(?3, content),
             icon        = CASE WHEN ?4 = 1 THEN ?5  ELSE icon        END,
             cover       = CASE WHEN ?6 = 1 THEN ?7  ELSE cover       END,
-            notebook_id = COALESCE(?8, notebook_id),
-            sort_order  = COALESCE(?9, sort_order),
+            notebook_id = CASE WHEN ?8 = 1 THEN ?9  ELSE notebook_id END,
+            sort_order  = COALESCE(?10, sort_order),
             updated_at  = datetime('now')
       WHERE id = ?1`
   ).bind(
     id,
     title      ?? null,
     content    ?? null,
-    nullableFlag(icon),  icon  ?? null,
-    nullableFlag(cover), cover ?? null,
-    notebookId ?? null,
+    nullableFlag(icon),       icon       ?? null,
+    nullableFlag(cover),      cover      ?? null,
+    nullableFlag(notebookId), notebookId ?? null,
     sortOrder  ?? null,
   ).run()
   return findNoteById(db, id)

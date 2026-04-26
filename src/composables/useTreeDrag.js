@@ -45,3 +45,19 @@ export const endDrag = () => {
 export const setHoverTarget = (target) => {
   dragState.hoverTarget = target
 }
+
+/**
+ * 拖动结束后浏览器可能合成一次 click(touchend → click,或 mouseup → click),
+ * 落在 router-link 上会触发导航跳走。装一次性 capture-phase click 拦截,
+ * 350ms 后自动撤销。drop 处理器调用一次即可。
+ */
+export const suppressNextClick = () => {
+  const handler = (e) => {
+    e.stopPropagation()
+    e.preventDefault()
+  }
+  document.addEventListener('click', handler, { capture: true, once: true })
+  setTimeout(() => {
+    document.removeEventListener('click', handler, { capture: true })
+  }, 350)
+}

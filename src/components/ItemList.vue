@@ -81,7 +81,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
-import { beginDrag, endDrag, dragState, setHoverTarget } from '@/composables/useTreeDrag'
+import { beginDrag, endDrag, dragState, setHoverTarget, suppressNextClick } from '@/composables/useTreeDrag'
 
 const props = defineProps({
   notebooks:  { type: Array, default: () => [] },
@@ -174,6 +174,7 @@ function detachTouchTracker() {
   touchHoverEl = null
 }
 
+
 function onDragStart(e) {
   const idx = e.oldIndex
   const item = merged.value[idx]
@@ -249,6 +250,7 @@ function onDragEnd(e) {
 
   // 优先级:面包屑 move > 列表内嵌套 nest > 同级重排
   if (breadcrumbHover && dragged) {
+    suppressNextClick() // 阻止 router-link 合成 click 跳走
     emit('move', { kind: dragged.kind, id: dragged.id, target: breadcrumbHover })
     return
   }

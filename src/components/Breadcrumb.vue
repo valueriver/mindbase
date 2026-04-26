@@ -50,7 +50,7 @@
 
 <script setup>
 import { computed, reactive } from 'vue'
-import { dragState } from '@/composables/useTreeDrag'
+import { dragState, suppressNextClick } from '@/composables/useTreeDrag'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
@@ -131,6 +131,9 @@ function onDrop(targetKind, targetId) {
   delete enterCounts[k]
 
   if (!canDropTo(targetKind, targetId)) return
+
+  // drop 之后浏览器可能合成 click 在 router-link 上 → 触发导航跳走
+  suppressNextClick()
 
   emit('move', {
     kind: dragState.kind,

@@ -7,7 +7,7 @@
       <h1 class="mt-8 text-[40px] font-bold leading-tight tracking-tight text-nt">AI 授权</h1>
 
       <p class="mt-3 text-sm leading-relaxed text-nt-muted">
-        让 AI 通过 OpenAPI 读写你的笔记。开启后任何拿到下面信息的人都能访问你的库,关闭立刻失效。
+        通过标准 OpenAPI 接口,让 ChatGPT、Claude 或任何支持 OpenAPI 的 AI 工具读写你的笔记。
       </p>
 
       <div v-if="loading" class="mt-10 py-6 text-sm text-nt-soft">加载中…</div>

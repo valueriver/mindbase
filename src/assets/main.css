@@ -9,6 +9,7 @@
   --color-nt-hover-strong:rgba(55, 53, 47, 0.10);
   --color-nt-divider:     rgba(55, 53, 47, 0.09);
   --color-nt-accent:      rgb(35, 131, 226);
+  --color-nt-accent-bg:   rgba(35, 131, 226, 0.10);
   --color-nt-danger:      #e03e3e;
   --color-nt-danger-bg:   rgba(224, 62, 62, 0.08);
 }

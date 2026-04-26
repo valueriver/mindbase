@@ -58,9 +58,11 @@
           class="mt-6"
           :notebooks="notebooks"
           :notes="notes"
+          :parent-id="null"
           @add-notebook="onAddNotebook"
           @add-note="onAddNote"
           @reorder="onReorder"
+          @nest="onNest"
         />
       </template>
     </main>
@@ -191,6 +193,28 @@ async function onReorder(items) {
   } catch (e) {
     alert(e.message || '排序失败')
     await load() // 失败也回到服务端真值,避免前端乱序
+  }
+}
+
+/**
+ * 拖到列表中某个 notebook 行的中央 → 嵌套进该 notebook。
+ */
+async function onNest({ kind, id, target }) {
+  try {
+    if (kind === 'notebook') {
+      await apiNotebook.update(id, { parent_id: target.id })
+    } else {
+      await apiNote.update(id, { notebook_id: target.id })
+    }
+    await load()
+  } catch (e) {
+    const msg = e.message || ''
+    if (/cannot_nest_in_self|cannot_nest_in_descendant/.test(msg)) {
+      alert('不能放进自己的子级')
+    } else {
+      alert(msg || '移动失败')
+    }
+    await load()
   }
 }
 

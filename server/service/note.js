@@ -92,10 +92,15 @@ export const updateNoteAction = async (request, env, id) => {
   if (icon  !== undefined) patch.icon  = icon
   if (cover !== undefined) patch.cover = cover
 
-  if (typeof body?.notebook_id === 'string' && body.notebook_id) {
-    const target = await findNotebookForUser(env.DB, body.notebook_id, user.id)
-    if (!target) return fail('notebook_not_found', 404)
-    patch.notebookId = body.notebook_id
+  // notebook_id:支持移到指定 notebook(字符串 id)或根层级(null)
+  if ('notebook_id' in (body || {})) {
+    if (body.notebook_id === null) {
+      patch.notebookId = null
+    } else if (typeof body.notebook_id === 'string' && body.notebook_id) {
+      const target = await findNotebookForUser(env.DB, body.notebook_id, user.id)
+      if (!target) return fail('notebook_not_found', 404)
+      patch.notebookId = body.notebook_id
+    }
   }
 
   const note = await updateNote(env.DB, id, patch)

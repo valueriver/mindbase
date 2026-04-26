@@ -9,7 +9,7 @@
     />
 
     <main class="mx-auto w-full max-w-3xl px-12 pt-10 pb-20">
-      <Breadcrumb :items="breadcrumbItems" />
+      <Breadcrumb :items="breadcrumbItems" @move="onMove" />
 
       <div v-if="loading" class="py-10 text-sm text-nt-soft">加载中…</div>
       <div v-else-if="error" class="py-10 text-sm text-nt-danger">{{ error }}</div>
@@ -68,9 +68,11 @@
           class="mt-6"
           :notebooks="children"
           :notes="notes"
+          :parent-id="props.id"
           @add-notebook="onAddNotebook"
           @add-note="onAddNote"
           @reorder="onReorder"
+          @nest="onNest"
         />
       </template>
     </main>
@@ -241,6 +243,42 @@ async function onReorder(items) {
     await load()
   } catch (e) {
     alert(e.message || '排序失败')
+    await load()
+  }
+}
+
+/**
+ * 拖到面包屑上 → 移动到目标父级。
+ * payload: { kind: 'note'|'notebook', id, target: { kind: 'home'|'notebook', id } }
+ */
+async function onMove({ kind, id, target }) {
+  const targetParent = target.kind === 'home' ? null : target.id
+  await doMove(kind, id, targetParent)
+}
+
+/**
+ * 在列表里把元素拖到某个 notebook 行的中央 → 嵌套进该 notebook。
+ * payload: { kind, id, target: { kind: 'notebook', id } }
+ */
+async function onNest({ kind, id, target }) {
+  await doMove(kind, id, target.id)
+}
+
+async function doMove(kind, id, targetParent) {
+  try {
+    if (kind === 'notebook') {
+      await apiNotebook.update(id, { parent_id: targetParent })
+    } else {
+      await apiNote.update(id, { notebook_id: targetParent })
+    }
+    await load()
+  } catch (e) {
+    const msg = e.message || ''
+    if (/cannot_nest_in_self|cannot_nest_in_descendant/.test(msg)) {
+      alert('不能放进自己的子级')
+    } else {
+      alert(msg || '移动失败')
+    }
     await load()
   }
 }

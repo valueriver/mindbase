@@ -12,15 +12,25 @@
       :delay="touchDelay"
       :delay-on-touch-only="true"
       :touch-start-threshold="3"
+      :move="onMove"
+      @start="onDragStart"
       @end="onDragEnd"
     >
       <template #item="{ element }">
-        <li>
+        <li
+          :data-mb-kind="element.kind"
+          :data-mb-id="element.id"
+        >
           <router-link
             :to="element.kind === 'notebook'
               ? { name: 'notebook', params: { id: element.id } }
               : { name: 'note',     params: { id: element.id } }"
-            class="flex min-h-7 items-center gap-2 rounded px-1.5 py-1 hover:bg-nt-hover"
+            class="flex min-h-7 items-center gap-2 rounded px-1.5 py-1 transition-colors"
+            :class="[
+              nestTargetId === element.id
+                ? 'bg-nt-accent-bg ring-2 ring-nt-accent ring-inset'
+                : 'hover:bg-nt-hover',
+            ]"
           >
             <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center text-base">
               {{ element.icon || (element.kind === 'notebook' ? '📁' : '📄') }}
@@ -32,6 +42,12 @@
               <template v-else>
                 {{ element.title || '无标题' }}
               </template>
+            </span>
+            <span
+              v-if="nestTargetId === element.id"
+              class="ml-1 text-xxs text-nt-accent font-medium select-none"
+            >
+              放入
             </span>
           </router-link>
         </li>
@@ -63,15 +79,19 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
+import { beginDrag, endDrag } from '@/composables/useTreeDrag'
 
 const props = defineProps({
   notebooks:  { type: Array, default: () => [] },
   notes:      { type: Array, default: () => [] },
   canAddNote: { type: Boolean, default: true },
+  // 当前列表所在的父级(用于"拖到自己当前父级是 noop"判断)
+  // null = 根层级(首页)
+  parentId:   { type: String, default: null },
 })
-const emit = defineEmits(['add-notebook', 'add-note', 'reorder'])
+const emit = defineEmits(['add-notebook', 'add-note', 'reorder', 'nest'])
 
 // 移动端长按 200ms 才触发拖动,避免点击/滚动误触发;桌面 0ms 立即响应
 const touchDelay = 200
@@ -98,12 +118,99 @@ watch(
   { immediate: true, deep: true },
 )
 
+// 拖动期间记录被拖项的 kind/id(原 array 在 SortableJS 期间索引会乱)
+const dragging = ref(null)
+// 当前嵌套目标 — hover notebook 行超过 NEST_DWELL_MS 时被设
+const nestTarget = ref(null)
+const nestTargetId = computed(() => nestTarget.value?.id ?? null)
+
+// 悬停 dwell 检测(Finder 风格:停留够久就切到嵌套语义)
+const NEST_DWELL_MS = 500
+let hoverTargetId = null
+let hoverTimer = null
+
+const clearHover = () => {
+  hoverTargetId = null
+  if (hoverTimer) {
+    clearTimeout(hoverTimer)
+    hoverTimer = null
+  }
+}
+
+function onDragStart(e) {
+  const idx = e.oldIndex
+  const item = merged.value[idx]
+  if (!item) return
+  dragging.value = { kind: item.kind, id: item.id }
+  nestTarget.value = null
+  clearHover()
+  beginDrag({ kind: item.kind, id: item.id, parentId: props.parentId })
+}
+
+/**
+ * SortableJS onMove:每次鼠标移动到候选位置都会调一次。
+ * 返回 false 会让 SortableJS 不在该位置 drop;返回 true 正常重排。
+ *
+ * 规则:
+ * - 如果鼠标在某 notebook 行的"中央 40%~85% 区域"且该 notebook
+ *   不是被拖动元素自己 → 标记嵌套目标,返回 false(阻止重排)
+ * - 否则 → 清嵌套目标,返回 true(让 SortableJS 处理重排插入)
+ *
+ * 中央比例特意取 0.4~0.85 而不是 0.3~0.7,留出顶部 40% 给"插到前面",
+ * 底部 15% 给"插到后面",中央留大一些利于触达嵌套。
+ */
+/**
+ * SortableJS onMove,每次鼠标 hover 新位置都触发。
+ * 我们用 hover-dwell 判断嵌套语义:
+ * - hover 一个 notebook 行 → 启动 500ms 计时器
+ * - 计时器到了 → 切到嵌套语义(nestTarget = { kind: 'notebook', id })
+ * - 移开/换行 → 清计时器,清 nestTarget
+ * - 已处于嵌套语义时 → return false 阻止 SortableJS 在该位置 swap
+ */
+function onMove(evt) {
+  const target = evt.related
+  const kind = target?.dataset?.mbKind
+  const id = target?.dataset?.mbId
+
+  // 不是 notebook 行,或就是被拖动的自己 → 走重排,清状态
+  if (kind !== 'notebook' || (dragging.value && dragging.value.id === id)) {
+    clearHover()
+    if (nestTarget.value) nestTarget.value = null
+    return true
+  }
+
+  // 进入新的 notebook 行 → 重启 dwell 计时器
+  if (hoverTargetId !== id) {
+    clearHover()
+    hoverTargetId = id
+    if (nestTarget.value) nestTarget.value = null
+    hoverTimer = setTimeout(() => {
+      nestTarget.value = { kind: 'notebook', id }
+    }, NEST_DWELL_MS)
+  }
+
+  // 已切到嵌套语义 → 阻止 SortableJS 在该位置 swap(避免视觉错乱)
+  if (nestTarget.value && nestTarget.value.id === id) return false
+
+  // 还在等 dwell → 让 SortableJS 正常 swap(保持"插到上/下"的视觉)
+  return true
+}
+
 function onDragEnd(e) {
+  endDrag()
+  clearHover()
+  const target = nestTarget.value
+  const dragged = dragging.value
+  nestTarget.value = null
+  dragging.value = null
+
+  if (target && dragged) {
+    emit('nest', { kind: dragged.kind, id: dragged.id, target })
+    return
+  }
+
   if (e.oldIndex === e.newIndex) return
-  emit(
-    'reorder',
-    merged.value.map(item => ({ kind: item.kind, id: item.id })),
-  )
+  emit('reorder', merged.value.map(item => ({ kind: item.kind, id: item.id })))
 }
 </script>
 

@@ -14,7 +14,7 @@
 <tr>
   <td width="50%">
     <img src="https://mindbase.me/screenshots/home.png" alt="首页"/>
-    <p align="center"><sub>🏠 首页:笔记本 + 笔记混排,可拖动排序</sub></p>
+    <p align="center"><sub>🏠 首页:笔记本 + 笔记混排,拖动整理</sub></p>
   </td>
   <td width="50%">
     <img src="https://mindbase.me/screenshots/notebook-reading.png" alt="笔记本"/>
@@ -41,7 +41,7 @@
 - ✏️ **Notion 式编辑器**:H1/H2/H3、粗体、斜体、行首 `# ` Markdown 快捷键
 - 📷 **粘贴即上传**:`⌘V` 截图直传你自己的 R2,删笔记自动清理
 - 🔍 **全文搜索**:笔记本名 + 笔记标题 + 正文
-- 🎯 **拖动排序**:笔记和笔记本同一空间混排,随便拖
+- 🎯 **三种拖动语义**:同级**重排**(拖到上下边缘)/ **嵌套**(悬停笔记本 0.5s 自动切到"放入")/ **跨级移动**(拖到面包屑任意上级或首页)
 - 🔐 **Google 一键登录**
 - 🤖 **一键 AI 授权**:OpenAPI 3.1 schema + Bearer token
 - 🎒 **可下载 Skill 包**:兼容 Anthropic Skills,丢进 `~/.claude/skills/` 即可

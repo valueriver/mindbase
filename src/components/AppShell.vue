@@ -1,171 +1,131 @@
 <template>
   <div class="flex min-h-screen flex-col">
-    <!-- 顶栏(PC / 移动端一致) -->
-    <header class="sticky top-0 z-40 flex h-11 items-center justify-between border-b border-nt-divider bg-white/95 px-3 backdrop-blur">
-      <div class="flex items-center gap-0.5">
-        <button
-          type="button"
-          class="flex h-8 w-8 items-center justify-center rounded text-nt-muted hover:bg-nt-hover"
-          :title="open ? '收起侧边栏' : '展开侧边栏'"
-          @click="toggle"
-        ><span class="text-base leading-none">☰</span></button>
-        <router-link :to="{ name: 'home' }" class="px-1.5 text-sm font-semibold text-nt">
-          MindBase
-        </router-link>
+    <!-- 顶栏:左当前应用标题、右宫格应用切换器 -->
+    <header class="sticky top-0 z-40 flex h-11 items-center justify-between border-b border-nt-divider bg-white/95 px-3 backdrop-blur md:px-4">
+      <div class="flex min-w-0 items-center gap-1.5 px-1">
+        <span class="text-base leading-none">{{ currentApp.icon }}</span>
+        <h1 class="truncate text-sm font-semibold text-nt">{{ currentApp.label }}</h1>
       </div>
 
       <button
-        v-if="user"
-        ref="avatarBtn"
+        ref="launcherBtn"
         type="button"
-        class="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-nt-hover hover:bg-nt-hover-strong"
-        @click="toggleMenu"
+        class="flex h-8 w-8 items-center justify-center rounded text-nt-muted hover:bg-nt-hover hover:text-nt"
+        :title="launcherOpen ? '关闭' : '切换应用'"
+        @click="toggleLauncher"
       >
-        <img
-          v-if="user.avatar_url"
-          :src="user.avatar_url"
-          referrerpolicy="no-referrer"
-          class="h-full w-full object-cover"
-          alt=""
-        />
-        <span v-else class="text-xs text-nt-muted">{{ (user.name || user.email || '').slice(0, 1).toUpperCase() }}</span>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
+          <rect x="1"  y="1"  width="7" height="7" rx="1.4"/>
+          <rect x="10" y="1"  width="7" height="7" rx="1.4"/>
+          <rect x="1"  y="10" width="7" height="7" rx="1.4"/>
+          <rect x="10" y="10" width="7" height="7" rx="1.4"/>
+        </svg>
       </button>
 
-      <Popover :open="menuOpen" :anchor="menuAnchor" :width="220" @close="menuOpen = false">
-        <div class="flex items-center gap-2 px-2 py-1.5">
-          <div class="min-w-0 flex-1">
-            <div class="truncate text-sm font-medium text-nt">{{ user?.name }}</div>
-            <div class="truncate text-xs text-nt-soft">{{ user?.email }}</div>
+      <Popover :open="launcherOpen" :anchor="launcherAnchor" :width="280" @close="launcherOpen = false">
+        <div class="grid grid-cols-2 gap-1 p-1">
+          <button
+            v-for="app in apps"
+            :key="app.name"
+            type="button"
+            :class="[
+              'flex flex-col items-center justify-center gap-1.5 rounded-md py-4 transition',
+              isActive(app)
+                ? 'bg-nt-hover-strong text-nt'
+                : 'text-nt-muted hover:bg-nt-hover hover:text-nt',
+            ]"
+            @click="goTo(app)"
+          >
+            <span class="text-3xl leading-none">{{ app.icon }}</span>
+            <span class="text-xs font-medium">{{ app.label }}</span>
+          </button>
+        </div>
+
+        <div v-if="user" class="mt-1 border-t border-nt-divider pt-1">
+          <div class="flex items-center gap-2 rounded-md px-2 py-1.5">
+            <img
+              v-if="user.avatar_url"
+              :src="user.avatar_url"
+              referrerpolicy="no-referrer"
+              class="h-6 w-6 shrink-0 rounded-full object-cover"
+              alt=""
+            />
+            <span
+              v-else
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nt-hover text-xs text-nt-muted"
+            >{{ initial }}</span>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-sm text-nt">{{ user.name }}</div>
+              <div class="truncate text-[11px] text-nt-soft">{{ user.email }}</div>
+            </div>
+            <button
+              type="button"
+              class="rounded px-2 py-1 text-xs text-nt-muted hover:bg-nt-hover hover:text-nt-danger"
+              @click="onLogout"
+            >退出</button>
           </div>
         </div>
-        <div class="my-1 h-px bg-nt-divider" />
-        <button
-          type="button"
-          class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
-          @click="goTo('assistant-settings')"
-        ><span>⚙</span> 设置</button>
-        <button
-          type="button"
-          class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
-          @click="goTo('assistant-authorize')"
-        ><span>🔑</span> 对外授权</button>
-        <div class="my-1 h-px bg-nt-divider" />
-        <button
-          type="button"
-          class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
-          @click="onLogout"
-        ><span>↩</span> 退出登录</button>
       </Popover>
     </header>
 
-    <!-- 主体:侧栏 + 内容 -->
-    <div class="relative flex flex-1">
-      <!-- 侧栏:PC 在文档流里(宽度动画),移动端 fixed 抽屉 -->
-      <aside
-        :class="[
-          'z-30 overflow-hidden border-r border-nt-divider bg-white transition-[width,transform] duration-200',
-          // 移动端 fixed 抽屉(top:44px、bottom:0)
-          'fixed top-11 bottom-0 left-0 w-64 max-w-[80%]',
-          open ? 'translate-x-0' : '-translate-x-full',
-          // PC 改为 sticky 跟内容并排
-          'md:sticky md:top-11 md:bottom-auto md:h-[calc(100vh-2.75rem)] md:translate-x-0 md:max-w-none',
-          open ? 'md:w-60' : 'md:w-0 md:border-r-0',
-        ]"
-      >
-        <nav class="flex h-full flex-col gap-0.5 p-2">
-          <SidebarLink
-            v-for="m in modules"
-            :key="m.name"
-            :to="m.to"
-            :icon="m.icon"
-            :label="m.label"
-            :active="isActive(m)"
-            @click="onNavClick"
-          />
-        </nav>
-      </aside>
-
-      <!-- 移动端遮罩 -->
-      <Transition name="fade">
-        <div
-          v-if="open"
-          class="fixed inset-x-0 bottom-0 top-11 z-20 bg-black/30 md:hidden"
-          @click="open = false"
-        />
-      </Transition>
-
-      <!-- 内容 -->
-      <main class="min-w-0 flex-1">
-        <slot />
-      </main>
-    </div>
+    <main class="min-w-0 flex-1">
+      <slot />
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Popover from './Popover.vue'
-import SidebarLink from './SidebarLink.vue'
 import { useAuth, logout } from '@/composables/useAuth'
 
 const route   = useRoute()
 const router  = useRouter()
 const { user } = useAuth()
 
-const STORAGE_KEY = 'mindbase.sidebar.open'
-const open = ref(false)
-
-onMounted(() => {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY)
-    // 首次进入:PC 默认展开,移动端默认收起
-    if (v === '1' || v === '0') open.value = v === '1'
-    else open.value = window.matchMedia('(min-width: 768px)').matches
-  } catch {}
-})
-
-function toggle() {
-  open.value = !open.value
-  try { localStorage.setItem(STORAGE_KEY, open.value ? '1' : '0') } catch {}
-}
-
-const modules = [
-  { name: 'memos',     to: '/memos',     icon: '💡', label: '想法', match: (p) => p.startsWith('/memos') },
-  { name: 'notes',     to: '/',          icon: '📚', label: '笔记', match: (p) => p === '/' || p.startsWith('/notebook') || p.startsWith('/note') },
-  { name: 'assistant', to: '/assistant', icon: '🤖', label: '助理', match: (p) => p === '/assistant' || (p.startsWith('/assistant') && !p.startsWith('/assistant/settings') && !p.startsWith('/assistant/authorize')) },
+const apps = [
+  { name: 'memos',     icon: '💡', label: '想法', to: { name: 'memos' },              match: (p) => p.startsWith('/memos') },
+  { name: 'notes',     icon: '📚', label: '笔记', to: { name: 'home' },               match: (p) => p === '/' || p.startsWith('/notebook') || p.startsWith('/note') },
+  { name: 'assistant', icon: '🤖', label: '助理', to: { name: 'assistant' },          match: (p) => p === '/assistant' },
+  { name: 'settings',  icon: '⚙',  label: '设置', to: { name: 'assistant-settings' }, match: (p) => p.startsWith('/assistant/settings') || p.startsWith('/assistant/authorize') },
 ]
 
-function isActive(m) {
-  return m.match(route.path)
+function isActive(app) {
+  return app.match(route.path)
 }
 
-// 移动端:点击导航后自动关闭抽屉;PC 端保持
-function onNavClick() {
-  if (!window.matchMedia('(min-width: 768px)').matches) {
-    open.value = false
+const currentApp = computed(() => {
+  if (route.path.startsWith('/assistant/authorize')) {
+    return { icon: '🔑', label: '对外授权' }
   }
+  const a = apps.find(isActive)
+  return a || { icon: '🧠', label: 'MindBase' }
+})
+
+const launcherBtn    = ref(null)
+const launcherOpen   = ref(false)
+const launcherAnchor = ref(null)
+
+function toggleLauncher() {
+  if (launcherOpen.value) { launcherOpen.value = false; return }
+  launcherAnchor.value = launcherBtn.value?.getBoundingClientRect() || null
+  launcherOpen.value = true
 }
 
-// —— 顶栏头像菜单 ——
-const avatarBtn  = ref(null)
-const menuOpen   = ref(false)
-const menuAnchor = ref(null)
-
-function toggleMenu() {
-  if (menuOpen.value) { menuOpen.value = false; return }
-  menuAnchor.value = avatarBtn.value?.getBoundingClientRect() || null
-  menuOpen.value = true
-}
-
-function goTo(name) {
-  menuOpen.value = false
-  router.push({ name })
+function goTo(app) {
+  launcherOpen.value = false
+  router.push(app.to)
 }
 
 async function onLogout() {
-  menuOpen.value = false
+  launcherOpen.value = false
   await logout()
   router.replace({ name: 'welcome' })
 }
+
+const initial = computed(() => {
+  const n = user.value?.name || user.value?.email || ''
+  return n.slice(0, 1).toUpperCase()
+})
 </script>

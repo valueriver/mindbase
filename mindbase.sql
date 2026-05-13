@@ -27,6 +27,18 @@ CREATE TABLE notes (
 );
 CREATE INDEX idx_notes_notebook ON notes(notebook_id);
 
+-- 待办:支持 1 层子任务(parent_id 自引用,业务层不允许嵌套二层以上)
+CREATE TABLE todos (
+  id          TEXT PRIMARY KEY,
+  parent_id   TEXT REFERENCES todos(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL DEFAULT '',
+  done        INTEGER NOT NULL DEFAULT 0,
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_todos_parent ON todos(parent_id, sort_order);
+
 -- 想法:时间轴随手记;content 是纯文本,内嵌图片用 markdown 语法 ![](/i/...)
 CREATE TABLE memos (
   id          TEXT PRIMARY KEY,

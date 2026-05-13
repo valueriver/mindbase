@@ -72,6 +72,13 @@ export const apiSearch = {
   run: (q, limit = 30) => api.get(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
 }
 
+export const apiTodos = {
+  list:   ()                       => api.get('/api/todos'),
+  create: ({ title, parent_id })   => api.post('/api/todos', { title, parent_id }),
+  update: (id, patch)              => api.patch(`/api/todos/${id}`, patch),
+  remove: (id)                     => api.delete(`/api/todos/${id}`),
+}
+
 export const apiSettings = {
   detail: ()      => api.get('/api/settings'),
   update: (patch) => api.patch('/api/settings', patch),

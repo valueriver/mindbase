@@ -7,6 +7,7 @@ const routes = [
   { path: '/notebook/:id',  name: 'notebook',          component: () => import('@/views/Notebook.vue'),          props: true },
   { path: '/note/:id',      name: 'note',              component: () => import('@/views/Note.vue'),              props: true },
   { path: '/memos',         name: 'memos',             component: () => import('@/views/Memos.vue') },
+  { path: '/todos',         name: 'todos',             component: () => import('@/views/Todos.vue') },
   { path: '/search',        name: 'search',            component: () => import('@/views/Search.vue') },
   { path: '/assistant',     name: 'assistant',         component: () => import('@/views/Assistant.vue') },
   { path: '/assistant/settings', name: 'assistant-settings', component: () => import('@/views/AssistantSettings.vue') },

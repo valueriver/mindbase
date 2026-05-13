@@ -12,6 +12,7 @@ import { handleItemApi } from './items.js'
 import { handleMemoApi } from './memos.js'
 import { handleChatApi } from './chat.js'
 import { handleSettingsApi } from './settings.js'
+import { handleTodoApi } from './todos.js'
 
 export async function handleApiRoutes(request, env, url) {
   const path = url.pathname
@@ -97,6 +98,12 @@ export async function handleApiRoutes(request, env, url) {
 
     if (path.startsWith('/api/settings')) {
       const r = await handleSettingsApi(request, env, path, method)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/todos')) {
+      const r = await handleTodoApi(request, env, path, method)
       if (r) return r
       return fail('not_found', 404)
     }

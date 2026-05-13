@@ -67,6 +67,7 @@ const router  = useRouter()
 
 const apps = [
   { name: 'memos',     icon: '💡', label: '想法', to: { name: 'memos' },              match: (p) => p.startsWith('/memos') },
+  { name: 'todos',     icon: '✅', label: '待办', to: { name: 'todos' },              match: (p) => p.startsWith('/todos') },
   { name: 'notes',     icon: '📚', label: '笔记', to: { name: 'home' },               match: (p) => p === '/' || p.startsWith('/notebook') || p.startsWith('/note') },
   { name: 'assistant', icon: '🤖', label: '助理', to: { name: 'assistant' },          match: (p) => p === '/assistant' },
   { name: 'search',    icon: '🔍', label: '搜索', to: { name: 'search' },             match: (p) => p.startsWith('/search') },

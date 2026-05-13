@@ -9,4 +9,5 @@ const randomId = (length) => {
 
 export const createNotebookId = () => randomId(12)
 export const createMemoId     = () => randomId(12)
+export const createTodoId     = () => randomId(12)
 export const createNoteId     = () => randomId(12)

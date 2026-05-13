@@ -102,7 +102,7 @@
       </div>
 
       <!-- 时间轴 -->
-      <div v-if="loading" class="mt-6 py-10 text-sm text-nt-soft">加载中…</div>
+      <div v-if="loading && !memos.length" class="mt-6 py-10 text-sm text-nt-soft">加载中…</div>
       <div v-else-if="error" class="mt-6 py-10 text-sm text-nt-danger">{{ error }}</div>
       <div v-else-if="!memos.length" class="mt-6 py-16 text-center text-sm text-nt-soft">
         还没有想法。试着写下第一条 ✨
@@ -165,6 +165,12 @@
             </article>
           </div>
         </div>
+
+        <!-- 分页 sentinel -->
+        <div ref="sentinelEl" class="py-6 text-center text-xs text-nt-soft">
+          <span v-if="loadingMore">加载中…</span>
+          <span v-else-if="!hasMore && memos.length">— 到底了 —</span>
+        </div>
       </div>
     </main>
 
@@ -198,7 +204,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import Cover from '@/components/Cover.vue'
 import CoverPicker from '@/components/CoverPicker.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
@@ -249,22 +255,43 @@ async function onPickEmoji(emoji) { emojiOpen.value = false; await persistSettin
 async function onPickCover(value) { coverOpen.value = false; await persistSettings({ memos_cover: value ?? '' }) }
 async function updateCover(value) { await persistSettings({ memos_cover: value ?? '' }) }
 
-// === 想法列表 ===
-const memos   = ref([])
-const loading = ref(true)
-const error   = ref('')
+// === 想法列表(无限滚动)===
+const PAGE_SIZE = 30
+const memos       = ref([])
+const offset      = ref(0)
+const loading     = ref(true)      // 初始
+const loadingMore = ref(false)     // 翻页
+const hasMore     = ref(true)
+const error       = ref('')
+const sentinelEl  = ref(null)
+let observer = null
 
-async function load() {
-  loading.value = true
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return
+  const isInitial = offset.value === 0
+  if (isInitial) loading.value = true
+  else loadingMore.value = true
   error.value = ''
   try {
-    const { memos: list } = await apiMemos.list()
-    memos.value = list
+    const { memos: list } = await apiMemos.list({ offset: offset.value, limit: PAGE_SIZE })
+    if (isInitial) memos.value = list
+    else memos.value.push(...list)
+    offset.value += list.length
+    if (list.length < PAGE_SIZE) hasMore.value = false
   } catch (e) {
     error.value = e?.message || '加载失败'
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
+}
+
+function ensureObserver() {
+  if (observer || !sentinelEl.value) return
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0]?.isIntersecting) loadMore()
+  }, { rootMargin: '300px 0px' })
+  observer.observe(sentinelEl.value)
 }
 
 // === 新增想法 ===
@@ -473,8 +500,14 @@ const grouped = computed(() => {
   return groups
 })
 
-onMounted(() => {
+onMounted(async () => {
   loadSettings()
-  load()
+  await loadMore()
+  await nextTick()
+  ensureObserver()
+})
+onUnmounted(() => {
+  observer?.disconnect()
+  observer = null
 })
 </script>

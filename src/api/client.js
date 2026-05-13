@@ -62,10 +62,14 @@ export const apiTokens = {
 }
 
 export const apiMemos = {
-  list:   ()           => api.get('/api/memos'),
-  create: ({ content }) => api.post('/api/memos', { content }),
-  update: (id, { content }) => api.patch(`/api/memos/${id}`, { content }),
-  remove: (id)         => api.delete(`/api/memos/${id}`),
+  list:   ({ offset = 0, limit = 30 } = {}) => api.get(`/api/memos?offset=${offset}&limit=${limit}`),
+  create: ({ content })                     => api.post('/api/memos', { content }),
+  update: (id, { content })                 => api.patch(`/api/memos/${id}`, { content }),
+  remove: (id)                              => api.delete(`/api/memos/${id}`),
+}
+
+export const apiSearch = {
+  run: (q, limit = 30) => api.get(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
 }
 
 export const apiSettings = {

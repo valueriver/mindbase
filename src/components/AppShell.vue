@@ -22,7 +22,7 @@
       </button>
 
       <Popover :open="launcherOpen" :anchor="launcherAnchor" :width="280" @close="launcherOpen = false">
-        <div class="grid grid-cols-2 gap-1 p-1">
+        <div class="grid grid-cols-3 gap-1 p-1">
           <button
             v-for="app in apps"
             :key="app.name"
@@ -69,6 +69,7 @@ const apps = [
   { name: 'memos',     icon: '💡', label: '想法', to: { name: 'memos' },              match: (p) => p.startsWith('/memos') },
   { name: 'notes',     icon: '📚', label: '笔记', to: { name: 'home' },               match: (p) => p === '/' || p.startsWith('/notebook') || p.startsWith('/note') },
   { name: 'assistant', icon: '🤖', label: '助理', to: { name: 'assistant' },          match: (p) => p === '/assistant' },
+  { name: 'search',    icon: '🔍', label: '搜索', to: { name: 'search' },             match: (p) => p.startsWith('/search') },
   { name: 'settings',  icon: '⚙️', label: '设置', to: { name: 'assistant-settings' }, match: (p) => p.startsWith('/assistant/settings') || p.startsWith('/assistant/authorize') },
 ]
 

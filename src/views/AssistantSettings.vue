@@ -18,8 +18,42 @@
         >{{ t.label }}</button>
       </div>
 
+      <!-- 账户 -->
+      <section v-if="tab === 'account'" class="mt-6 space-y-5">
+        <Field label="当前密码">
+          <input
+            v-model="pwdForm.old"
+            type="password"
+            autocomplete="current-password"
+            class="mb-input"
+          />
+        </Field>
+        <Field label="新密码" hint="至少 6 位">
+          <input
+            v-model="pwdForm.next"
+            type="password"
+            autocomplete="new-password"
+            class="mb-input"
+          />
+        </Field>
+        <Field label="重复新密码">
+          <input
+            v-model="pwdForm.next2"
+            type="password"
+            autocomplete="new-password"
+            class="mb-input"
+          />
+        </Field>
+        <SaveBar
+          :busy="pwdBusy"
+          :saved="pwdSaved"
+          :error="pwdError"
+          @save="onChangePassword"
+        />
+      </section>
+
       <!-- 模型 -->
-      <section v-if="tab === 'model'" class="mt-6 space-y-5">
+      <section v-else-if="tab === 'model'" class="mt-6 space-y-5">
         <div v-if="loading" class="py-6 text-sm text-nt-soft">加载中…</div>
         <template v-else>
           <Field label="Base URL" hint="完整地址,不会自动拼路径">
@@ -140,7 +174,7 @@
 <script setup>
 import { computed, reactive, ref, onMounted, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { apiSettings, apiTokens } from '@/api/client'
+import { apiSettings, apiTokens, apiUser } from '@/api/client'
 
 const Field = (props, { slots }) => h('label', { class: 'block' }, [
   h('div', { class: 'mb-1 text-sm font-medium text-nt' }, props.label),
@@ -165,13 +199,14 @@ SaveBar.emits = ['save']
 const route  = useRoute()
 const router = useRouter()
 const tabs = [
+  { id: 'account', label: '账户' },
   { id: 'model',   label: '模型' },
   { id: 'context', label: '上下文' },
   { id: 'collab',  label: '协作' },
   { id: 'skills',  label: '技能' },
 ]
 const VALID = new Set(tabs.map(t => t.id))
-const tab = ref(VALID.has(route.query.tab) ? route.query.tab : 'model')
+const tab = ref(VALID.has(route.query.tab) ? route.query.tab : 'account')
 function setTab(t) {
   tab.value = t
   router.replace({ query: { ...route.query, tab: t } })
@@ -279,6 +314,37 @@ async function onDisable() {
     current.value = null
   } catch (e) { alert(e?.message || '关闭失败') }
   finally { authBusy.value = false }
+}
+
+// === 账户:改密码 ===
+const pwdForm = reactive({ old: '', next: '', next2: '' })
+const pwdBusy  = ref(false)
+const pwdSaved = ref(false)
+const pwdError = ref('')
+
+async function onChangePassword() {
+  pwdError.value = ''
+  pwdSaved.value = false
+  if (!pwdForm.old)            { pwdError.value = '请输入当前密码'; return }
+  if (pwdForm.next.length < 6) { pwdError.value = '新密码至少 6 位'; return }
+  if (pwdForm.next !== pwdForm.next2) { pwdError.value = '两次输入的新密码不一致'; return }
+
+  pwdBusy.value = true
+  try {
+    await apiUser.changePassword(pwdForm.old, pwdForm.next)
+    pwdForm.old = ''
+    pwdForm.next = ''
+    pwdForm.next2 = ''
+    pwdSaved.value = true
+    setTimeout(() => { pwdSaved.value = false }, 1500)
+  } catch (e) {
+    const msg = e?.message || ''
+    if (/invalid_old_password/.test(msg)) pwdError.value = '当前密码错误'
+    else if (/password_too_short/.test(msg)) pwdError.value = '新密码至少 6 位'
+    else pwdError.value = msg || '修改失败'
+  } finally {
+    pwdBusy.value = false
+  }
 }
 
 async function copy(text) {

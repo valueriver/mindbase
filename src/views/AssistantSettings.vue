@@ -58,7 +58,7 @@
       <section v-else-if="tab === 'model'" class="mt-6 space-y-5">
         <div v-if="loading" class="py-6 text-sm text-nt-soft">加载中…</div>
         <template v-else>
-          <Field label="Base URL" hint="完整地址,不会自动拼路径">
+          <Field label="Base URL">
             <input
               v-model="form.ai_base_url"
               type="url"

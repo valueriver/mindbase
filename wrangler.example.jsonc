@@ -10,7 +10,7 @@
  *   3) R2 桶(名字跟 bucket_name 保持一致就行)
  *        npx wrangler r2 bucket create mindbase
  *
- * 单用户登录:AUTH_USERNAME / AUTH_PASSWORD 自己起一个。
+ * 账号密码在首次访问网站时设置(写到 D1 settings 表,PBKDF2 哈希存)。
  * JWT_SECRET 随便生成一串长串:
  *   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
  */
@@ -61,8 +61,7 @@
 	],
 
 	"vars": {
-		"AUTH_USERNAME": "<YOUR_LOGIN_USERNAME>",
-		"AUTH_PASSWORD": "<YOUR_LOGIN_PASSWORD>",
+		// 账号密码不在这里配。首次访问网站会引导你设置一次。
 		"JWT_SECRET": "<GENERATE_A_LONG_RANDOM_STRING>"
 	}
 }

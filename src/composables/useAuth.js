@@ -29,6 +29,12 @@ export async function login(username, password) {
   ready.value = true
 }
 
+export async function setupAuth(username, password) {
+  await apiUser.setupAuth(username, password)
+  authed.value = true
+  ready.value = true
+}
+
 export async function logout() {
   try { await apiUser.logout() } catch {}
   authed.value = false

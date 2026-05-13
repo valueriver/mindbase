@@ -24,9 +24,12 @@ export const api = {
 }
 
 export const apiUser = {
-  me:     ()                   => api.get('/api/user/me'),
-  login:  (username, password) => api.post('/api/user/login', { username, password }),
-  logout: ()                   => api.post('/api/user/logout'),
+  me:           ()                       => api.get('/api/user/me'),
+  authStatus:   ()                       => api.get('/api/user/auth/status'),
+  setupAuth:    (username, password)     => api.post('/api/user/auth/setup', { username, password }),
+  login:        (username, password)     => api.post('/api/user/login', { username, password }),
+  logout:       ()                       => api.post('/api/user/logout'),
+  changePassword: (oldPwd, newPwd)       => api.post('/api/user/password', { old_password: oldPwd, new_password: newPwd }),
 }
 
 export const apiRoot = {

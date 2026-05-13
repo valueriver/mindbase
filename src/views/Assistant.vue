@@ -31,14 +31,12 @@
 
         <template v-for="(item, i) in turns" :key="i">
           <!-- 用户气泡 -->
-          <div v-if="item.kind === 'user'" class="flex items-start gap-2 justify-end">
+          <div v-if="item.kind === 'user'" class="flex justify-end">
             <div class="max-w-[85%] rounded-2xl rounded-br-sm bg-nt px-3.5 py-2.5 text-[15px] leading-relaxed text-white whitespace-pre-wrap break-words">{{ item.content }}</div>
-            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover-strong text-xs text-nt-muted">我</div>
           </div>
 
           <!-- 工具调用块 -->
-          <div v-else-if="item.kind === 'tool'" class="flex items-start gap-2 justify-start">
-            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover text-sm">🔧</div>
+          <div v-else-if="item.kind === 'tool'" class="flex justify-start">
             <details class="max-w-[90%] flex-1 rounded-md border border-nt-divider bg-nt-hover/50 overflow-hidden" :open="item.open ?? false">
               <summary class="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-nt-muted hover:bg-nt-hover">
                 <span class="font-medium text-nt">{{ item.name }}</span>
@@ -64,8 +62,7 @@
           </div>
 
           <!-- 助手气泡 -->
-          <div v-else-if="item.kind === 'assistant'" class="flex items-start gap-2 justify-start">
-            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover text-sm">🤖</div>
+          <div v-else-if="item.kind === 'assistant'" class="flex justify-start">
             <div class="max-w-[85%] rounded-2xl rounded-bl-sm bg-nt-hover px-3.5 py-2.5 text-[15px] leading-relaxed text-nt whitespace-pre-wrap break-words">{{ item.content }}<span v-if="item.streaming" class="ml-0.5 inline-block h-4 w-1.5 align-middle bg-nt-soft animate-pulse"></span></div>
           </div>
         </template>

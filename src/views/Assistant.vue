@@ -1,54 +1,5 @@
 <template>
   <div class="flex flex-col min-h-screen">
-    <!-- 顶部:对话标题 + 操作 -->
-    <header class="sticky top-11 z-20 flex items-center gap-2 border-b border-nt-divider bg-white/95 px-4 py-2 backdrop-blur md:px-8">
-      <button
-        type="button"
-        class="rounded-md px-2 py-1 text-xs text-nt-muted hover:bg-nt-hover"
-        title="对话历史"
-        @click="historyOpen = !historyOpen"
-      >🗂 历史</button>
-      <button
-        type="button"
-        class="rounded-md px-2 py-1 text-xs text-nt-muted hover:bg-nt-hover"
-        @click="onNew"
-      >＋ 新对话</button>
-      <span class="ml-auto truncate text-xs text-nt-soft">{{ headerHint }}</span>
-    </header>
-
-    <!-- 历史抽屉 -->
-    <Transition name="fade">
-      <div v-if="historyOpen" class="fixed inset-0 z-40 flex" @click.self="historyOpen = false">
-        <div class="absolute inset-0 bg-black/30" @click="historyOpen = false"></div>
-        <div class="relative ml-auto md:ml-0 h-full w-80 max-w-[85%] bg-white p-3 shadow-xl flex flex-col">
-          <div class="mb-2 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-nt">对话历史</h2>
-            <button class="text-nt-soft hover:text-nt" @click="historyOpen = false">✕</button>
-          </div>
-          <div v-if="convs.length === 0" class="py-8 text-center text-xs text-nt-soft">还没有对话</div>
-          <div class="flex-1 overflow-y-auto space-y-1">
-            <div
-              v-for="c in convs"
-              :key="c.id"
-              :class="['group flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer',
-                       conversationId === c.id ? 'bg-nt-hover-strong' : 'hover:bg-nt-hover']"
-              @click="onLoadConv(c.id)"
-            >
-              <div class="flex-1 min-w-0">
-                <div class="truncate text-sm text-nt">{{ c.preview || '(空)' }}</div>
-                <div class="text-[10px] text-nt-soft">{{ c.msg_count }} 条 · {{ shortDate(c.last_at) }}</div>
-              </div>
-              <button
-                type="button"
-                class="opacity-0 group-hover:opacity-100 text-nt-soft hover:text-nt-danger text-xs"
-                @click.stop="onDeleteConv(c.id)"
-              >✕</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
     <!-- 未配置提示 -->
     <div
       v-if="!aiReady && !checkingSettings"
@@ -62,7 +13,9 @@
     <!-- 消息列表 -->
     <div ref="scrollEl" class="flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6">
       <div class="mx-auto max-w-3xl space-y-4">
-        <div v-if="!messages.length && !streaming" class="py-12 text-center">
+        <div v-if="loadingHistory" class="py-12 text-center text-sm text-nt-soft">加载中…</div>
+
+        <div v-else-if="!messages.length && !streaming" class="py-12 text-center">
           <div class="text-4xl mb-2">🤖</div>
           <div class="text-sm text-nt-soft mb-4">问点什么</div>
           <div class="flex flex-wrap justify-center gap-2">
@@ -130,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { apiChat, apiSettings } from '@/api/client'
 
 const suggestions = ['总结一下我最近的想法', '帮我把今天的随手记整理成 1 段周报', '我有哪些 idea 类的笔记?']
@@ -138,34 +91,13 @@ const suggestions = ['总结一下我最近的想法', '帮我把今天的随手
 const messages   = ref([]) // [{role, content, streaming?}]
 const draft      = ref('')
 const streaming  = ref(false)
-const conversationId = ref('')
-const convs      = ref([])
-const historyOpen = ref(false)
+const loadingHistory = ref(true)
 
 const checkingSettings = ref(true)
 const aiReady = ref(false)
 
 const scrollEl = ref(null)
 const inputEl  = ref(null)
-
-const headerHint = computed(() => {
-  if (streaming.value) return '生成中…'
-  if (!conversationId.value) return '新对话'
-  return `对话 ${conversationId.value.slice(0, 6)}`
-})
-
-function shortDate(ts) {
-  if (!ts) return ''
-  const iso = ts.includes('T') ? ts : ts.replace(' ', 'T') + 'Z'
-  const d = new Date(iso)
-  if (isNaN(d.getTime())) return ''
-  const today = new Date()
-  const sameDay = d.getFullYear() === today.getFullYear()
-    && d.getMonth() === today.getMonth()
-    && d.getDate() === today.getDate()
-  if (sameDay) return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
-  return `${d.getMonth() + 1}/${d.getDate()}`
-}
 
 function autosize(e) {
   const el = e.target
@@ -191,43 +123,18 @@ async function checkAi() {
   }
 }
 
-async function loadConvs() {
+async function loadHistory() {
+  loadingHistory.value = true
   try {
-    const { conversations } = await apiChat.conversations()
-    convs.value = conversations
-  } catch {}
-}
-
-async function onLoadConv(id) {
-  historyOpen.value = false
-  try {
-    const { messages: rows } = await apiChat.messages(id)
-    conversationId.value = id
+    const { messages: rows } = await apiChat.messages()
     messages.value = rows
       .map(r => r.message)
       .filter(m => m && m.role)
       .map(m => ({ role: m.role, content: String(m.content || '') }))
     scrollBottom()
-  } catch (e) {
-    alert(e?.message || '加载失败')
+  } catch {} finally {
+    loadingHistory.value = false
   }
-}
-
-async function onDeleteConv(id) {
-  if (!confirm('删除该对话?')) return
-  try {
-    await apiChat.removeConversation(id)
-    convs.value = convs.value.filter(c => c.id !== id)
-    if (conversationId.value === id) onNew()
-  } catch (e) { alert(e?.message || '删除失败') }
-}
-
-function onNew() {
-  conversationId.value = ''
-  messages.value = []
-  historyOpen.value = false
-  draft.value = ''
-  inputEl.value?.focus()
 }
 
 async function ask(preset) {
@@ -248,10 +155,7 @@ async function ask(preset) {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        conversation_id: conversationId.value || undefined,
-        content,
-      }),
+      body: JSON.stringify({ content }),
     })
 
     if (!resp.ok || !resp.body) {
@@ -280,9 +184,7 @@ async function ask(preset) {
           if (payload === '[DONE]') continue
           let evt
           try { evt = JSON.parse(payload) } catch { continue }
-          if (evt.type === 'start' && evt.conversation_id) {
-            conversationId.value = evt.conversation_id
-          } else if (evt.type === 'delta' && typeof evt.text === 'string') {
+          if (evt.type === 'delta' && typeof evt.text === 'string') {
             assistant.content += evt.text
             scrollBottom()
           } else if (evt.type === 'error') {
@@ -297,12 +199,11 @@ async function ask(preset) {
     assistant.streaming = false
     streaming.value = false
     scrollBottom()
-    loadConvs()
   }
 }
 
 onMounted(async () => {
   await checkAi()
-  await loadConvs()
+  await loadHistory()
 })
 </script>

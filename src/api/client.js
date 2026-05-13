@@ -71,10 +71,8 @@ export const apiSettings = {
 }
 
 export const apiChat = {
-  conversations:    ()                  => api.get('/api/chat/conversations'),
-  messages:         (conversationId)    => api.get(`/api/chat/conversations/${conversationId}/messages`),
-  sendUrl:          ()                  => '/api/chat/send',
-  removeConversation: (id)              => api.delete(`/api/chat/conversations/${id}`),
+  messages: () => api.get('/api/chat/messages'),
+  sendUrl:  () => '/api/chat/send',
 }
 
 export const apiItems = {

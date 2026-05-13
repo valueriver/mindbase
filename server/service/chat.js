@@ -2,12 +2,10 @@ import { ok, fail } from '../api/utils/json.js'
 import { readJsonBody } from '../api/utils/body.js'
 import { getUserFromRequest } from '../domain/auth/index.js'
 import { getAllSettings } from '../repository/setting.js'
-import {
-  insertMessage,
-  listMessages,
-  listConversations,
-  deleteConversation,
-} from '../repository/message.js'
+import { insertMessage, listMessages } from '../repository/message.js'
+
+// 单一全局对话(暂不支持多会话)。
+const CONVERSATION_ID = 'main'
 
 const safeParse = (s, fallback = null) => {
   if (s == null) return fallback
@@ -24,53 +22,15 @@ const serialize = (row) => ({
   created_at:      row.created_at,
 })
 
-const randomConvId = () => {
-  const b = crypto.getRandomValues(new Uint8Array(8))
-  return Array.from(b, x => x.toString(16).padStart(2, '0')).join('')
-}
-
-const previewOfMessage = (raw) => {
-  const m = safeParse(raw, null)
-  if (!m) return ''
-  if (typeof m.content === 'string') return m.content.slice(0, 80)
-  return ''
-}
-
-export const listConversationsAction = async (request, env) => {
+export const listMessagesAction = async (request, env) => {
   const user = await getUserFromRequest(request, env)
   if (!user) return fail('unauthorized', 401)
-  const r = await listConversations(env.DB)
-  return ok({
-    conversations: (r?.results || []).map(c => ({
-      id:        c.conversation_id,
-      msg_count: c.msg_count,
-      first_at:  c.first_at,
-      last_at:   c.last_at,
-      preview:   previewOfMessage(c.last_message),
-    })),
-  })
+  const r = await listMessages(env.DB, CONVERSATION_ID)
+  return ok({ messages: (r?.results || []).map(serialize) })
 }
 
-export const listMessagesAction = async (request, env, conversationId) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
-  const r = await listMessages(env.DB, conversationId)
-  return ok({
-    conversation_id: conversationId,
-    messages: (r?.results || []).map(serialize),
-  })
-}
-
-export const deleteConversationAction = async (request, env, conversationId) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
-  await deleteConversation(env.DB, conversationId)
-  return ok({})
-}
-
-// POST /api/chat/send  { conversation_id?, content }
+// POST /api/chat/send  { content }
 // 返回 SSE 流:
-//   data: {"type":"start","conversation_id":"..."}
 //   data: {"type":"delta","text":"..."}
 //   data: {"type":"done","usage":{...}}
 //   data: {"type":"error","message":"..."}
@@ -94,21 +54,15 @@ export const sendChatAction = async (request, env) => {
     )
   }
 
-  const conversationId = String(body?.conversation_id || '') || randomConvId()
-  const isNew = !body?.conversation_id
-
-  // 拉历史(若是已有对话)
-  let history = []
-  if (!isNew) {
-    const r = await listMessages(env.DB, conversationId)
-    history = (r?.results || [])
-      .map(row => safeParse(row.message, null))
-      .filter(Boolean)
-  }
+  // 单一全局对话:总是拉完整历史
+  const r = await listMessages(env.DB, CONVERSATION_ID)
+  const history = (r?.results || [])
+    .map(row => safeParse(row.message, null))
+    .filter(Boolean)
 
   // 写入用户消息
   const userMsg = { role: 'user', content }
-  await insertMessage(env.DB, { conversationId, message: userMsg })
+  await insertMessage(env.DB, { conversationId: CONVERSATION_ID, message: userMsg })
 
   // 构造发往大模型的消息列表
   const messagesForLLM = [...history, userMsg]
@@ -157,8 +111,6 @@ export const sendChatAction = async (request, env) => {
         controller.close()
       }
 
-      send({ type: 'start', conversation_id: conversationId })
-
       let buf = ''
       let fullText = ''
       let lastUsage = null
@@ -194,7 +146,7 @@ export const sendChatAction = async (request, env) => {
       // 写入助手消息
       const assistantMsg = { role: 'assistant', content: fullText }
       await insertMessage(env.DB, {
-        conversationId,
+        conversationId: CONVERSATION_ID,
         message: assistantMsg,
         usage: lastUsage,
         meta: { model },

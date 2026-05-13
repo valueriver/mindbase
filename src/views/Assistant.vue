@@ -161,38 +161,51 @@ function autosize(e) {
   el.style.height = Math.min(el.scrollHeight, 160) + 'px'
 }
 
-// 智能滚动:用 ResizeObserver 监听内容容器,只要内容长高、且用户当前在底部,就跟随。
-// 用户手动上滑 → stickToBottom 变 false,新内容不再打扰;滚回底部自动恢复。
+// 智能滚动:
+// - ResizeObserver 监听内容容器,长高时若 stickToBottom 就 snap
+// - stickToBottom 只在"用户主动上滑"时翻 false;布局变化引发的 scroll 事件不影响
 const SCROLL_THRESHOLD = 80
 const stickToBottom = ref(true)
 let resizeObserver = null
 let topObserver    = null
-// 程序性 scrollTop 修改自身会触发 scroll 事件,要在 onScroll 里区分;
-// 用 ignoreNextScrolls 计数器吞掉自己引起的事件
-let ignoreNextScrolls = 0
+// 上次"用户视角"的 scrollTop,用于判断方向;程序性 scroll 会同步更新这个值
+let lastScrollTop  = 0
 
 function onScroll(e) {
-  if (ignoreNextScrolls > 0) { ignoreNextScrolls--; return }
   const el = e.target
-  const distance = el.scrollHeight - el.scrollTop - el.clientHeight
-  stickToBottom.value = distance < SCROLL_THRESHOLD
+  const newTop = el.scrollTop
+  // scrollTop 没动 = 仅 scrollHeight 变,布局抖动,不动 stickToBottom
+  if (newTop === lastScrollTop) return
+  const goingUp = newTop < lastScrollTop
+  lastScrollTop = newTop
+  if (goingUp) {
+    stickToBottom.value = false
+  } else {
+    // 向下滑;只要接近底部就再开启粘底
+    const distance = el.scrollHeight - newTop - el.clientHeight
+    if (distance < SCROLL_THRESHOLD) stickToBottom.value = true
+  }
 }
 
 function snapToBottom() {
   const el = scrollEl.value
   if (!el) return
-  // 已经在底部就不动
   if (el.scrollHeight - el.scrollTop - el.clientHeight < 1) return
-  ignoreNextScrolls++
   el.scrollTop = el.scrollHeight
+  lastScrollTop = el.scrollTop  // 自己滚的同步记下来,不会被 onScroll 误判
 }
 
-// 兼容旧调用:force=true 强制粘底并滚动;否则交给 ResizeObserver
+// 兼容旧调用:force=true 强制粘底并连续 snap 几次,扛住后续异步渲染(markdown/图)
 function scrollBottom(force = false) {
-  if (force) {
-    stickToBottom.value = true
-    nextTick(snapToBottom)
-  }
+  if (!force) return
+  stickToBottom.value = true
+  nextTick(() => {
+    snapToBottom()
+    requestAnimationFrame(() => {
+      snapToBottom()
+      setTimeout(snapToBottom, 120)
+    })
+  })
 }
 
 async function checkAi() {
@@ -265,10 +278,8 @@ async function loadInitial() {
       for (const r of rows) pushFromMessage(r.message)
     }
     if (rows.length < PAGE_SIZE) hasMoreHistory.value = false
-    // 首次:粘到底
-    await nextTick()
-    stickToBottom.value = true
-    snapToBottom()
+    // 首次:多次 snap,扛住 markdown / 工具卡片 / 图片 异步渲染
+    scrollBottom(true)
   } catch {} finally {
     loadingHistory.value = false
   }
@@ -295,8 +306,9 @@ async function loadOlder() {
       // 等一帧让 ResizeObserver 不抢先
       requestAnimationFrame(() => {
         const newHeight = el.scrollHeight
-        ignoreNextScrolls++
-        el.scrollTop = prevTop + (newHeight - prevHeight)
+        const top = prevTop + (newHeight - prevHeight)
+        el.scrollTop = top
+        lastScrollTop = el.scrollTop
       })
     }
   } catch {} finally {

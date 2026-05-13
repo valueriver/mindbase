@@ -116,16 +116,10 @@
           </div>
           <div class="mt-2 space-y-3">
             <article
-              v-for="(m, idx) in group.items"
+              v-for="m in group.items"
               :key="m.id"
-              class="group relative pl-6"
+              class="group"
             >
-              <span class="absolute left-1.5 top-3 h-2.5 w-2.5 rounded-full bg-white ring-2 ring-nt-divider"></span>
-              <span
-                v-if="idx !== group.items.length - 1"
-                class="absolute left-[10px] top-5 bottom-[-12px] w-px bg-nt-divider"
-              ></span>
-
               <div class="rounded-md border border-nt-divider bg-white p-3 md:p-4">
                 <div class="mb-1 flex items-center justify-between gap-2">
                   <span class="text-xs text-nt-soft">{{ formatTime(m.created_at) }}</span>

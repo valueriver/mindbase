@@ -1,13 +1,47 @@
 <template>
   <div class="min-h-screen">
+    <Cover
+      v-if="cover"
+      :cover="cover"
+      @update="updateCover"
+    />
+
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
-      <header class="mb-4 md:mb-6">
-        <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">💡 想法</h1>
-        <p class="mt-1 text-sm text-nt-soft">想到什么写什么,按时间倒序</p>
-      </header>
+      <!-- Icon -->
+      <div class="mt-2">
+        <button
+          v-if="icon"
+          ref="iconBtn"
+          type="button"
+          class="flex h-[78px] w-[78px] items-center justify-center rounded-md text-[66px] leading-none hover:bg-nt-hover"
+          @click="openEmoji"
+        >{{ icon }}</button>
+      </div>
+
+      <!-- 添加图标 / 添加封面 -->
+      <div class="mt-2 flex items-center gap-1 text-nt-soft">
+        <button
+          v-if="!icon"
+          ref="iconBtn"
+          type="button"
+          class="rounded px-1.5 py-1 text-sm hover:bg-nt-hover hover:text-nt-muted"
+          @click="openEmoji"
+        >😀 添加图标</button>
+        <button
+          v-if="!cover"
+          ref="coverBtn"
+          type="button"
+          class="rounded px-1.5 py-1 text-sm hover:bg-nt-hover hover:text-nt-muted"
+          @click="openCover"
+        >🏞️ 添加封面</button>
+      </div>
+
+      <!-- 标题 -->
+      <h1 class="mt-2 text-[40px] font-bold leading-tight tracking-tight text-nt">想法</h1>
+      <p class="mt-1 text-sm text-nt-soft">想到什么写什么,按时间倒序</p>
 
       <!-- 输入卡 -->
-      <div class="rounded-md border border-nt-divider bg-white p-3 md:p-4 mb-6">
+      <div class="mt-6 rounded-md border border-nt-divider bg-white p-3 md:p-4">
         <textarea
           ref="inputEl"
           v-model="draft"
@@ -43,13 +77,13 @@
       </div>
 
       <!-- 时间轴 -->
-      <div v-if="loading" class="py-10 text-sm text-nt-soft">加载中…</div>
-      <div v-else-if="error" class="py-10 text-sm text-nt-danger">{{ error }}</div>
-      <div v-else-if="!memos.length" class="py-16 text-center text-sm text-nt-soft">
+      <div v-if="loading" class="mt-6 py-10 text-sm text-nt-soft">加载中…</div>
+      <div v-else-if="error" class="mt-6 py-10 text-sm text-nt-danger">{{ error }}</div>
+      <div v-else-if="!memos.length" class="mt-6 py-16 text-center text-sm text-nt-soft">
         还没有想法。试着写下第一条 ✨
       </div>
 
-      <div v-else>
+      <div v-else class="mt-6">
         <div v-for="group in grouped" :key="group.label" class="mb-6">
           <div class="sticky top-11 z-10 -mx-4 md:-mx-12 px-4 md:px-12 py-1.5 bg-white/95 backdrop-blur text-xs font-medium text-nt-soft">
             {{ group.label }}
@@ -90,13 +124,82 @@
         </div>
       </div>
     </main>
+
+    <EmojiPicker
+      :open="emojiOpen"
+      :anchor="emojiAnchor"
+      @pick="onPickEmoji"
+      @close="emojiOpen = false"
+    />
+    <CoverPicker
+      :open="coverOpen"
+      :anchor="coverAnchor"
+      @pick="onPickCover"
+      @close="coverOpen = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { apiMemos } from '@/api/client'
+import Cover from '@/components/Cover.vue'
+import CoverPicker from '@/components/CoverPicker.vue'
+import EmojiPicker from '@/components/EmojiPicker.vue'
+import { apiMemos, apiSettings } from '@/api/client'
 
+// === 头部 icon / cover ===
+const icon  = ref('')
+const cover = ref('')
+
+const iconBtn  = ref(null)
+const coverBtn = ref(null)
+const emojiOpen = ref(false)
+const coverOpen = ref(false)
+const emojiAnchor = ref(null)
+const coverAnchor = ref(null)
+
+function openEmoji() {
+  emojiAnchor.value = iconBtn.value?.getBoundingClientRect() || null
+  emojiOpen.value = true
+}
+function openCover() {
+  coverAnchor.value = coverBtn.value?.getBoundingClientRect() || null
+  coverOpen.value = true
+}
+
+async function loadSettings() {
+  try {
+    const { settings } = await apiSettings.detail()
+    icon.value  = settings.memos_icon  || ''
+    cover.value = settings.memos_cover || ''
+  } catch {}
+}
+
+async function persist(patch) {
+  try {
+    const { settings } = await apiSettings.update(patch)
+    icon.value  = settings.memos_icon  || ''
+    cover.value = settings.memos_cover || ''
+  } catch (e) {
+    alert(e?.message || '保存失败')
+  }
+}
+
+async function onPickEmoji(emoji) {
+  emojiOpen.value = false
+  await persist({ memos_icon: emoji ?? '' })
+}
+
+async function onPickCover(value) {
+  coverOpen.value = false
+  await persist({ memos_cover: value ?? '' })
+}
+
+async function updateCover(value) {
+  await persist({ memos_cover: value ?? '' })
+}
+
+// === 想法 ===
 const memos     = ref([])
 const loading   = ref(true)
 const error     = ref('')
@@ -161,7 +264,6 @@ function formatTime(ts) {
 }
 function parseTs(ts) {
   if (!ts) return null
-  // SQLite datetime('now') 返回 'YYYY-MM-DD HH:MM:SS' UTC
   const iso = ts.includes('T') ? ts : ts.replace(' ', 'T') + 'Z'
   const d = new Date(iso)
   return isNaN(d.getTime()) ? null : d
@@ -189,5 +291,8 @@ const grouped = computed(() => {
   return groups
 })
 
-onMounted(load)
+onMounted(() => {
+  loadSettings()
+  load()
+})
 </script>

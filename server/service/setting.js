@@ -4,7 +4,7 @@ import { getUserFromRequest } from '../domain/auth/index.js'
 import { getAllSettings, setSetting } from '../repository/setting.js'
 
 // 暴露给前端的字段白名单(AI key 也回传以便前端展示掩码,但前端永远不能拿原值)
-const PUBLIC_KEYS = ['ai_base_url', 'ai_model']
+const PUBLIC_KEYS = ['ai_base_url', 'ai_model', 'memos_icon', 'memos_cover']
 const SECRET_KEYS = ['ai_api_key']
 const WRITABLE = new Set([...PUBLIC_KEYS, ...SECRET_KEYS])
 
@@ -20,10 +20,12 @@ export const getSettingsAction = async (request, env) => {
   const all = await getAllSettings(env.DB)
   return ok({
     settings: {
-      ai_base_url:    all.ai_base_url || '',
-      ai_model:       all.ai_model    || '',
-      ai_api_key_set: !!all.ai_api_key,
+      ai_base_url:     all.ai_base_url || '',
+      ai_model:        all.ai_model    || '',
+      ai_api_key_set:  !!all.ai_api_key,
       ai_api_key_hint: maskKey(all.ai_api_key || ''),
+      memos_icon:      all.memos_icon  || '',
+      memos_cover:     all.memos_cover || '',
     },
   })
 }

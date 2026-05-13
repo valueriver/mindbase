@@ -192,15 +192,15 @@ async function save() {
 }
 
 function openEmoji() {
-  emojiAnchor.value = iconBtn.value?.getBoundingClientRect() || null
+  emojiAnchor.value = iconBtn.value || null
   emojiOpen.value = true
 }
 function openCover() {
-  coverAnchor.value = coverBtn.value?.getBoundingClientRect() || null
+  coverAnchor.value = coverBtn.value || null
   coverOpen.value = true
 }
 function openManage() {
-  manageAnchor.value = manageBtn.value?.getBoundingClientRect() || null
+  manageAnchor.value = manageBtn.value || null
   manageOpen.value = true
 }
 

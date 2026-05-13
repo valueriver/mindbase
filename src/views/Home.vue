@@ -138,11 +138,11 @@ async function saveName() {
 }
 
 function openEmoji() {
-  emojiAnchor.value = iconBtn.value?.getBoundingClientRect() || null
+  emojiAnchor.value = iconBtn.value || null
   emojiOpen.value = true
 }
 function openCover() {
-  coverAnchor.value = coverBtn.value?.getBoundingClientRect() || null
+  coverAnchor.value = coverBtn.value || null
   coverOpen.value = true
 }
 

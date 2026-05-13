@@ -219,11 +219,11 @@ const emojiAnchor = ref(null)
 const coverAnchor = ref(null)
 
 function openEmoji() {
-  emojiAnchor.value = iconBtn.value?.getBoundingClientRect() || null
+  emojiAnchor.value = iconBtn.value || null
   emojiOpen.value = true
 }
 function openCover() {
-  coverAnchor.value = coverBtn.value?.getBoundingClientRect() || null
+  coverAnchor.value = coverBtn.value || null
   coverOpen.value = true
 }
 
@@ -409,7 +409,7 @@ const menuAnchor = ref(null)
 
 function openMenu(id, evt) {
   menuOpenId.value = id
-  menuAnchor.value = evt.currentTarget.getBoundingClientRect()
+  menuAnchor.value = evt.currentTarget
 }
 function closeMenu() {
   menuOpenId.value = ''

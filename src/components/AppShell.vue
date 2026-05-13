@@ -87,7 +87,7 @@ const launcherAnchor = ref(null)
 
 function toggleLauncher() {
   if (launcherOpen.value) { launcherOpen.value = false; return }
-  launcherAnchor.value = launcherBtn.value?.getBoundingClientRect() || null
+  launcherAnchor.value = launcherBtn.value || null
   launcherOpen.value = true
 }
 

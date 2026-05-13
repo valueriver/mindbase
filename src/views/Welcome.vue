@@ -104,7 +104,7 @@ async function onSetup() {
   busy.value  = true
   try {
     await setupAuth(username.value.trim(), password.value)
-    router.replace({ name: 'home' })
+    router.replace('/')
   } catch (e) {
     const msg = e?.message || ''
     if (/already_initialized/.test(msg)) {
@@ -128,7 +128,7 @@ async function onLogin() {
   busy.value  = true
   try {
     await login(username.value.trim(), password.value)
-    router.replace({ name: 'home' })
+    router.replace('/')
   } catch (e) {
     const msg = e?.message || ''
     if (/invalid_credentials/.test(msg)) error.value = '账号或密码错误'

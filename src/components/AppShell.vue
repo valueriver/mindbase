@@ -64,11 +64,11 @@
       <aside
         :class="[
           'z-30 overflow-hidden border-r border-nt-divider bg-white transition-[width,transform] duration-200',
-          // 移动端 fixed 抽屉
-          'fixed inset-y-11 left-0 w-64 max-w-[80%]',
+          // 移动端 fixed 抽屉(top:44px、bottom:0)
+          'fixed top-11 bottom-0 left-0 w-64 max-w-[80%]',
           open ? 'translate-x-0' : '-translate-x-full',
-          // PC 改为静态,跟内容并排
-          'md:sticky md:top-11 md:inset-y-auto md:h-[calc(100vh-2.75rem)] md:translate-x-0 md:max-w-none',
+          // PC 改为 sticky 跟内容并排
+          'md:sticky md:top-11 md:bottom-auto md:h-[calc(100vh-2.75rem)] md:translate-x-0 md:max-w-none',
           open ? 'md:w-60' : 'md:w-0 md:border-r-0',
         ]"
       >

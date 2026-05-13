@@ -25,7 +25,7 @@ export const searchAction = async (request, env, url) => {
   if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
 
   const q = String(url.searchParams.get('q') || '').trim().slice(0, 120)
-  if (!q) return ok({ query: '', notebooks: [], notes: [] })
+  if (!q) return ok({ query: '', notebooks: [], notes: [], memos: [] })
 
   const limit = Math.max(
     1,
@@ -33,7 +33,7 @@ export const searchAction = async (request, env, url) => {
   )
   const like = `%${q.replace(/[%_]/g, m => `\\${m}`)}%`
 
-  const [nbResult, noteResult] = await Promise.all([
+  const [nbResult, noteResult, memoResult] = await Promise.all([
     env.DB.prepare(
       `SELECT id, parent_id, name, icon, cover, updated_at
          FROM notebooks
@@ -49,6 +49,14 @@ export const searchAction = async (request, env, url) => {
         ORDER BY updated_at DESC
         LIMIT ?2`
     ).bind(like, limit).all(),
+
+    env.DB.prepare(
+      `SELECT id, content, created_at, updated_at
+         FROM memos
+        WHERE content LIKE ?1 ESCAPE '\\'
+        ORDER BY created_at DESC
+        LIMIT ?2`
+    ).bind(like, limit).all(),
   ])
 
   const notes = (noteResult?.results || []).map(n => ({
@@ -60,9 +68,17 @@ export const searchAction = async (request, env, url) => {
     snippet:     makeSnippet(stripHtml(n.content), q),
   }))
 
+  const memos = (memoResult?.results || []).map(m => ({
+    id:         m.id,
+    created_at: m.created_at,
+    updated_at: m.updated_at,
+    snippet:    makeSnippet(String(m.content || ''), q),
+  }))
+
   return ok({
     query:     q,
     notebooks: nbResult?.results || [],
     notes,
+    memos,
   })
 }

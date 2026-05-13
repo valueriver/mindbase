@@ -3,8 +3,7 @@
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
       <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">⚙️ 设置</h1>
 
-      <!-- tabs -->
-      <div class="mt-6 flex gap-1 border-b border-nt-divider">
+      <div class="mt-6 flex flex-wrap gap-1 border-b border-nt-divider">
         <button
           v-for="t in tabs"
           :key="t.id"
@@ -19,10 +18,9 @@
         >{{ t.label }}</button>
       </div>
 
-      <!-- 助理 -->
-      <section v-if="tab === 'ai'" class="mt-6 space-y-5">
+      <!-- 模型 -->
+      <section v-if="tab === 'model'" class="mt-6 space-y-5">
         <div v-if="loading" class="py-6 text-sm text-nt-soft">加载中…</div>
-
         <template v-else>
           <Field label="Base URL" hint="完整地址,不会自动拼路径">
             <input
@@ -53,7 +51,15 @@
             />
           </Field>
 
-          <Field label="上下文轮数">
+          <SaveBar :busy="modelBusy" :saved="modelSaved" :error="modelError" @save="onSaveModel" />
+        </template>
+      </section>
+
+      <!-- 上下文 -->
+      <section v-else-if="tab === 'context'" class="mt-6 space-y-5">
+        <div v-if="loading" class="py-6 text-sm text-nt-soft">加载中…</div>
+        <template v-else>
+          <Field label="历史轮数" hint="每次调用送给模型的最近 user 回合数">
             <div class="inline-flex overflow-hidden rounded-md border border-nt-divider">
               <button
                 v-for="opt in roundOptions"
@@ -70,24 +76,14 @@
             </div>
           </Field>
 
-          <div class="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              :disabled="aiBusy"
-              class="rounded-md bg-nt px-5 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
-              @click="onSaveAi"
-            >{{ aiBusy ? '保存中…' : '保存' }}</button>
-            <span v-if="aiSaved" class="text-xs text-nt-soft">✓ 已保存</span>
-            <span v-if="aiError" class="text-xs text-nt-danger">{{ aiError }}</span>
-          </div>
+          <SaveBar :busy="contextBusy" :saved="contextSaved" :error="contextError" @save="onSaveContext" />
         </template>
       </section>
 
-      <!-- 授权 -->
-      <section v-else-if="tab === 'auth'" class="mt-6">
+      <!-- 协作 -->
+      <section v-else-if="tab === 'collab'" class="mt-6">
         <div v-if="authLoading" class="py-6 text-sm text-nt-soft">加载中…</div>
 
-        <!-- 未开启 -->
         <div v-else-if="!current">
           <p class="text-sm text-nt-muted">为外部 AI 工具(ChatGPT / Claude 等)开一把 token,可读写本机所有数据。</p>
           <button
@@ -95,10 +91,9 @@
             :disabled="authBusy"
             class="mt-4 rounded-md bg-nt px-5 py-2.5 text-sm text-white hover:bg-black disabled:opacity-50"
             @click="onEnable"
-          >{{ authBusy ? '开启中…' : '开启授权' }}</button>
+          >{{ authBusy ? '开启中…' : '开启协作' }}</button>
         </div>
 
-        <!-- 已开启 -->
         <template v-else>
           <div class="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
             <span>⚠️</span>
@@ -111,18 +106,8 @@
             <button
               type="button"
               class="mt-3 rounded-md bg-nt px-4 py-2 text-sm text-white hover:bg-black"
-              @click="copy(aiMessage, 'msg')"
-            >{{ copied === 'msg' ? '✓ 已复制' : '复制' }}</button>
-          </section>
-
-          <section class="mt-4 rounded-md border border-nt-divider p-4">
-            <h2 class="text-sm font-medium text-nt">📦 技能包</h2>
-            <p class="mt-1 text-xs text-nt-muted">Claude Code 装到 <code class="rounded bg-nt-hover px-1 py-0.5 font-mono">~/.claude/skills/</code>。</p>
-            <a
-              href="/skills/mindbase.zip"
-              download="mindbase-skill.zip"
-              class="mt-3 inline-flex items-center gap-2 rounded-md bg-nt px-4 py-2 text-sm text-white hover:bg-black"
-            >⬇ 下载 mindbase-skill.zip</a>
+              @click="copy(aiMessage)"
+            >{{ copied ? '✓ 已复制' : '复制' }}</button>
           </section>
 
           <div class="mt-6">
@@ -131,9 +116,22 @@
               :disabled="authBusy"
               class="rounded-md border border-nt-divider px-3 py-1.5 text-xs text-nt-muted hover:bg-nt-danger-bg hover:text-nt-danger disabled:opacity-50"
               @click="onDisable"
-            >{{ authBusy ? '关闭中…' : '关闭授权' }}</button>
+            >{{ authBusy ? '关闭中…' : '关闭协作' }}</button>
           </div>
         </template>
+      </section>
+
+      <!-- 技能 -->
+      <section v-else-if="tab === 'skills'" class="mt-6">
+        <section class="rounded-md border border-nt-divider p-4">
+          <h2 class="text-sm font-medium text-nt">📦 MindBase 技能包</h2>
+          <p class="mt-1 text-xs text-nt-muted">Claude Code 装到 <code class="rounded bg-nt-hover px-1 py-0.5 font-mono">~/.claude/skills/</code>。</p>
+          <a
+            href="/skills/mindbase.zip"
+            download="mindbase-skill.zip"
+            class="mt-3 inline-flex items-center gap-2 rounded-md bg-nt px-4 py-2 text-sm text-white hover:bg-black"
+          >⬇ 下载 mindbase-skill.zip</a>
+        </section>
       </section>
     </main>
   </div>
@@ -144,7 +142,6 @@ import { computed, reactive, ref, onMounted, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { apiSettings, apiTokens } from '@/api/client'
 
-// 内联小组件:label + slot
 const Field = (props, { slots }) => h('label', { class: 'block' }, [
   h('div', { class: 'mb-1 text-sm font-medium text-nt' }, props.label),
   props.hint ? h('div', { class: 'mb-1 text-xs text-nt-soft' }, props.hint) : null,
@@ -152,23 +149,37 @@ const Field = (props, { slots }) => h('label', { class: 'block' }, [
 ])
 Field.props = ['label', 'hint']
 
+const SaveBar = (props, { emit }) => h('div', { class: 'flex items-center gap-3 pt-2' }, [
+  h('button', {
+    type: 'button',
+    disabled: props.busy,
+    class: 'rounded-md bg-nt px-5 py-2 text-sm text-white hover:bg-black disabled:opacity-50',
+    onClick: () => emit('save'),
+  }, props.busy ? '保存中…' : '保存'),
+  props.saved ? h('span', { class: 'text-xs text-nt-soft' }, '✓ 已保存') : null,
+  props.error ? h('span', { class: 'text-xs text-nt-danger' }, props.error) : null,
+])
+SaveBar.props = ['busy', 'saved', 'error']
+SaveBar.emits = ['save']
+
 const route  = useRoute()
 const router = useRouter()
 const tabs = [
-  { id: 'ai',   label: '助理' },
-  { id: 'auth', label: '授权' },
+  { id: 'model',   label: '模型' },
+  { id: 'context', label: '上下文' },
+  { id: 'collab',  label: '协作' },
+  { id: 'skills',  label: '技能' },
 ]
-const tab = ref(route.query.tab === 'auth' ? 'auth' : 'ai')
+const VALID = new Set(tabs.map(t => t.id))
+const tab = ref(VALID.has(route.query.tab) ? route.query.tab : 'model')
+function setTab(t) {
+  tab.value = t
+  router.replace({ query: { ...route.query, tab: t } })
+}
 
-// 切 tab 时同步 url(便于刷新保持)
-function setTab(t) { tab.value = t; router.replace({ query: { ...route.query, tab: t } }) }
-
-// === 助理 ===
+// === 模型 / 上下文 共用同一份 form,因为都来自 settings ===
 const roundOptions = [30, 100, 500]
 const loading = ref(true)
-const aiBusy  = ref(false)
-const aiSaved = ref(false)
-const aiError = ref('')
 const form = reactive({
   ai_base_url: '',
   ai_api_key:  '',
@@ -176,7 +187,7 @@ const form = reactive({
   ai_context_rounds: 100,
 })
 
-async function loadAi() {
+async function loadSettings() {
   loading.value = true
   try {
     const { settings } = await apiSettings.detail()
@@ -184,42 +195,50 @@ async function loadAi() {
     form.ai_api_key  = settings.ai_api_key
     form.ai_model    = settings.ai_model
     form.ai_context_rounds = settings.ai_context_rounds || 100
-  } catch (e) {
-    aiError.value = e?.message || '加载失败'
-  } finally {
+  } catch {} finally {
     loading.value = false
   }
 }
 
-async function onSaveAi() {
-  aiBusy.value = true
-  aiSaved.value = false
-  aiError.value = ''
+const modelBusy = ref(false), modelSaved = ref(false), modelError = ref('')
+async function onSaveModel() {
+  modelBusy.value = true; modelSaved.value = false; modelError.value = ''
   try {
     const { settings } = await apiSettings.update({
-      ai_base_url:       form.ai_base_url.trim(),
-      ai_api_key:        form.ai_api_key.trim(),
-      ai_model:          form.ai_model.trim(),
-      ai_context_rounds: form.ai_context_rounds,
+      ai_base_url: form.ai_base_url.trim(),
+      ai_api_key:  form.ai_api_key.trim(),
+      ai_model:    form.ai_model.trim(),
     })
     form.ai_base_url = settings.ai_base_url
     form.ai_api_key  = settings.ai_api_key
     form.ai_model    = settings.ai_model
-    form.ai_context_rounds = settings.ai_context_rounds
-    aiSaved.value = true
-    setTimeout(() => { aiSaved.value = false }, 1500)
+    modelSaved.value = true
+    setTimeout(() => { modelSaved.value = false }, 1500)
   } catch (e) {
-    aiError.value = e?.message || '保存失败'
-  } finally {
-    aiBusy.value = false
-  }
+    modelError.value = e?.message || '保存失败'
+  } finally { modelBusy.value = false }
 }
 
-// === 授权 ===
+const contextBusy = ref(false), contextSaved = ref(false), contextError = ref('')
+async function onSaveContext() {
+  contextBusy.value = true; contextSaved.value = false; contextError.value = ''
+  try {
+    const { settings } = await apiSettings.update({
+      ai_context_rounds: form.ai_context_rounds,
+    })
+    form.ai_context_rounds = settings.ai_context_rounds
+    contextSaved.value = true
+    setTimeout(() => { contextSaved.value = false }, 1500)
+  } catch (e) {
+    contextError.value = e?.message || '保存失败'
+  } finally { contextBusy.value = false }
+}
+
+// === 协作 ===
 const authLoading = ref(true)
 const authBusy = ref(false)
 const current  = ref(null)
-const copied   = ref('')
+const copied   = ref(false)
 
 const schemaUrl = computed(() => `${window.location.origin}/api/ai/openapi.json`)
 const aiMessage = computed(() => current.value
@@ -237,9 +256,7 @@ async function loadAuth() {
   try {
     const { tokens } = await apiTokens.list()
     current.value = tokens[0] || null
-  } catch (e) {
-    alert(e?.message || '加载失败')
-  } finally {
+  } catch {} finally {
     authLoading.value = false
   }
 }
@@ -249,36 +266,30 @@ async function onEnable() {
   try {
     const { token } = await apiTokens.create('AI')
     current.value = token
-  } catch (e) {
-    alert(e?.message || '开启失败')
-  } finally {
-    authBusy.value = false
-  }
+  } catch (e) { alert(e?.message || '开启失败') }
+  finally { authBusy.value = false }
 }
 
 async function onDisable() {
   if (!current.value) return
-  if (!window.confirm('关闭授权?当前 token 立即失效。')) return
+  if (!window.confirm('关闭协作?当前 token 立即失效。')) return
   authBusy.value = true
   try {
     await apiTokens.remove(current.value.id)
     current.value = null
-  } catch (e) {
-    alert(e?.message || '关闭失败')
-  } finally {
-    authBusy.value = false
-  }
+  } catch (e) { alert(e?.message || '关闭失败') }
+  finally { authBusy.value = false }
 }
 
-async function copy(text, key) {
+async function copy(text) {
   try {
     await navigator.clipboard.writeText(text)
-    copied.value = key
-    setTimeout(() => { if (copied.value === key) copied.value = '' }, 1500)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 1500)
   } catch {}
 }
 
-onMounted(() => { loadAi(); loadAuth() })
+onMounted(() => { loadSettings(); loadAuth() })
 </script>
 
 <style scoped>

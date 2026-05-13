@@ -10,8 +10,8 @@ const routes = [
   { path: '/assistant',     name: 'assistant',         component: () => import('@/views/Assistant.vue') },
   { path: '/assistant/settings', name: 'assistant-settings', component: () => import('@/views/AssistantSettings.vue') },
   // 老链接兼容:授权页并入设置的 tab
-  { path: '/assistant/authorize', redirect: { name: 'assistant-settings', query: { tab: 'auth' } } },
-  { path: '/ai', redirect: { name: 'assistant-settings', query: { tab: 'auth' } } },
+  { path: '/assistant/authorize', redirect: { name: 'assistant-settings', query: { tab: 'collab' } } },
+  { path: '/ai', redirect: { name: 'assistant-settings', query: { tab: 'collab' } } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 

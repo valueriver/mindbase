@@ -85,7 +85,12 @@ export const apiSettings = {
 }
 
 export const apiChat = {
-  messages: () => api.get('/api/chat/messages'),
+  messages: ({ before, limit = 30 } = {}) => {
+    const params = new URLSearchParams()
+    if (before) params.set('before', String(before))
+    params.set('limit', String(limit))
+    return api.get(`/api/chat/messages?${params.toString()}`)
+  },
   sendUrl:  () => '/api/chat/send',
 }
 

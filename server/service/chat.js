@@ -2,7 +2,7 @@ import { ok, fail } from '../api/utils/json.js'
 import { readJsonBody } from '../api/utils/body.js'
 import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings } from '../repository/setting.js'
-import { insertMessage, listMessages } from '../repository/message.js'
+import { insertMessage, listMessages, listMessagesPage } from '../repository/message.js'
 import { chat } from '../ai/handler.js'
 import { DEFAULT_SYSTEM_PROMPT } from '../ai/system-prompt.js'
 
@@ -24,10 +24,15 @@ const serialize = (row) => ({
   created_at:      row.created_at,
 })
 
-export const listMessagesAction = async (request, env) => {
+export const listMessagesAction = async (request, env, url) => {
   if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
-  const r = await listMessages(env.DB, CONVERSATION_ID)
-  return ok({ messages: (r?.results || []).map(serialize) })
+  const before = url.searchParams.get('before')
+  const limit  = url.searchParams.get('limit')
+  const rows = await listMessagesPage(env.DB, CONVERSATION_ID, {
+    before: before ? Number(before) : undefined,
+    limit:  limit  ? Number(limit)  : 30,
+  })
+  return ok({ messages: rows.map(serialize) })
 }
 
 export const sendChatAction = async (request, env) => {

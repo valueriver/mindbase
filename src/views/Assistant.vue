@@ -17,7 +17,13 @@
       @scroll.passive="onScroll"
     >
       <div ref="contentEl" class="mx-auto max-w-3xl space-y-4">
-        <div v-if="loadingHistory" class="py-12 text-center text-sm text-nt-soft">加载中…</div>
+        <!-- 顶部 sentinel:上滑触发加载更早 -->
+        <div ref="topSentinelEl" class="py-2 text-center text-xs text-nt-soft">
+          <span v-if="loadingOlder">加载更早…</span>
+          <span v-else-if="!hasMoreHistory && turns.length">— 已经是最早 —</span>
+        </div>
+
+        <div v-if="loadingHistory && !turns.length" class="py-12 text-center text-sm text-nt-soft">加载中…</div>
 
         <div v-else-if="!turns.length && !streaming" class="py-12 text-center">
           <div class="text-4xl mb-2">🤖</div>
@@ -126,7 +132,7 @@ const suggestions = [
 // { kind: 'assistant', content, streaming? }
 // { kind: 'tool', id, name, args, reason, result, status: 'running'|'done'|'error', open }
 const turns = ref([])
-const toolMap = new Map() // tool_call_id → turn index in turns
+const toolMap = new Map() // tool_call_id → turn object 引用(prepend 时引用不变)
 
 const draft     = ref('')
 const streaming = ref(false)
@@ -135,8 +141,9 @@ const loadingHistory = ref(true)
 const checkingSettings = ref(true)
 const aiReady = ref(false)
 
-const scrollEl  = ref(null)
-const contentEl = ref(null)
+const scrollEl       = ref(null)
+const contentEl      = ref(null)
+const topSentinelEl  = ref(null)
 const inputEl  = ref(null)
 
 // 回车发送;Shift+Enter 换行;中文输入法上屏时(isComposing / keyCode 229)放行,不触发发送
@@ -159,6 +166,7 @@ function autosize(e) {
 const SCROLL_THRESHOLD = 80
 const stickToBottom = ref(true)
 let resizeObserver = null
+let topObserver    = null
 // 程序性 scrollTop 修改自身会触发 scroll 事件,要在 onScroll 里区分;
 // 用 ignoreNextScrolls 计数器吞掉自己引起的事件
 let ignoreNextScrolls = 0
@@ -199,41 +207,39 @@ async function checkAi() {
   }
 }
 
-// 从历史 messages 表回放 → turns
-function pushFromMessage(msg) {
+// 从历史 messages 表回放;dest 用于决定推到 turns 末尾还是临时数组(prepend 时)
+function pushFromMessage(msg, dest) {
+  const out = dest || turns.value
   if (!msg || !msg.role) return
   if (msg.role === 'user') {
-    turns.value.push({ kind: 'user', content: String(msg.content || '') })
+    out.push({ kind: 'user', content: String(msg.content || '') })
   } else if (msg.role === 'assistant') {
     if (Array.isArray(msg.tool_calls) && msg.tool_calls.length) {
-      // 文本可能为空,但 tool_calls 要展示成工具块
-      if (msg.content) {
-        turns.value.push({ kind: 'assistant', content: String(msg.content) })
-      }
+      if (msg.content) out.push({ kind: 'assistant', content: String(msg.content) })
       for (const tc of msg.tool_calls) {
         let argsObj = {}
         try { argsObj = JSON.parse(tc.function?.arguments || '{}') } catch {}
-        const idx = turns.value.length
-        turns.value.push({
+        const turn = {
           kind: 'tool',
           id: tc.id,
           name: tc.function?.name || 'tool',
           args: formatArgs(argsObj),
           reason: argsObj.reason || '',
           result: undefined,
-          status: 'done',  // history 里已经有结果
+          status: 'done',
           open: false,
-        })
-        toolMap.set(tc.id, idx)
+        }
+        out.push(turn)
+        toolMap.set(tc.id, turn)
       }
     } else {
-      turns.value.push({ kind: 'assistant', content: String(msg.content || '') })
+      out.push({ kind: 'assistant', content: String(msg.content || '') })
     }
   } else if (msg.role === 'tool') {
-    const idx = toolMap.get(msg.tool_call_id)
-    if (idx != null && turns.value[idx]) {
-      turns.value[idx].result = msg.content
-      turns.value[idx].status = 'done'
+    const turn = toolMap.get(msg.tool_call_id)
+    if (turn) {
+      turn.result = msg.content
+      turn.status = 'done'
     }
   }
 }
@@ -244,14 +250,57 @@ function formatArgs(obj) {
   try { return JSON.stringify(obj, null, 2) } catch { return String(obj) }
 }
 
-async function loadHistory() {
+// 分页加载历史:初次拿最新 30 条;上滑触发更早 30 条
+const PAGE_SIZE = 30
+const oldestId       = ref(0)
+const hasMoreHistory = ref(true)
+const loadingOlder   = ref(false)
+
+async function loadInitial() {
   loadingHistory.value = true
   try {
-    const { messages: rows } = await apiChat.messages()
-    for (const r of rows) pushFromMessage(r.message)
-    scrollBottom(true) // 首次加载强制滚到底
+    const { messages: rows } = await apiChat.messages({ limit: PAGE_SIZE })
+    if (rows.length) {
+      oldestId.value = rows[0].id
+      for (const r of rows) pushFromMessage(r.message)
+    }
+    if (rows.length < PAGE_SIZE) hasMoreHistory.value = false
+    // 首次:粘到底
+    await nextTick()
+    stickToBottom.value = true
+    snapToBottom()
   } catch {} finally {
     loadingHistory.value = false
+  }
+}
+
+async function loadOlder() {
+  if (loadingOlder.value || !hasMoreHistory.value || !oldestId.value) return
+  loadingOlder.value = true
+  const el = scrollEl.value
+  const prevHeight = el?.scrollHeight || 0
+  const prevTop    = el?.scrollTop || 0
+  try {
+    const { messages: rows } = await apiChat.messages({ before: oldestId.value, limit: PAGE_SIZE })
+    if (rows.length) {
+      oldestId.value = rows[0].id
+      const prepend = []
+      for (const r of rows) pushFromMessage(r.message, prepend)
+      turns.value = [...prepend, ...turns.value]
+    }
+    if (rows.length < PAGE_SIZE) hasMoreHistory.value = false
+    // 维持可视位置:上方插入新内容后,scrollTop += (新高 - 旧高)
+    await nextTick()
+    if (el) {
+      // 等一帧让 ResizeObserver 不抢先
+      requestAnimationFrame(() => {
+        const newHeight = el.scrollHeight
+        ignoreNextScrolls++
+        el.scrollTop = prevTop + (newHeight - prevHeight)
+      })
+    }
+  } catch {} finally {
+    loadingOlder.value = false
   }
 }
 
@@ -325,8 +374,7 @@ async function ask(preset) {
             for (const tc of evt.message.tool_calls) {
               let argsObj = {}
               try { argsObj = JSON.parse(tc.function?.arguments || '{}') } catch {}
-              const i = turns.value.length
-              turns.value.push({
+              const turn = {
                 kind: 'tool',
                 id: tc.id,
                 name: tc.function?.name || 'tool',
@@ -335,18 +383,17 @@ async function ask(preset) {
                 result: undefined,
                 status: 'running',
                 open: false,
-              })
-              toolMap.set(tc.id, i)
+              }
+              turns.value.push(turn)
+              toolMap.set(tc.id, turn)
             }
-            scrollBottom()
           } else if (evt.type === 'tool_result' && evt.message?.tool_call_id) {
-            const i = toolMap.get(evt.message.tool_call_id)
-            if (i != null && turns.value[i]) {
-              turns.value[i].result = evt.message.content
+            const turn = toolMap.get(evt.message.tool_call_id)
+            if (turn) {
+              turn.result = evt.message.content
               const isError = /^tool error:|^\[?error\]?:/i.test(String(evt.message.content || '').trim())
-              turns.value[i].status = isError ? 'error' : 'done'
+              turn.status = isError ? 'error' : 'done'
             }
-            scrollBottom()
           } else if (evt.type === 'done') {
             if (currentAssistant) currentAssistant.streaming = false
           } else if (evt.type === 'error') {
@@ -376,11 +423,20 @@ onMounted(async () => {
     resizeObserver.observe(contentEl.value)
   }
   await checkAi()
-  await loadHistory()
+  await loadInitial()
+  // 注意先加载完初始内容、scroll 到底之后,再装顶部 sentinel 观察器,
+  // 避免初次渲染时 sentinel 就在视口里立刻触发分页
+  await nextTick()
+  if (topSentinelEl.value && typeof IntersectionObserver !== 'undefined') {
+    topObserver = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) loadOlder()
+    }, { root: scrollEl.value, rootMargin: '120px 0px 0px 0px' })
+    topObserver.observe(topSentinelEl.value)
+  }
 })
 
 onUnmounted(() => {
-  resizeObserver?.disconnect()
-  resizeObserver = null
+  resizeObserver?.disconnect(); resizeObserver = null
+  topObserver?.disconnect();    topObserver = null
 })
 </script>

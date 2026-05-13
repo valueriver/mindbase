@@ -16,6 +16,7 @@ export const insertMessage = async (db, { conversationId, message, memo, usage, 
   return r
 }
 
+// 全量(给 chat 调用送上下文用)
 export const listMessages = (db, conversationId) =>
   db.prepare(
     `SELECT id, conversation_id, message, memo, usage, meta, created_at
@@ -23,3 +24,25 @@ export const listMessages = (db, conversationId) =>
       WHERE conversation_id = ?1
       ORDER BY id ASC`
   ).bind(conversationId).all()
+
+// 分页(给前端列表用):取 id < before 的最近 limit 条,DESC 后再反转得到 ASC
+export const listMessagesPage = async (db, conversationId, { before, limit = 30 } = {}) => {
+  const lim = Math.max(1, Math.min(200, Number(limit) || 30))
+  const r = before
+    ? await db.prepare(
+        `SELECT id, conversation_id, message, memo, usage, meta, created_at
+           FROM messages
+          WHERE conversation_id = ?1 AND id < ?2
+          ORDER BY id DESC
+          LIMIT ?3`
+      ).bind(conversationId, before, lim).all()
+    : await db.prepare(
+        `SELECT id, conversation_id, message, memo, usage, meta, created_at
+           FROM messages
+          WHERE conversation_id = ?1
+          ORDER BY id DESC
+          LIMIT ?2`
+      ).bind(conversationId, lim).all()
+  const rows = (r?.results || []).reverse()
+  return rows
+}

@@ -3,30 +3,40 @@ import { readJsonBody } from '../api/utils/body.js'
 import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings, setSetting } from '../repository/setting.js'
 
-// 暴露给前端的字段白名单(AI key 也回传以便前端展示掩码,但前端永远不能拿原值)
-const PUBLIC_KEYS = ['ai_base_url', 'ai_model', 'memos_icon', 'memos_cover']
-const SECRET_KEYS = ['ai_api_key']
-const WRITABLE = new Set([...PUBLIC_KEYS, ...SECRET_KEYS])
+const ROUND_CHOICES = [30, 100, 500]
+const DEFAULT_ROUNDS = 100
 
-const maskKey = (v) => {
-  if (!v) return ''
-  if (v.length <= 8) return '••••'
-  return `${v.slice(0, 4)}••••${v.slice(-4)}`
+const WRITABLE = new Set([
+  'ai_base_url',
+  'ai_api_key',
+  'ai_model',
+  'ai_context_rounds',
+  'memos_icon',
+  'memos_cover',
+  'home_name',
+  'home_icon',
+  'home_cover',
+])
+
+const normalizeRounds = (raw) => {
+  const n = Number(raw)
+  if (!Number.isFinite(n)) return DEFAULT_ROUNDS
+  return ROUND_CHOICES.includes(n) ? n : DEFAULT_ROUNDS
 }
+
+const serialize = (all) => ({
+  ai_base_url:       all.ai_base_url || '',
+  ai_api_key:        all.ai_api_key  || '',
+  ai_model:          all.ai_model    || '',
+  ai_context_rounds: normalizeRounds(all.ai_context_rounds),
+  memos_icon:        all.memos_icon  || '',
+  memos_cover:       all.memos_cover || '',
+})
 
 export const getSettingsAction = async (request, env) => {
   if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const all = await getAllSettings(env.DB)
-  return ok({
-    settings: {
-      ai_base_url:     all.ai_base_url || '',
-      ai_model:        all.ai_model    || '',
-      ai_api_key_set:  !!all.ai_api_key,
-      ai_api_key_hint: maskKey(all.ai_api_key || ''),
-      memos_icon:      all.memos_icon  || '',
-      memos_cover:     all.memos_cover || '',
-    },
-  })
+  return ok({ settings: serialize(all) })
 }
 
 export const updateSettingsAction = async (request, env) => {
@@ -34,9 +44,14 @@ export const updateSettingsAction = async (request, env) => {
   const body = await readJsonBody(request) || {}
   for (const [k, v] of Object.entries(body)) {
     if (!WRITABLE.has(k)) continue
-    // 空字符串视为删除该配置
-    const val = v === '' || v === null ? null : String(v)
+    let val
+    if (k === 'ai_context_rounds') {
+      val = String(normalizeRounds(v))
+    } else {
+      val = v === '' || v === null ? null : String(v)
+    }
     await setSetting(env.DB, k, val)
   }
-  return getSettingsAction(request, env)
+  const all = await getAllSettings(env.DB)
+  return ok({ settings: serialize(all) })
 }

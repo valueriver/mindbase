@@ -8,10 +8,10 @@ const routes = [
   { path: '/note/:id',      name: 'note',              component: () => import('@/views/Note.vue'),              props: true },
   { path: '/memos',         name: 'memos',             component: () => import('@/views/Memos.vue') },
   { path: '/assistant',     name: 'assistant',         component: () => import('@/views/Assistant.vue') },
-  { path: '/assistant/settings',  name: 'assistant-settings',  component: () => import('@/views/AssistantSettings.vue') },
-  { path: '/assistant/authorize', name: 'assistant-authorize', component: () => import('@/views/Ai.vue') },
-  // 兼容老的 /ai 入口
-  { path: '/ai', redirect: '/assistant/authorize' },
+  { path: '/assistant/settings', name: 'assistant-settings', component: () => import('@/views/AssistantSettings.vue') },
+  // 老链接兼容:授权页并入设置的 tab
+  { path: '/assistant/authorize', redirect: { name: 'assistant-settings', query: { tab: 'auth' } } },
+  { path: '/ai', redirect: { name: 'assistant-settings', query: { tab: 'auth' } } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 

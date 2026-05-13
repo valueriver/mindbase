@@ -55,22 +55,39 @@ export const sendChatAction = async (request, env) => {
   if (!content) return new Response('content_required', { status: 400 })
 
   const settings = await getAllSettings(env.DB)
-  const baseUrl  = settings.ai_base_url
-  const apiKey   = settings.ai_api_key
-  const model    = settings.ai_model
-  if (!baseUrl || !apiKey || !model) {
+  const apiUrl = settings.ai_base_url
+  const apiKey = settings.ai_api_key
+  const model  = settings.ai_model
+  if (!apiUrl || !apiKey || !model) {
     return new Response(
       JSON.stringify({ success: false, message: 'ai_not_configured' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } },
     )
   }
-  const apiUrl = baseUrl.replace(/\/+$/, '') + '/chat/completions'
 
-  // 拉历史(LLM 格式),拼系统提示和当前用户消息
+  // 拉历史(LLM 格式),按 ai_context_rounds 截断
+  const rounds = [30, 100, 500].includes(Number(settings.ai_context_rounds))
+    ? Number(settings.ai_context_rounds) : 100
   const histR = await listMessages(env.DB, CONVERSATION_ID)
-  const history = (histR?.results || [])
+  const allRows = (histR?.results || [])
     .map(row => safeParse(row.message, null))
     .filter(Boolean)
+
+  // 保留最近 (rounds - 1) 个 user 回合,留出当前 user 的名额
+  const targetUserCount = Math.max(0, rounds - 1)
+  let sliceFrom = 0
+  if (targetUserCount === 0) {
+    sliceFrom = allRows.length
+  } else {
+    let seen = 0
+    for (let i = allRows.length - 1; i >= 0; i--) {
+      if (allRows[i].role === 'user') {
+        seen++
+        if (seen >= targetUserCount) { sliceFrom = i; break }
+      }
+    }
+  }
+  const history = allRows.slice(sliceFrom)
 
   const userMsg = { role: 'user', content }
   await insertMessage(env.DB, { conversationId: CONVERSATION_ID, message: userMsg })

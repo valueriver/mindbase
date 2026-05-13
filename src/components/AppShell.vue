@@ -43,7 +43,7 @@
         <div class="mt-1 border-t border-nt-divider pt-1">
           <button
             type="button"
-            class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt-muted hover:bg-nt-hover hover:text-nt-danger"
+            class="flex w-full items-center justify-center gap-2 rounded px-2 py-1.5 text-sm text-nt-muted hover:bg-nt-hover hover:text-nt-danger"
             @click="onLogout"
           ><span>↩</span> 退出</button>
         </div>
@@ -69,7 +69,7 @@ const apps = [
   { name: 'memos',     icon: '💡', label: '想法', to: { name: 'memos' },              match: (p) => p.startsWith('/memos') },
   { name: 'notes',     icon: '📚', label: '笔记', to: { name: 'home' },               match: (p) => p === '/' || p.startsWith('/notebook') || p.startsWith('/note') },
   { name: 'assistant', icon: '🤖', label: '助理', to: { name: 'assistant' },          match: (p) => p === '/assistant' },
-  { name: 'settings',  icon: '⚙',  label: '设置', to: { name: 'assistant-settings' }, match: (p) => p.startsWith('/assistant/settings') || p.startsWith('/assistant/authorize') },
+  { name: 'settings',  icon: '⚙️', label: '设置', to: { name: 'assistant-settings' }, match: (p) => p.startsWith('/assistant/settings') || p.startsWith('/assistant/authorize') },
 ]
 
 function isActive(app) {
@@ -77,9 +77,6 @@ function isActive(app) {
 }
 
 const currentApp = computed(() => {
-  if (route.path.startsWith('/assistant/authorize')) {
-    return { icon: '🔑', label: '对外授权' }
-  }
   const a = apps.find(isActive)
   return a || { icon: '🧠', label: 'MindBase' }
 })

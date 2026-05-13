@@ -36,7 +36,6 @@
       </div>
 
       <h1 class="mt-2 text-[40px] font-bold leading-tight tracking-tight text-nt">想法</h1>
-      <p class="mt-1 text-sm text-nt-soft">想到什么写什么,按时间倒序。粘贴或拖入图片可直接附上。</p>
 
       <!-- 输入卡 -->
       <div

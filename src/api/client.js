@@ -73,10 +73,10 @@ export const apiSearch = {
 }
 
 export const apiTodos = {
-  list:   ()                       => api.get('/api/todos'),
-  create: ({ title, parent_id })   => api.post('/api/todos', { title, parent_id }),
-  update: (id, patch)              => api.patch(`/api/todos/${id}`, patch),
-  remove: (id)                     => api.delete(`/api/todos/${id}`),
+  list:   ()           => api.get('/api/todos'),
+  create: ({ title })  => api.post('/api/todos', { title }),
+  update: (id, patch)  => api.patch(`/api/todos/${id}`, patch),
+  remove: (id)         => api.delete(`/api/todos/${id}`),
 }
 
 export const apiSettings = {

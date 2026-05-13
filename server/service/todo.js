@@ -14,7 +14,6 @@ const MAX_TITLE = 500
 
 const serialize = (row) => row && ({
   id:         row.id,
-  parent_id:  row.parent_id || null,
   title:      row.title || '',
   done:       !!row.done,
   sort_order: row.sort_order ?? 0,
@@ -32,18 +31,8 @@ export const createTodoAction = async (request, env) => {
   if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const body = await readJsonBody(request)
   const title = String(body?.title || '').trim().slice(0, MAX_TITLE)
-  const parentId = body?.parent_id ? String(body.parent_id) : null
   if (!title) return fail('title_required', 400)
-  if (parentId) {
-    const parent = await findTodoById(env.DB, parentId)
-    if (!parent) return fail('parent_not_found', 404)
-    if (parent.parent_id) return fail('cannot_nest_subtask', 400)
-  }
-  const row = await insertTodo(env.DB, {
-    id: createTodoId(),
-    parentId,
-    title,
-  })
+  const row = await insertTodo(env.DB, { id: createTodoId(), title })
   return ok({ todo: serialize(row) })
 }
 

@@ -1,6 +1,6 @@
 import { ok, fail } from '../api/utils/json.js'
 import { readJsonBody } from '../api/utils/body.js'
-import { getUserFromRequest } from '../domain/auth/index.js'
+import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings, setSetting } from '../repository/setting.js'
 
 // 暴露给前端的字段白名单(AI key 也回传以便前端展示掩码,但前端永远不能拿原值)
@@ -15,8 +15,7 @@ const maskKey = (v) => {
 }
 
 export const getSettingsAction = async (request, env) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const all = await getAllSettings(env.DB)
   return ok({
     settings: {
@@ -31,8 +30,7 @@ export const getSettingsAction = async (request, env) => {
 }
 
 export const updateSettingsAction = async (request, env) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const body = await readJsonBody(request) || {}
   for (const [k, v] of Object.entries(body)) {
     if (!WRITABLE.has(k)) continue

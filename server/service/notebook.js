@@ -1,12 +1,12 @@
 import { readJsonBody } from '../api/utils/body.js'
 import { ok, fail } from '../api/utils/json.js'
 import { createNotebookId } from '../api/utils/id.js'
-import { getUserFromRequest } from '../domain/auth/index.js'
-import { deleteR2Keys, extractOwnedR2Keys } from '../domain/image/refs.js'
+import { isAuthenticated } from '../domain/auth/index.js'
+import { deleteR2Keys, extractR2Keys } from '../domain/image/refs.js'
 import {
   createNotebook,
   deleteNotebook,
-  findNotebookForUser,
+  findNotebookById,
   getNotebookAncestors,
   isSelfOrDescendant,
   listNotebooksUnder,
@@ -14,10 +14,9 @@ import {
 } from '../repository/notebook.js'
 import { listNotesIn } from '../repository/note.js'
 
-const authed = async (request, env) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return { error: fail('unauthorized', 401) }
-  return { user }
+const requireAuth = async (request, env) => {
+  if (await isAuthenticated(request, env)) return null
+  return fail('unauthorized', 401)
 }
 
 const readNullableString = (body, key, maxLen) => {
@@ -27,33 +26,30 @@ const readNullableString = (body, key, maxLen) => {
   return String(v).slice(0, maxLen)
 }
 
-// 递归收集子孙里所有笔记的 R2 key
-const collectDescendantImageKeys = async (db, userId, rootNotebookId) => {
+const collectDescendantImageKeys = async (db, rootNotebookId) => {
   const queue = [rootNotebookId]
   const keys  = []
   while (queue.length) {
     const nbId = queue.shift()
     const [childNbs, notes] = await Promise.all([
-      listNotebooksUnder(db, userId, nbId),
-      listNotesIn(db, userId, nbId),
+      listNotebooksUnder(db, nbId),
+      listNotesIn(db, nbId),
     ])
     for (const child of childNbs) queue.push(child.id)
-    for (const note of notes) keys.push(...extractOwnedR2Keys(note.content, userId))
+    for (const note of notes) keys.push(...extractR2Keys(note.content))
   }
   return keys
 }
 
 export const listNotebooksAction = async (request, env, url) => {
-  const { user, error } = await authed(request, env)
-  if (error) return error
+  const e = await requireAuth(request, env); if (e) return e
   const parentId = url.searchParams.get('parent_id') || null
-  const notebooks = await listNotebooksUnder(env.DB, user.id, parentId)
+  const notebooks = await listNotebooksUnder(env.DB, parentId)
   return ok({ notebooks })
 }
 
 export const createNotebookAction = async (request, env) => {
-  const { user, error } = await authed(request, env)
-  if (error) return error
+  const e = await requireAuth(request, env); if (e) return e
 
   const body = await readJsonBody(request)
   const name     = String(body?.name || '').trim().slice(0, 120)
@@ -63,13 +59,12 @@ export const createNotebookAction = async (request, env) => {
   if (!name) return fail('name_required', 400)
 
   if (parentId) {
-    const parent = await findNotebookForUser(env.DB, parentId, user.id)
+    const parent = await findNotebookById(env.DB, parentId)
     if (!parent) return fail('parent_not_found', 404)
   }
 
   const notebook = await createNotebook(env.DB, {
     id: createNotebookId(),
-    userId: user.id,
     parentId,
     name,
     icon,
@@ -79,26 +74,24 @@ export const createNotebookAction = async (request, env) => {
 }
 
 export const getNotebookDetailAction = async (request, env, id) => {
-  const { user, error } = await authed(request, env)
-  if (error) return error
+  const e = await requireAuth(request, env); if (e) return e
 
-  const notebook = await findNotebookForUser(env.DB, id, user.id)
+  const notebook = await findNotebookById(env.DB, id)
   if (!notebook) return fail('not_found', 404)
 
   const [ancestors, children, notes] = await Promise.all([
-    getNotebookAncestors(env.DB, id, user.id),
-    listNotebooksUnder(env.DB, user.id, id),
-    listNotesIn(env.DB, user.id, id),
+    getNotebookAncestors(env.DB, id),
+    listNotebooksUnder(env.DB, id),
+    listNotesIn(env.DB, id),
   ])
 
   return ok({ notebook, breadcrumb: ancestors, children, notes })
 }
 
 export const updateNotebookAction = async (request, env, id) => {
-  const { user, error } = await authed(request, env)
-  if (error) return error
+  const e = await requireAuth(request, env); if (e) return e
 
-  const existing = await findNotebookForUser(env.DB, id, user.id)
+  const existing = await findNotebookById(env.DB, id)
   if (!existing) return fail('not_found', 404)
 
   const body = await readJsonBody(request)
@@ -115,9 +108,9 @@ export const updateNotebookAction = async (request, env, id) => {
     const nextParent = body.parent_id ? String(body.parent_id) : null
     if (nextParent) {
       if (nextParent === id) return fail('cannot_nest_in_self', 400)
-      const parent = await findNotebookForUser(env.DB, nextParent, user.id)
+      const parent = await findNotebookById(env.DB, nextParent)
       if (!parent) return fail('parent_not_found', 404)
-      if (await isSelfOrDescendant(env.DB, user.id, id, nextParent)) {
+      if (await isSelfOrDescendant(env.DB, id, nextParent)) {
         return fail('cannot_nest_in_descendant', 400)
       }
     }
@@ -129,14 +122,12 @@ export const updateNotebookAction = async (request, env, id) => {
 }
 
 export const deleteNotebookAction = async (request, env, id) => {
-  const { user, error } = await authed(request, env)
-  if (error) return error
+  const e = await requireAuth(request, env); if (e) return e
 
-  const existing = await findNotebookForUser(env.DB, id, user.id)
+  const existing = await findNotebookById(env.DB, id)
   if (!existing) return fail('not_found', 404)
 
-  // 先收集所有子孙笔记用到的 R2 key,DB 级联删之后就查不到了
-  const imageKeys = await collectDescendantImageKeys(env.DB, user.id, id)
+  const imageKeys = await collectDescendantImageKeys(env.DB, id)
 
   await deleteNotebook(env.DB, id)
   if (imageKeys.length > 0) await deleteR2Keys(env, imageKeys)

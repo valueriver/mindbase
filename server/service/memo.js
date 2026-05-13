@@ -1,7 +1,7 @@
 import { ok, fail } from '../api/utils/json.js'
 import { readJsonBody } from '../api/utils/body.js'
 import { createMemoId } from '../api/utils/id.js'
-import { getUserFromRequest } from '../domain/auth/index.js'
+import { isAuthenticated } from '../domain/auth/index.js'
 import {
   listMemos,
   findMemoById,
@@ -35,24 +35,21 @@ const sanitizeTags = (tags) => {
 }
 
 export const listMemosAction = async (request, env, url) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const limit  = Math.min(Number(url.searchParams.get('limit'))  || 200, 500)
   const offset = Math.max(Number(url.searchParams.get('offset')) || 0, 0)
-  const result = await listMemos(env.DB, user.id, { limit, offset })
+  const result = await listMemos(env.DB, { limit, offset })
   return ok({ memos: (result?.results || []).map(serialize) })
 }
 
 export const createMemoAction = async (request, env) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const body = await readJsonBody(request)
   const content = String(body?.content || '').trim()
   if (!content) return fail('content_required', 400)
   if (content.length > 5000) return fail('content_too_long', 400)
   const row = await insertMemo(env.DB, {
     id:      createMemoId(),
-    userId:  user.id,
     content,
     tags:    sanitizeTags(body?.tags) ?? null,
   })
@@ -60,15 +57,14 @@ export const createMemoAction = async (request, env) => {
 }
 
 export const updateMemoAction = async (request, env, id) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const body = await readJsonBody(request)
-  const existing = await findMemoById(env.DB, user.id, id)
+  const existing = await findMemoById(env.DB, id)
   if (!existing) return fail('not_found', 404)
   const content = body?.content !== undefined ? String(body.content).trim() : undefined
   if (content !== undefined && !content) return fail('content_required', 400)
   if (content && content.length > 5000) return fail('content_too_long', 400)
-  const row = await updateMemo(env.DB, user.id, id, {
+  const row = await updateMemo(env.DB, id, {
     content,
     tags: sanitizeTags(body?.tags),
   })
@@ -76,10 +72,9 @@ export const updateMemoAction = async (request, env, id) => {
 }
 
 export const deleteMemoAction = async (request, env, id) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
-  const existing = await findMemoById(env.DB, user.id, id)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
+  const existing = await findMemoById(env.DB, id)
   if (!existing) return fail('not_found', 404)
-  await deleteMemo(env.DB, user.id, id)
+  await deleteMemo(env.DB, id)
   return ok({})
 }

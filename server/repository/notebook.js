@@ -1,33 +1,25 @@
-const NB_COLS = 'id, user_id, parent_id, name, icon, cover, sort_order, created_at, updated_at'
+const NB_COLS = 'id, parent_id, name, icon, cover, sort_order, created_at, updated_at'
 
-export const createNotebook = async (db, { id, userId, parentId, name, icon, cover }) => {
+export const createNotebook = async (db, { id, parentId, name, icon, cover }) => {
   await db.prepare(
-    `INSERT INTO notebooks (id, user_id, parent_id, name, icon, cover, sort_order, created_at, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'), datetime('now'))`
-  ).bind(id, userId, parentId ?? null, name, icon ?? null, cover ?? null, Date.now()).run()
+    `INSERT INTO notebooks (id, parent_id, name, icon, cover, sort_order, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'), datetime('now'))`
+  ).bind(id, parentId ?? null, name, icon ?? null, cover ?? null, Date.now()).run()
   return findNotebookById(db, id)
 }
 
 export const findNotebookById = (db, id) =>
   db.prepare(`SELECT ${NB_COLS} FROM notebooks WHERE id = ?1`).bind(id).first()
 
-export const findNotebookForUser = (db, id, userId) =>
-  db.prepare(`SELECT ${NB_COLS} FROM notebooks WHERE id = ?1 AND user_id = ?2`)
-    .bind(id, userId).first()
-
-export const listNotebooksUnder = async (db, userId, parentId) => {
+export const listNotebooksUnder = async (db, parentId) => {
   const sql = parentId
-    ? `SELECT ${NB_COLS} FROM notebooks WHERE user_id = ?1 AND parent_id = ?2 ORDER BY sort_order ASC, created_at ASC`
-    : `SELECT ${NB_COLS} FROM notebooks WHERE user_id = ?1 AND parent_id IS NULL ORDER BY sort_order ASC, created_at ASC`
-  const stmt = parentId
-    ? db.prepare(sql).bind(userId, parentId)
-    : db.prepare(sql).bind(userId)
+    ? `SELECT ${NB_COLS} FROM notebooks WHERE parent_id = ?1 ORDER BY sort_order ASC, created_at ASC`
+    : `SELECT ${NB_COLS} FROM notebooks WHERE parent_id IS NULL ORDER BY sort_order ASC, created_at ASC`
+  const stmt = parentId ? db.prepare(sql).bind(parentId) : db.prepare(sql)
   const { results } = await stmt.all()
   return results || []
 }
 
-// COALESCE-with-flag pattern for fields that can be cleared to NULL:
-// pass `undefined` to leave unchanged, pass `null` to clear.
 const nullableFlag = (value) => (value === undefined ? 0 : 1)
 
 export const updateNotebook = async (db, id, { name, icon, cover, parentId, sortOrder }) => {
@@ -54,31 +46,28 @@ export const updateNotebook = async (db, id, { name, icon, cover, parentId, sort
 export const deleteNotebook = (db, id) =>
   db.prepare('DELETE FROM notebooks WHERE id = ?1').bind(id).run()
 
-// 递归收集祖先链(含自身),用于面包屑。按根→当前顺序返回。
-export const getNotebookAncestors = async (db, id, userId) => {
+export const getNotebookAncestors = async (db, id) => {
   const chain = []
-  let current = await findNotebookForUser(db, id, userId)
+  let current = await findNotebookById(db, id)
   const seen = new Set()
   while (current && !seen.has(current.id)) {
     chain.push(current)
     seen.add(current.id)
     if (!current.parent_id) break
-    current = await findNotebookForUser(db, current.parent_id, userId)
+    current = await findNotebookById(db, current.parent_id)
   }
   return chain.reverse()
 }
 
-// 判断 descendantId 是否是 ancestorId 的后代(或同一个),
-// 用于防止把笔记本移动到自己的子孙下,造成环。
-export const isSelfOrDescendant = async (db, userId, ancestorId, descendantId) => {
+export const isSelfOrDescendant = async (db, ancestorId, descendantId) => {
   if (!descendantId) return false
   if (ancestorId === descendantId) return true
-  let cursor = await findNotebookForUser(db, descendantId, userId)
+  let cursor = await findNotebookById(db, descendantId)
   const seen = new Set()
   while (cursor && cursor.parent_id && !seen.has(cursor.id)) {
     seen.add(cursor.id)
     if (cursor.parent_id === ancestorId) return true
-    cursor = await findNotebookForUser(db, cursor.parent_id, userId)
+    cursor = await findNotebookById(db, cursor.parent_id)
   }
   return false
 }

@@ -1,6 +1,6 @@
 import { ok, fail } from '../api/utils/json.js'
 import { readJsonBody } from '../api/utils/body.js'
-import { getUserFromRequest } from '../domain/auth/index.js'
+import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings } from '../repository/setting.js'
 import { insertMessage, listMessages } from '../repository/message.js'
 import { chat } from '../ai/handler.js'
@@ -9,18 +9,17 @@ import { chat } from '../ai/handler.js'
 const CONVERSATION_ID = 'main'
 
 // 给 AI 的系统提示:工作场景 + 数据库 schema 概览。
-const SYSTEM_PROMPT = `你是 MindBase 的助理。MindBase 是用户(单人)自部署的笔记应用,部署在 Cloudflare Workers + D1。
+const SYSTEM_PROMPT = `你是 MindBase 的助理。MindBase 是单机自部署的笔记应用(Cloudflare Workers + D1),没有多用户概念。
 
 你拥有一个工具 sql_query,可以对 D1 数据库执行任意 SQL(SELECT/INSERT/UPDATE/DELETE/DDL 都行,但每次只能一条语句、不要带末尾分号)。
 
-数据库表(SQLite 风格):
-- users(id, email, name, avatar_url, home_name, home_icon, home_cover, created_at, updated_at) — 单用户,id='mindbase00000001'
-- notebooks(id, user_id, parent_id, name, icon, cover, sort_order, created_at, updated_at) — 笔记本树
-- notes(id, user_id, notebook_id, title, content, icon, cover, sort_order, created_at, updated_at) — content 为 HTML
-- memos(id, user_id, content, tags, created_at, updated_at) — 想法/时间轴随手记,tags 为 JSON array 字符串
+数据库表(SQLite 风格,均无 user_id 字段):
+- notebooks(id, parent_id, name, icon, cover, sort_order, created_at, updated_at) — 笔记本树
+- notes(id, notebook_id, title, content, icon, cover, sort_order, created_at, updated_at) — content 是 HTML
+- memos(id, content, tags, created_at, updated_at) — 想法/时间轴随手记,tags 为 JSON array 字符串
 - messages(id, conversation_id, message, memo, usage, meta, created_at) — 你正在写入的这张表
-- settings(key, value, updated_at) — KV,含 ai_base_url/ai_api_key/ai_model
-- tokens(id, user_id, name, token, scope, created_at, last_used_at) — 对外 AI 授权 token,千万别 SELECT 出 token 字段
+- settings(key, value, updated_at) — KV,含 ai_base_url/ai_api_key/ai_model/home_name/home_icon/home_cover/memos_icon/memos_cover 等
+- tokens(id, name, token, scope, created_at, last_used_at) — 对外 AI 授权 token,不要 SELECT 出 token 字段
 
 约定:
 - 回答用中文,简洁直接,不要长篇大论。
@@ -43,15 +42,13 @@ const serialize = (row) => ({
 })
 
 export const listMessagesAction = async (request, env) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const r = await listMessages(env.DB, CONVERSATION_ID)
   return ok({ messages: (r?.results || []).map(serialize) })
 }
 
 export const sendChatAction = async (request, env) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return new Response('unauthorized', { status: 401 })
+  if (!(await isAuthenticated(request, env))) return new Response('unauthorized', { status: 401 })
 
   const body = await readJsonBody(request)
   const content = String(body?.content || '').trim()

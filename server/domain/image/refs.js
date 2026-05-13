@@ -1,16 +1,11 @@
-// /i/u/<userId>/<uuid>.<ext> 形式的图片 URL
-const R2_KEY_RE = /\/i\/(u\/[A-Za-z0-9_-]+\/[A-Za-z0-9-]+\.[A-Za-z0-9]+)/g
+// 历史:旧 key 形如 /i/u/<userId>/<uuid>.<ext>
+// 单机化后:新 key 形如 /i/u/<uuid>.<ext>。两种都识别。
+const R2_KEY_RE = /\/i\/(u\/(?:[A-Za-z0-9_-]+\/)?[A-Za-z0-9-]+\.[A-Za-z0-9]+)/g
 
-// 从正文 HTML 里抽出 "本用户的" R2 key。跨用户的 key 一律忽略,
-// 防止恶意内容触发别人图片的删除。
-export function extractOwnedR2Keys(content, userId) {
+export function extractR2Keys(content) {
   if (!content) return []
-  const prefix = `u/${userId}/`
   const out = new Set()
-  for (const m of content.matchAll(R2_KEY_RE)) {
-    const key = m[1]
-    if (key.startsWith(prefix)) out.add(key)
-  }
+  for (const m of content.matchAll(R2_KEY_RE)) out.add(m[1])
   return [...out]
 }
 
@@ -20,14 +15,12 @@ export async function deleteR2Keys(env, keys) {
   try {
     await env.IMAGES.delete(keys)
   } catch (err) {
-    // 清理失败不阻塞业务,先记日志
     console.error('r2 delete failed:', err?.message, keys.length, 'keys')
   }
 }
 
-// 给定旧/新内容,返回被移除的 key 列表(仅本用户的)
-export function diffRemovedKeys(oldContent, newContent, userId) {
-  const oldKeys = new Set(extractOwnedR2Keys(oldContent, userId))
-  const newKeys = new Set(extractOwnedR2Keys(newContent, userId))
+export function diffRemovedKeys(oldContent, newContent) {
+  const oldKeys = new Set(extractR2Keys(oldContent))
+  const newKeys = new Set(extractR2Keys(newContent))
   return [...oldKeys].filter(k => !newKeys.has(k))
 }

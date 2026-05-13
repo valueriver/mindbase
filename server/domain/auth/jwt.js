@@ -12,7 +12,7 @@ const secret = (env) => {
   return new TextEncoder().encode(env.JWT_SECRET)
 }
 
-export const signJwt = (env, payload) =>
+export const signJwt = (env, payload = {}) =>
   new SignJWT(payload)
     .setProtectedHeader({ alg: ALG })
     .setIssuedAt()
@@ -49,7 +49,8 @@ const parseCookies = (request) => {
   return out
 }
 
-export const getUserFromRequest = async (request, env) => {
+// 鉴权:成功时返回 { source: 'cookie' | 'api_token' };失败返回 null。
+export const getAuth = async (request, env) => {
   const cookies = parseCookies(request)
   let token = cookies[TOKEN_COOKIE]
   if (!token) {
@@ -58,33 +59,20 @@ export const getUserFromRequest = async (request, env) => {
   }
   if (!token) return null
 
-  // AI 授权令牌(mb_ 开头):明文直接比对
   if (isApiTokenShape(token)) {
     if (!env?.DB) return null
     const row = await findTokenByValue(env.DB, token)
     if (!row) return null
-    // 顺手更新 last_used_at;失败不影响鉴权
     touchToken(env.DB, row.token_id).catch(err =>
       console.error('touchToken failed', err?.message)
     )
-    return {
-      id:         row.user_id,
-      name:       row.name  || '',
-      email:      row.email || '',
-      avatar:     row.avatar_url || '',
-      isApiToken: true,
-      scope:      row.scope || 'read',
-    }
+    return { source: 'api_token', scope: row.scope || 'read' }
   }
 
-  // 普通 cookie/JWT
   const payload = await verifyJwt(env, token)
-  if (!payload?.sub) return null
-
-  return {
-    id:     String(payload.sub),
-    name:   payload.name || '',
-    email:  payload.email || '',
-    avatar: payload.avatar || '',
-  }
+  if (!payload) return null
+  return { source: 'cookie' }
 }
+
+// 便捷别名:仅判断是否已鉴权(密码 cookie 或对外 API token 都算)。
+export const isAuthenticated = async (request, env) => !!(await getAuth(request, env))

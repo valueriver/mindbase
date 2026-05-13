@@ -1,10 +1,9 @@
 import { ok, fail } from '../api/utils/json.js'
-import { getUserFromRequest } from '../domain/auth/index.js'
+import { isAuthenticated } from '../domain/auth/index.js'
 
 const MAX_LIMIT   = 50
 const SNIPPET_LEN = 120
 
-// 去掉 HTML 标签、压空白,便于搜索/展示 snippet
 const stripHtml = (html) => String(html || '')
   .replace(/<[^>]*>/g, ' ')
   .replace(/\s+/g, ' ')
@@ -22,11 +21,8 @@ const makeSnippet = (text, q) => {
   return `${prefix}${text.slice(start, end)}${suffix}`
 }
 
-// GET /api/search?q=term&limit=20
-// 搜本人的笔记本名字 + 笔记标题 + 笔记正文(HTML,去标签后用 LIKE)
 export const searchAction = async (request, env, url) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
 
   const q = String(url.searchParams.get('q') || '').trim().slice(0, 120)
   if (!q) return ok({ query: '', notebooks: [], notes: [] })
@@ -41,19 +37,18 @@ export const searchAction = async (request, env, url) => {
     env.DB.prepare(
       `SELECT id, parent_id, name, icon, cover, updated_at
          FROM notebooks
-        WHERE user_id = ?1 AND name LIKE ?2 ESCAPE '\\'
+        WHERE name LIKE ?1 ESCAPE '\\'
         ORDER BY updated_at DESC
-        LIMIT ?3`
-    ).bind(user.id, like, limit).all(),
+        LIMIT ?2`
+    ).bind(like, limit).all(),
 
     env.DB.prepare(
       `SELECT id, notebook_id, title, icon, content, updated_at
          FROM notes
-        WHERE user_id = ?1
-          AND (title LIKE ?2 ESCAPE '\\' OR content LIKE ?2 ESCAPE '\\')
+        WHERE title LIKE ?1 ESCAPE '\\' OR content LIKE ?1 ESCAPE '\\'
         ORDER BY updated_at DESC
-        LIMIT ?3`
-    ).bind(user.id, like, limit).all(),
+        LIMIT ?2`
+    ).bind(like, limit).all(),
   ])
 
   const notes = (noteResult?.results || []).map(n => ({

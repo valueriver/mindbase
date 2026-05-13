@@ -1,5 +1,5 @@
 import { ok, fail } from '../api/utils/json.js'
-import { getUserFromRequest } from '../domain/auth/index.js'
+import { isAuthenticated } from '../domain/auth/index.js'
 
 const MAX_SIZE  = 10 * 1024 * 1024 // 10MB
 const ALLOWED   = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'])
@@ -18,9 +18,7 @@ const bytesStreamOrBuffer = async (file) => {
 }
 
 export const uploadImageAction = async (request, env) => {
-  const user = await getUserFromRequest(request, env)
-  if (!user) return fail('unauthorized', 401)
-
+  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   if (!env.IMAGES) return fail('r2_not_configured', 500)
 
   let formData
@@ -39,7 +37,8 @@ export const uploadImageAction = async (request, env) => {
   if (!ALLOWED.has(type)) return fail(`unsupported_type:${type || 'unknown'}`, 400)
 
   const ext = EXT_MAP[type] || 'bin'
-  const key = `u/${user.id}/${crypto.randomUUID()}.${ext}`
+  // 单机:key 不再带 user_id 路径,但保留 u/ 前缀和老 key 兼容
+  const key = `u/${crypto.randomUUID()}.${ext}`
 
   await env.IMAGES.put(key, await bytesStreamOrBuffer(file), {
     httpMetadata: { contentType: type },
@@ -53,7 +52,7 @@ export const uploadImageAction = async (request, env) => {
   }, 201)
 }
 
-// GET /i/<key>  — key 是多段(u/<userId>/<uuid>.<ext>)
+// GET /i/<key>  — key 是多段(u/<uuid>.<ext>;老 key 形如 u/<userId>/<uuid>.<ext>)
 export const serveImageAction = async (request, env, key) => {
   if (!env.IMAGES)           return new Response('r2_not_configured', { status: 500 })
   if (!key || key.length > 256) return new Response('bad_key', { status: 400 })

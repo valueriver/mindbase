@@ -1,6 +1,5 @@
 <template>
   <div class="flex min-h-screen flex-col">
-    <!-- 顶栏:左当前应用标题、右宫格应用切换器 -->
     <header class="sticky top-0 z-40 flex h-11 items-center justify-between border-b border-nt-divider bg-white/95 px-3 backdrop-blur md:px-4">
       <div class="flex min-w-0 items-center gap-1.5 px-1">
         <span class="text-base leading-none">{{ currentApp.icon }}</span>
@@ -41,29 +40,12 @@
           </button>
         </div>
 
-        <div v-if="user" class="mt-1 border-t border-nt-divider pt-1">
-          <div class="flex items-center gap-2 rounded-md px-2 py-1.5">
-            <img
-              v-if="user.avatar_url"
-              :src="user.avatar_url"
-              referrerpolicy="no-referrer"
-              class="h-6 w-6 shrink-0 rounded-full object-cover"
-              alt=""
-            />
-            <span
-              v-else
-              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nt-hover text-xs text-nt-muted"
-            >{{ initial }}</span>
-            <div class="min-w-0 flex-1">
-              <div class="truncate text-sm text-nt">{{ user.name }}</div>
-              <div class="truncate text-[11px] text-nt-soft">{{ user.email }}</div>
-            </div>
-            <button
-              type="button"
-              class="rounded px-2 py-1 text-xs text-nt-muted hover:bg-nt-hover hover:text-nt-danger"
-              @click="onLogout"
-            >退出</button>
-          </div>
+        <div class="mt-1 border-t border-nt-divider pt-1">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt-muted hover:bg-nt-hover hover:text-nt-danger"
+            @click="onLogout"
+          ><span>↩</span> 退出</button>
         </div>
       </Popover>
     </header>
@@ -78,11 +60,10 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Popover from './Popover.vue'
-import { useAuth, logout } from '@/composables/useAuth'
+import { logout } from '@/composables/useAuth'
 
 const route   = useRoute()
 const router  = useRouter()
-const { user } = useAuth()
 
 const apps = [
   { name: 'memos',     icon: '💡', label: '想法', to: { name: 'memos' },              match: (p) => p.startsWith('/memos') },
@@ -123,9 +104,4 @@ async function onLogout() {
   await logout()
   router.replace({ name: 'welcome' })
 }
-
-const initial = computed(() => {
-  const n = user.value?.name || user.value?.email || ''
-  return n.slice(0, 1).toUpperCase()
-})
 </script>

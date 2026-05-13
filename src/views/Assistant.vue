@@ -76,11 +76,10 @@
           ref="inputEl"
           v-model="draft"
           rows="1"
-          :placeholder="aiReady ? '问点什么…  (⌘/Ctrl + Enter 发送)' : '先去设置里配置大模型'"
+          :placeholder="aiReady ? '问点什么…  (Enter 发送,Shift+Enter 换行)' : '先去设置里配置大模型'"
           :disabled="!aiReady || streaming"
           class="max-h-32 flex-1 resize-none rounded-2xl bg-nt-hover px-3 py-2.5 text-[15px] text-nt outline-none placeholder:text-nt-hint disabled:opacity-60"
-          @keydown.meta.enter.prevent="ask()"
-          @keydown.ctrl.enter.prevent="ask()"
+          @keydown="onKeydown"
           @input="autosize"
         ></textarea>
         <button
@@ -124,6 +123,15 @@ const aiReady = ref(false)
 const scrollEl = ref(null)
 const inputEl  = ref(null)
 
+// 回车发送;Shift+Enter 换行;中文输入法上屏时(isComposing / keyCode 229)放行,不触发发送
+function onKeydown(e) {
+  if (e.key !== 'Enter') return
+  if (e.shiftKey) return
+  if (e.isComposing || e.keyCode === 229) return
+  e.preventDefault()
+  ask()
+}
+
 function autosize(e) {
   const el = e.target
   el.style.height = 'auto'
@@ -140,7 +148,7 @@ async function checkAi() {
   checkingSettings.value = true
   try {
     const { settings } = await apiSettings.detail()
-    aiReady.value = !!(settings.ai_base_url && settings.ai_model && settings.ai_api_key_set)
+    aiReady.value = !!(settings.ai_base_url && settings.ai_model && settings.ai_api_key)
   } catch {
     aiReady.value = false
   } finally {

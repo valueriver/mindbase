@@ -3,8 +3,8 @@
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
       <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">设置</h1>
 
-      <div class="mt-6 -mx-4 md:-mx-12 border-b border-nt-divider overflow-x-auto no-scrollbar">
-        <div class="flex gap-1 px-4 md:px-12 min-w-max">
+      <div class="mt-6 overflow-x-auto no-scrollbar">
+        <div class="flex gap-1 border-b border-nt-divider min-w-max">
           <button
             v-for="t in tabs"
             :key="t.id"

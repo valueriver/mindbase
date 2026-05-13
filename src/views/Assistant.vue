@@ -15,9 +15,9 @@
       <div class="mx-auto max-w-3xl space-y-4">
         <div v-if="loadingHistory" class="py-12 text-center text-sm text-nt-soft">加载中…</div>
 
-        <div v-else-if="!messages.length && !streaming" class="py-12 text-center">
+        <div v-else-if="!turns.length && !streaming" class="py-12 text-center">
           <div class="text-4xl mb-2">🤖</div>
-          <div class="text-sm text-nt-soft mb-4">问点什么</div>
+          <div class="text-sm text-nt-soft mb-4">问点什么 —— 我可以查你的数据库</div>
           <div class="flex flex-wrap justify-center gap-2">
             <button
               v-for="s in suggestions"
@@ -29,28 +29,46 @@
           </div>
         </div>
 
-        <div
-          v-for="(m, i) in messages"
-          :key="i"
-          :class="['flex items-start gap-2', m.role === 'user' ? 'justify-end' : 'justify-start']"
-        >
-          <div
-            v-if="m.role !== 'user'"
-            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover text-sm"
-          >🤖</div>
-          <div
-            :class="[
-              'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap break-words',
-              m.role === 'user'
-                ? 'bg-nt text-white rounded-br-sm'
-                : 'bg-nt-hover text-nt rounded-bl-sm',
-            ]"
-          >{{ m.content }}<span v-if="m.streaming" class="ml-0.5 inline-block h-4 w-1.5 align-middle bg-nt-soft animate-pulse"></span></div>
-          <div
-            v-if="m.role === 'user'"
-            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover-strong text-xs text-nt-muted"
-          >我</div>
-        </div>
+        <template v-for="(item, i) in turns" :key="i">
+          <!-- 用户气泡 -->
+          <div v-if="item.kind === 'user'" class="flex items-start gap-2 justify-end">
+            <div class="max-w-[85%] rounded-2xl rounded-br-sm bg-nt px-3.5 py-2.5 text-[15px] leading-relaxed text-white whitespace-pre-wrap break-words">{{ item.content }}</div>
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover-strong text-xs text-nt-muted">我</div>
+          </div>
+
+          <!-- 工具调用块 -->
+          <div v-else-if="item.kind === 'tool'" class="flex items-start gap-2 justify-start">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover text-sm">🔧</div>
+            <details class="max-w-[90%] flex-1 rounded-md border border-nt-divider bg-nt-hover/50 overflow-hidden" :open="item.open ?? false">
+              <summary class="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-nt-muted hover:bg-nt-hover">
+                <span class="font-medium text-nt">{{ item.name }}</span>
+                <span v-if="item.reason" class="truncate text-nt-soft">· {{ item.reason }}</span>
+                <span v-if="item.status === 'running'" class="ml-auto inline-flex items-center gap-1 text-nt-soft">
+                  <svg class="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  执行中
+                </span>
+                <span v-else-if="item.status === 'error'" class="ml-auto text-nt-danger">失败</span>
+                <span v-else class="ml-auto text-nt-soft">完成</span>
+              </summary>
+              <div class="border-t border-nt-divider bg-white px-3 py-2 space-y-2">
+                <div v-if="item.args">
+                  <div class="text-[11px] text-nt-soft mb-1">参数</div>
+                  <pre class="overflow-x-auto rounded bg-nt-hover px-2 py-1.5 font-mono text-[12px] leading-relaxed text-nt whitespace-pre-wrap break-words">{{ item.args }}</pre>
+                </div>
+                <div v-if="item.result !== undefined">
+                  <div class="text-[11px] text-nt-soft mb-1">结果</div>
+                  <pre class="overflow-x-auto rounded bg-nt-hover px-2 py-1.5 font-mono text-[12px] leading-relaxed text-nt whitespace-pre-wrap break-words">{{ item.result }}</pre>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- 助手气泡 -->
+          <div v-else-if="item.kind === 'assistant'" class="flex items-start gap-2 justify-start">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nt-hover text-sm">🤖</div>
+            <div class="max-w-[85%] rounded-2xl rounded-bl-sm bg-nt-hover px-3.5 py-2.5 text-[15px] leading-relaxed text-nt whitespace-pre-wrap break-words">{{ item.content }}<span v-if="item.streaming" class="ml-0.5 inline-block h-4 w-1.5 align-middle bg-nt-soft animate-pulse"></span></div>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -86,11 +104,21 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { apiChat, apiSettings } from '@/api/client'
 
-const suggestions = ['总结一下我最近的想法', '帮我把今天的随手记整理成 1 段周报', '我有哪些 idea 类的笔记?']
+const suggestions = [
+  '我的想法里有多少条带 idea 标签的?',
+  '最近一周新建了几条 memo?',
+  '统计每个笔记本下的笔记数量',
+]
 
-const messages   = ref([]) // [{role, content, streaming?}]
-const draft      = ref('')
-const streaming  = ref(false)
+// turns 是面向 UI 的渲染数组(扁平):
+// { kind: 'user', content }
+// { kind: 'assistant', content, streaming? }
+// { kind: 'tool', id, name, args, reason, result, status: 'running'|'done'|'error', open }
+const turns = ref([])
+const toolMap = new Map() // tool_call_id → turn index in turns
+
+const draft     = ref('')
+const streaming = ref(false)
 const loadingHistory = ref(true)
 
 const checkingSettings = ref(true)
@@ -123,14 +151,56 @@ async function checkAi() {
   }
 }
 
+// 从历史 messages 表回放 → turns
+function pushFromMessage(msg) {
+  if (!msg || !msg.role) return
+  if (msg.role === 'user') {
+    turns.value.push({ kind: 'user', content: String(msg.content || '') })
+  } else if (msg.role === 'assistant') {
+    if (Array.isArray(msg.tool_calls) && msg.tool_calls.length) {
+      // 文本可能为空,但 tool_calls 要展示成工具块
+      if (msg.content) {
+        turns.value.push({ kind: 'assistant', content: String(msg.content) })
+      }
+      for (const tc of msg.tool_calls) {
+        let argsObj = {}
+        try { argsObj = JSON.parse(tc.function?.arguments || '{}') } catch {}
+        const idx = turns.value.length
+        turns.value.push({
+          kind: 'tool',
+          id: tc.id,
+          name: tc.function?.name || 'tool',
+          args: formatArgs(argsObj),
+          reason: argsObj.reason || '',
+          result: undefined,
+          status: 'done',  // history 里已经有结果
+          open: false,
+        })
+        toolMap.set(tc.id, idx)
+      }
+    } else {
+      turns.value.push({ kind: 'assistant', content: String(msg.content || '') })
+    }
+  } else if (msg.role === 'tool') {
+    const idx = toolMap.get(msg.tool_call_id)
+    if (idx != null && turns.value[idx]) {
+      turns.value[idx].result = msg.content
+      turns.value[idx].status = 'done'
+    }
+  }
+}
+
+function formatArgs(obj) {
+  // sql_query 的话直接显示 sql,其它工具显示 JSON
+  if (obj?.sql) return String(obj.sql)
+  try { return JSON.stringify(obj, null, 2) } catch { return String(obj) }
+}
+
 async function loadHistory() {
   loadingHistory.value = true
   try {
     const { messages: rows } = await apiChat.messages()
-    messages.value = rows
-      .map(r => r.message)
-      .filter(m => m && m.role)
-      .map(m => ({ role: m.role, content: String(m.content || '') }))
+    for (const r of rows) pushFromMessage(r.message)
     scrollBottom()
   } catch {} finally {
     loadingHistory.value = false
@@ -139,14 +209,21 @@ async function loadHistory() {
 
 async function ask(preset) {
   const content = (preset ?? draft.value).trim()
-  if (!content || streaming.value) return
-  if (!aiReady.value) return
+  if (!content || streaming.value || !aiReady.value) return
 
-  messages.value.push({ role: 'user', content })
+  turns.value.push({ kind: 'user', content })
   draft.value = ''
   if (inputEl.value) inputEl.value.style.height = 'auto'
-  const assistant = { role: 'assistant', content: '', streaming: true }
-  messages.value.push(assistant)
+
+  // 当前正在 streaming 的 assistant bubble(如果存在)
+  let currentAssistant = null
+  const ensureAssistant = () => {
+    if (currentAssistant && turns.value.includes(currentAssistant)) return currentAssistant
+    currentAssistant = { kind: 'assistant', content: '', streaming: true }
+    turns.value.push(currentAssistant)
+    return currentAssistant
+  }
+
   streaming.value = true
   scrollBottom()
 
@@ -161,8 +238,9 @@ async function ask(preset) {
     if (!resp.ok || !resp.body) {
       let msg = `http_${resp.status}`
       try { const j = await resp.json(); if (j?.message) msg = j.message } catch {}
-      assistant.content = `[错误] ${msg}`
-      assistant.streaming = false
+      const a = ensureAssistant()
+      a.content = `[错误] ${msg}`
+      a.streaming = false
       streaming.value = false
       return
     }
@@ -184,19 +262,56 @@ async function ask(preset) {
           if (payload === '[DONE]') continue
           let evt
           try { evt = JSON.parse(payload) } catch { continue }
-          if (evt.type === 'delta' && typeof evt.text === 'string') {
-            assistant.content += evt.text
+
+          if (evt.type === 'delta' && typeof evt.delta === 'string') {
+            const a = ensureAssistant()
+            a.content += evt.delta
             scrollBottom()
+          } else if (evt.type === 'assistant_tool_calls' && evt.message?.tool_calls) {
+            // 收到这条意味着该 assistant 文本段结束(模型转去调工具),
+            // 给所有 tool_calls 创建占位卡片
+            if (currentAssistant) currentAssistant.streaming = false
+            currentAssistant = null
+            for (const tc of evt.message.tool_calls) {
+              let argsObj = {}
+              try { argsObj = JSON.parse(tc.function?.arguments || '{}') } catch {}
+              const i = turns.value.length
+              turns.value.push({
+                kind: 'tool',
+                id: tc.id,
+                name: tc.function?.name || 'tool',
+                args: formatArgs(argsObj),
+                reason: argsObj.reason || '',
+                result: undefined,
+                status: 'running',
+                open: false,
+              })
+              toolMap.set(tc.id, i)
+            }
+            scrollBottom()
+          } else if (evt.type === 'tool_result' && evt.message?.tool_call_id) {
+            const i = toolMap.get(evt.message.tool_call_id)
+            if (i != null && turns.value[i]) {
+              turns.value[i].result = evt.message.content
+              const isError = /^tool error:|^\[?error\]?:/i.test(String(evt.message.content || '').trim())
+              turns.value[i].status = isError ? 'error' : 'done'
+            }
+            scrollBottom()
+          } else if (evt.type === 'done') {
+            if (currentAssistant) currentAssistant.streaming = false
           } else if (evt.type === 'error') {
-            assistant.content += `\n[错误] ${evt.message}`
+            const a = ensureAssistant()
+            a.content += `\n[错误] ${evt.message}`
+            a.streaming = false
           }
         }
       }
     }
   } catch (e) {
-    assistant.content += `\n[网络错误] ${e?.message || ''}`
+    const a = ensureAssistant()
+    a.content += `\n[网络错误] ${e?.message || ''}`
   } finally {
-    assistant.streaming = false
+    if (currentAssistant) currentAssistant.streaming = false
     streaming.value = false
     scrollBottom()
   }

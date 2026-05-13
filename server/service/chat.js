@@ -3,9 +3,29 @@ import { readJsonBody } from '../api/utils/body.js'
 import { getUserFromRequest } from '../domain/auth/index.js'
 import { getAllSettings } from '../repository/setting.js'
 import { insertMessage, listMessages } from '../repository/message.js'
+import { chat } from '../ai/handler.js'
 
-// 单一全局对话(暂不支持多会话)。
+// 单一全局对话。
 const CONVERSATION_ID = 'main'
+
+// 给 AI 的系统提示:工作场景 + 数据库 schema 概览。
+const SYSTEM_PROMPT = `你是 MindBase 的助理。MindBase 是用户(单人)自部署的笔记应用,部署在 Cloudflare Workers + D1。
+
+你拥有一个工具 sql_query,可以对 D1 数据库执行任意 SQL(SELECT/INSERT/UPDATE/DELETE/DDL 都行,但每次只能一条语句、不要带末尾分号)。
+
+数据库表(SQLite 风格):
+- users(id, email, name, avatar_url, home_name, home_icon, home_cover, created_at, updated_at) — 单用户,id='mindbase00000001'
+- notebooks(id, user_id, parent_id, name, icon, cover, sort_order, created_at, updated_at) — 笔记本树
+- notes(id, user_id, notebook_id, title, content, icon, cover, sort_order, created_at, updated_at) — content 为 HTML
+- memos(id, user_id, content, tags, created_at, updated_at) — 想法/时间轴随手记,tags 为 JSON array 字符串
+- messages(id, conversation_id, message, memo, usage, meta, created_at) — 你正在写入的这张表
+- settings(key, value, updated_at) — KV,含 ai_base_url/ai_api_key/ai_model
+- tokens(id, user_id, name, token, scope, created_at, last_used_at) — 对外 AI 授权 token,千万别 SELECT 出 token 字段
+
+约定:
+- 回答用中文,简洁直接,不要长篇大论。
+- 涉及 UPDATE/DELETE/DROP 等写入操作时,先用 SELECT 看一眼,再次确认后再写入。不可逆操作避免连续多步自动执行。
+- 查询大表请用 LIMIT。`
 
 const safeParse = (s, fallback = null) => {
   if (s == null) return fallback
@@ -29,12 +49,6 @@ export const listMessagesAction = async (request, env) => {
   return ok({ messages: (r?.results || []).map(serialize) })
 }
 
-// POST /api/chat/send  { content }
-// 返回 SSE 流:
-//   data: {"type":"delta","text":"..."}
-//   data: {"type":"done","usage":{...}}
-//   data: {"type":"error","message":"..."}
-//   data: [DONE]
 export const sendChatAction = async (request, env) => {
   const user = await getUserFromRequest(request, env)
   if (!user) return new Response('unauthorized', { status: 401 })
@@ -44,116 +58,80 @@ export const sendChatAction = async (request, env) => {
   if (!content) return new Response('content_required', { status: 400 })
 
   const settings = await getAllSettings(env.DB)
-  const baseUrl = settings.ai_base_url
-  const apiKey  = settings.ai_api_key
-  const model   = settings.ai_model
+  const baseUrl  = settings.ai_base_url
+  const apiKey   = settings.ai_api_key
+  const model    = settings.ai_model
   if (!baseUrl || !apiKey || !model) {
     return new Response(
       JSON.stringify({ success: false, message: 'ai_not_configured' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } },
     )
   }
+  const apiUrl = baseUrl.replace(/\/+$/, '') + '/chat/completions'
 
-  // 单一全局对话:总是拉完整历史
-  const r = await listMessages(env.DB, CONVERSATION_ID)
-  const history = (r?.results || [])
+  // 拉历史(LLM 格式),拼系统提示和当前用户消息
+  const histR = await listMessages(env.DB, CONVERSATION_ID)
+  const history = (histR?.results || [])
     .map(row => safeParse(row.message, null))
     .filter(Boolean)
 
-  // 写入用户消息
   const userMsg = { role: 'user', content }
   await insertMessage(env.DB, { conversationId: CONVERSATION_ID, message: userMsg })
 
-  // 构造发往大模型的消息列表
-  const messagesForLLM = [...history, userMsg]
-    .map(m => ({ role: m.role, content: m.content }))
-    .filter(m => m.role && typeof m.content === 'string')
-
-  // 发起上游流式请求(OpenAI 兼容 /chat/completions)
-  const endpoint = baseUrl.replace(/\/+$/, '') + '/chat/completions'
-  let upstream
-  try {
-    upstream = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: messagesForLLM,
-        stream: true,
-      }),
-    })
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ success: false, message: `upstream_fetch_failed: ${err?.message || 'unknown'}` }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
-
-  if (!upstream.ok || !upstream.body) {
-    const errText = await upstream.text().catch(() => '')
-    return new Response(
-      JSON.stringify({ success: false, message: `upstream_${upstream.status}: ${errText.slice(0, 200)}` }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...history,
+    userMsg,
+  ]
 
   const encoder = new TextEncoder()
-  const decoder = new TextDecoder()
-
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (obj) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`))
+      const sse = (obj) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`))
       const close = () => {
-        controller.enqueue(encoder.encode(`data: [DONE]\n\n`))
-        controller.close()
+        try { controller.enqueue(encoder.encode(`data: [DONE]\n\n`)) } catch {}
+        try { controller.close() } catch {}
       }
 
-      let buf = ''
-      let fullText = ''
-      let lastUsage = null
-      const reader = upstream.body.getReader()
-      try {
-        while (true) {
-          const { value, done } = await reader.read()
-          if (done) break
-          buf += decoder.decode(value, { stream: true })
-          let idx
-          while ((idx = buf.indexOf('\n')) >= 0) {
-            const line = buf.slice(0, idx).trim()
-            buf = buf.slice(idx + 1)
-            if (!line.startsWith('data:')) continue
-            const payload = line.slice(5).trim()
-            if (payload === '[DONE]') continue
-            let evt
-            try { evt = JSON.parse(payload) } catch { continue }
-            const delta = evt?.choices?.[0]?.delta?.content
-            if (typeof delta === 'string' && delta) {
-              fullText += delta
-              send({ type: 'delta', text: delta })
-            }
-            if (evt?.usage) lastUsage = evt.usage
-          }
+      const send = (evt) => {
+        // 透传给前端
+        sse(evt)
+        // 副作用:把过程中产生的消息持久化
+        // - assistant_tool_calls: 模型决定调用工具,需要存(下次重启对话能恢复 LLM 上下文)
+        // - tool_result:工具结果
+        // - done:最终 assistant 文本
+        if (evt.type === 'assistant_tool_calls' && evt.message) {
+          insertMessage(env.DB, {
+            conversationId: CONVERSATION_ID,
+            message: evt.message,
+          }).catch(err => console.error('insert tool_calls failed', err?.message))
+        } else if (evt.type === 'tool_result' && evt.message) {
+          insertMessage(env.DB, {
+            conversationId: CONVERSATION_ID,
+            message: evt.message,
+          }).catch(err => console.error('insert tool_result failed', err?.message))
+        } else if (evt.type === 'done' && evt.message) {
+          insertMessage(env.DB, {
+            conversationId: CONVERSATION_ID,
+            message: evt.message,
+            meta: { model },
+          }).catch(err => console.error('insert done failed', err?.message))
         }
-      } catch (err) {
-        send({ type: 'error', message: err?.message || 'stream_error' })
-        close()
-        return
       }
 
-      // 写入助手消息
-      const assistantMsg = { role: 'assistant', content: fullText }
-      await insertMessage(env.DB, {
-        conversationId: CONVERSATION_ID,
-        message: assistantMsg,
-        usage: lastUsage,
-        meta: { model },
-      })
-
-      send({ type: 'done', usage: lastUsage })
-      close()
+      try {
+        await chat(messages, {
+          apiUrl,
+          apiKey,
+          model,
+          toolContext: { env },
+          send,
+        })
+      } catch (err) {
+        sse({ type: 'error', message: err?.message || 'chat_failed' })
+      } finally {
+        close()
+      }
     },
   })
 

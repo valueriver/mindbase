@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-32 md:px-12 md:pt-10">
+    <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
       <header class="mb-4 md:mb-6">
         <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">💡 想法</h1>
         <p class="mt-1 text-sm text-nt-soft">想到什么写什么,按时间倒序</p>
@@ -51,7 +51,7 @@
 
       <div v-else>
         <div v-for="group in grouped" :key="group.label" class="mb-6">
-          <div class="sticky top-0 md:top-0 z-10 -mx-4 md:-mx-12 px-4 md:px-12 py-1.5 bg-white/95 backdrop-blur text-xs font-medium text-nt-soft">
+          <div class="sticky top-11 z-10 -mx-4 md:-mx-12 px-4 md:px-12 py-1.5 bg-white/95 backdrop-blur text-xs font-medium text-nt-soft">
             {{ group.label }}
           </div>
           <div class="mt-2 space-y-3">

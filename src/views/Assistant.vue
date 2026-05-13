@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col min-h-screen">
     <!-- 顶部:对话标题 + 操作 -->
-    <header class="sticky top-11 md:top-0 z-20 flex items-center gap-2 border-b border-nt-divider bg-white/95 px-4 py-2 backdrop-blur md:px-8">
+    <header class="sticky top-11 z-20 flex items-center gap-2 border-b border-nt-divider bg-white/95 px-4 py-2 backdrop-blur md:px-8">
       <button
         type="button"
         class="rounded-md px-2 py-1 text-xs text-nt-muted hover:bg-nt-hover"
@@ -102,7 +102,7 @@
     </div>
 
     <!-- 输入区 -->
-    <div class="sticky bottom-14 md:bottom-0 border-t border-nt-divider bg-white px-3 py-3 md:px-8">
+    <div class="sticky bottom-0 border-t border-nt-divider bg-white px-3 py-3 md:px-8">
       <div class="mx-auto flex max-w-3xl items-end gap-2">
         <textarea
           ref="inputEl"

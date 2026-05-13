@@ -1,169 +1,111 @@
 <template>
-  <div class="md:flex md:items-stretch min-h-screen">
-
-    <!-- PC 侧栏 (md+) -->
-    <aside
-      :class="[
-        'hidden md:flex md:flex-col md:shrink-0 md:sticky md:top-0 md:h-screen',
-        'border-r border-nt-divider bg-white transition-[width] duration-200',
-        collapsed ? 'md:w-14' : 'md:w-60',
-      ]"
-    >
-      <div :class="['flex items-center px-2 py-2.5', collapsed ? 'justify-center' : 'justify-between gap-2']">
-        <router-link
-          v-if="!collapsed"
-          :to="{ name: 'home' }"
-          class="flex items-center gap-2 px-2 text-sm font-semibold text-nt"
-        >
-          <span class="text-base">🧠</span>
-          <span>MindBase</span>
-        </router-link>
+  <div class="flex min-h-screen flex-col">
+    <!-- 顶栏(PC / 移动端一致) -->
+    <header class="sticky top-0 z-40 flex h-11 items-center justify-between border-b border-nt-divider bg-white/95 px-3 backdrop-blur">
+      <div class="flex items-center gap-0.5">
         <button
           type="button"
           class="flex h-8 w-8 items-center justify-center rounded text-nt-muted hover:bg-nt-hover"
-          :title="collapsed ? '展开' : '收起'"
+          :title="open ? '收起侧边栏' : '展开侧边栏'"
           @click="toggle"
-        >
-          <span class="text-base leading-none">☰</span>
-        </button>
+        ><span class="text-base leading-none">☰</span></button>
+        <router-link :to="{ name: 'home' }" class="px-1.5 text-sm font-semibold text-nt">
+          MindBase
+        </router-link>
       </div>
 
-      <nav class="mt-1 flex-1 space-y-0.5 px-2">
-        <SidebarLink
-          v-for="m in modules"
-          :key="m.name"
-          :to="m.to"
-          :icon="m.icon"
-          :label="m.label"
-          :collapsed="collapsed"
-          :active="isActive(m)"
-        />
-      </nav>
-
-      <div class="border-t border-nt-divider px-2 py-2 space-y-0.5">
-        <SidebarLink
-          to="/assistant/settings"
-          icon="⚙"
-          label="设置"
-          :collapsed="collapsed"
-          :active="route.path === '/assistant/settings'"
-        />
-        <button
-          type="button"
-          :class="[
-            'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-nt-muted hover:bg-nt-hover hover:text-nt',
-            collapsed ? 'justify-center' : '',
-          ]"
-          :title="collapsed ? '退出登录' : ''"
-          @click="onLogout"
-        >
-          <span class="text-base leading-none">↩</span>
-          <span v-if="!collapsed" class="truncate">退出</span>
-        </button>
-      </div>
-    </aside>
-
-    <!-- 主区域 -->
-    <div class="flex-1 min-w-0 flex flex-col min-h-screen md:min-h-0">
-
-      <!-- 移动端顶栏 -->
-      <header
-        class="md:hidden sticky top-0 z-30 flex h-11 items-center justify-between border-b border-nt-divider bg-white/95 px-3 backdrop-blur"
+      <button
+        v-if="user"
+        ref="avatarBtn"
+        type="button"
+        class="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-nt-hover hover:bg-nt-hover-strong"
+        @click="toggleMenu"
       >
+        <img
+          v-if="user.avatar_url"
+          :src="user.avatar_url"
+          referrerpolicy="no-referrer"
+          class="h-full w-full object-cover"
+          alt=""
+        />
+        <span v-else class="text-xs text-nt-muted">{{ (user.name || user.email || '').slice(0, 1).toUpperCase() }}</span>
+      </button>
+
+      <Popover :open="menuOpen" :anchor="menuAnchor" :width="220" @close="menuOpen = false">
+        <div class="flex items-center gap-2 px-2 py-1.5">
+          <div class="min-w-0 flex-1">
+            <div class="truncate text-sm font-medium text-nt">{{ user?.name }}</div>
+            <div class="truncate text-xs text-nt-soft">{{ user?.email }}</div>
+          </div>
+        </div>
+        <div class="my-1 h-px bg-nt-divider" />
         <button
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded hover:bg-nt-hover"
-          @click="drawerOpen = true"
-        ><span class="text-base">☰</span></button>
-        <span class="text-sm font-semibold text-nt">{{ currentLabel }}</span>
-        <span class="w-8" />
-      </header>
+          class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
+          @click="goTo('assistant-settings')"
+        ><span>⚙</span> 设置</button>
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
+          @click="goTo('assistant-authorize')"
+        ><span>🔑</span> 对外授权</button>
+        <div class="my-1 h-px bg-nt-divider" />
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
+          @click="onLogout"
+        ><span>↩</span> 退出登录</button>
+      </Popover>
+    </header>
 
-      <!-- 路由内容 -->
-      <div class="flex-1 min-w-0 pb-14 md:pb-0">
-        <slot />
-      </div>
-    </div>
-
-    <!-- 移动端底部 dock -->
-    <nav
-      class="md:hidden fixed bottom-0 left-0 right-0 z-30 grid grid-cols-3 border-t border-nt-divider bg-white"
-      :style="{ paddingBottom: 'env(safe-area-inset-bottom)' }"
-    >
-      <router-link
-        v-for="m in modules"
-        :key="m.name"
-        :to="m.to"
+    <!-- 主体:侧栏 + 内容 -->
+    <div class="relative flex flex-1">
+      <!-- 侧栏:PC 在文档流里(宽度动画),移动端 fixed 抽屉 -->
+      <aside
         :class="[
-          'flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] leading-none transition',
-          isActive(m) ? 'text-nt' : 'text-nt-soft',
+          'z-30 overflow-hidden border-r border-nt-divider bg-white transition-[width,transform] duration-200',
+          // 移动端 fixed 抽屉
+          'fixed inset-y-11 left-0 w-64 max-w-[80%]',
+          open ? 'translate-x-0' : '-translate-x-full',
+          // PC 改为静态,跟内容并排
+          'md:sticky md:top-11 md:inset-y-auto md:h-[calc(100vh-2.75rem)] md:translate-x-0 md:max-w-none',
+          open ? 'md:w-60' : 'md:w-0 md:border-r-0',
         ]"
       >
-        <span class="text-xl leading-none">{{ m.icon }}</span>
-        <span>{{ m.label }}</span>
-      </router-link>
-    </nav>
+        <nav class="flex h-full flex-col gap-0.5 p-2">
+          <SidebarLink
+            v-for="m in modules"
+            :key="m.name"
+            :to="m.to"
+            :icon="m.icon"
+            :label="m.label"
+            :active="isActive(m)"
+            @click="onNavClick"
+          />
+        </nav>
+      </aside>
 
-    <!-- 移动端抽屉(放次级入口) -->
-    <Transition name="fade">
-      <div
-        v-if="drawerOpen"
-        class="md:hidden fixed inset-0 z-50 flex"
-        @click.self="drawerOpen = false"
-      >
-        <div class="absolute inset-0 bg-black/30" @click="drawerOpen = false" />
-        <div class="relative h-full w-64 max-w-[80%] bg-white p-3 shadow-xl flex flex-col">
-          <div class="mb-3 flex items-center gap-2 px-1 text-sm font-semibold text-nt">
-            <span>🧠</span> MindBase
-          </div>
-          <nav class="space-y-0.5">
-            <SidebarLink
-              v-for="m in modules"
-              :key="m.name"
-              :to="m.to"
-              :icon="m.icon"
-              :label="m.label"
-              :collapsed="false"
-              :active="isActive(m)"
-              @click="drawerOpen = false"
-            />
-          </nav>
-          <div class="mt-2 border-t border-nt-divider pt-2 space-y-0.5">
-            <SidebarLink
-              to="/assistant/settings"
-              icon="⚙"
-              label="设置"
-              :collapsed="false"
-              :active="route.path === '/assistant/settings'"
-              @click="drawerOpen = false"
-            />
-            <SidebarLink
-              to="/assistant/authorize"
-              icon="🔑"
-              label="对外授权"
-              :collapsed="false"
-              :active="route.path === '/assistant/authorize'"
-              @click="drawerOpen = false"
-            />
-            <button
-              type="button"
-              class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-nt-muted hover:bg-nt-hover hover:text-nt"
-              @click="onLogout"
-            >
-              <span class="text-base leading-none">↩</span>
-              <span>退出登录</span>
-            </button>
-          </div>
-          <div class="mt-auto px-1 text-xs text-nt-soft">{{ user?.name || '' }}</div>
-        </div>
-      </div>
-    </Transition>
+      <!-- 移动端遮罩 -->
+      <Transition name="fade">
+        <div
+          v-if="open"
+          class="fixed inset-x-0 bottom-0 top-11 z-20 bg-black/30 md:hidden"
+          @click="open = false"
+        />
+      </Transition>
+
+      <!-- 内容 -->
+      <main class="min-w-0 flex-1">
+        <slot />
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Popover from './Popover.vue'
 import SidebarLink from './SidebarLink.vue'
 import { useAuth, logout } from '@/composables/useAuth'
 
@@ -171,17 +113,21 @@ const route   = useRoute()
 const router  = useRouter()
 const { user } = useAuth()
 
-const STORAGE_KEY = 'mindbase.sidebar.collapsed'
-const collapsed = ref(false)
-const drawerOpen = ref(false)
+const STORAGE_KEY = 'mindbase.sidebar.open'
+const open = ref(false)
 
 onMounted(() => {
-  try { collapsed.value = localStorage.getItem(STORAGE_KEY) === '1' } catch {}
+  try {
+    const v = localStorage.getItem(STORAGE_KEY)
+    // 首次进入:PC 默认展开,移动端默认收起
+    if (v === '1' || v === '0') open.value = v === '1'
+    else open.value = window.matchMedia('(min-width: 768px)').matches
+  } catch {}
 })
 
 function toggle() {
-  collapsed.value = !collapsed.value
-  try { localStorage.setItem(STORAGE_KEY, collapsed.value ? '1' : '0') } catch {}
+  open.value = !open.value
+  try { localStorage.setItem(STORAGE_KEY, open.value ? '1' : '0') } catch {}
 }
 
 const modules = [
@@ -194,16 +140,31 @@ function isActive(m) {
   return m.match(route.path)
 }
 
-const currentLabel = computed(() => {
-  const m = modules.find(isActive)
-  if (m) return m.label
-  if (route.path.startsWith('/assistant/settings')) return '设置'
-  if (route.path.startsWith('/assistant/authorize')) return '对外授权'
-  return 'MindBase'
-})
+// 移动端:点击导航后自动关闭抽屉;PC 端保持
+function onNavClick() {
+  if (!window.matchMedia('(min-width: 768px)').matches) {
+    open.value = false
+  }
+}
+
+// —— 顶栏头像菜单 ——
+const avatarBtn  = ref(null)
+const menuOpen   = ref(false)
+const menuAnchor = ref(null)
+
+function toggleMenu() {
+  if (menuOpen.value) { menuOpen.value = false; return }
+  menuAnchor.value = avatarBtn.value?.getBoundingClientRect() || null
+  menuOpen.value = true
+}
+
+function goTo(name) {
+  menuOpen.value = false
+  router.push({ name })
+}
 
 async function onLogout() {
-  drawerOpen.value = false
+  menuOpen.value = false
   await logout()
   router.replace({ name: 'welcome' })
 }

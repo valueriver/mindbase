@@ -13,10 +13,10 @@
     <!-- 消息列表 -->
     <div
       ref="scrollEl"
-      class="flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6"
+      class="relative flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6"
       @scroll.passive="onScroll"
     >
-      <div class="mx-auto max-w-3xl space-y-4">
+      <div ref="contentEl" class="mx-auto max-w-3xl space-y-4">
         <div v-if="loadingHistory" class="py-12 text-center text-sm text-nt-soft">加载中…</div>
 
         <div v-else-if="!turns.length && !streaming" class="py-12 text-center">
@@ -101,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { apiChat, apiSettings } from '@/api/client'
 
 const suggestions = [
@@ -124,7 +124,8 @@ const loadingHistory = ref(true)
 const checkingSettings = ref(true)
 const aiReady = ref(false)
 
-const scrollEl = ref(null)
+const scrollEl  = ref(null)
+const contentEl = ref(null)
 const inputEl  = ref(null)
 
 // 回车发送;Shift+Enter 换行;中文输入法上屏时(isComposing / keyCode 229)放行,不触发发送
@@ -142,21 +143,37 @@ function autosize(e) {
   el.style.height = Math.min(el.scrollHeight, 160) + 'px'
 }
 
-// 智能滚动:用户在底部时才跟随;手动上滑后暂停,再次滚回底部恢复
-const SCROLL_THRESHOLD = 50
+// 智能滚动:用 ResizeObserver 监听内容容器,只要内容长高、且用户当前在底部,就跟随。
+// 用户手动上滑 → stickToBottom 变 false,新内容不再打扰;滚回底部自动恢复。
+const SCROLL_THRESHOLD = 80
 const stickToBottom = ref(true)
+let resizeObserver = null
+// 程序性 scrollTop 修改自身会触发 scroll 事件,要在 onScroll 里区分;
+// 用 ignoreNextScrolls 计数器吞掉自己引起的事件
+let ignoreNextScrolls = 0
 
 function onScroll(e) {
+  if (ignoreNextScrolls > 0) { ignoreNextScrolls--; return }
   const el = e.target
   const distance = el.scrollHeight - el.scrollTop - el.clientHeight
   stickToBottom.value = distance < SCROLL_THRESHOLD
 }
 
+function snapToBottom() {
+  const el = scrollEl.value
+  if (!el) return
+  // 已经在底部就不动
+  if (el.scrollHeight - el.scrollTop - el.clientHeight < 1) return
+  ignoreNextScrolls++
+  el.scrollTop = el.scrollHeight
+}
+
+// 兼容旧调用:force=true 强制粘底并滚动;否则交给 ResizeObserver
 function scrollBottom(force = false) {
-  if (!force && !stickToBottom.value) return
-  nextTick(() => {
-    if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
-  })
+  if (force) {
+    stickToBottom.value = true
+    nextTick(snapToBottom)
+  }
 }
 
 async function checkAi() {
@@ -340,7 +357,19 @@ async function ask(preset) {
 }
 
 onMounted(async () => {
+  // 监听内容容器尺寸变化,触发自动跟随
+  if (contentEl.value && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => {
+      if (stickToBottom.value) snapToBottom()
+    })
+    resizeObserver.observe(contentEl.value)
+  }
   await checkAi()
   await loadHistory()
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
 })
 </script>

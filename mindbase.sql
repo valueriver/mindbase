@@ -27,11 +27,10 @@ CREATE TABLE notes (
 );
 CREATE INDEX idx_notes_notebook ON notes(notebook_id);
 
--- 想法:时间轴随手记
+-- 想法:时间轴随手记;content 是纯文本,内嵌图片用 markdown 语法 ![](/i/...)
 CREATE TABLE memos (
   id          TEXT PRIMARY KEY,
   content     TEXT NOT NULL DEFAULT '',
-  tags        TEXT,   -- JSON array
   created_at  TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );

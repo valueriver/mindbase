@@ -18,7 +18,6 @@
         >{{ icon }}</button>
       </div>
 
-      <!-- 添加图标 / 添加封面 -->
       <div class="mt-2 flex items-center gap-1 text-nt-soft">
         <button
           v-if="!icon"
@@ -36,40 +35,67 @@
         >🏞️ 添加封面</button>
       </div>
 
-      <!-- 标题 -->
       <h1 class="mt-2 text-[40px] font-bold leading-tight tracking-tight text-nt">想法</h1>
-      <p class="mt-1 text-sm text-nt-soft">想到什么写什么,按时间倒序</p>
+      <p class="mt-1 text-sm text-nt-soft">想到什么写什么,按时间倒序。粘贴或拖入图片可直接附上。</p>
 
       <!-- 输入卡 -->
-      <div class="mt-6 rounded-md border border-nt-divider bg-white p-3 md:p-4">
+      <div
+        class="mt-6 rounded-md border border-nt-divider bg-white p-3 md:p-4"
+        :class="dropping ? 'border-nt-accent bg-nt-accent-bg' : ''"
+        @dragenter.prevent="onDragEnter"
+        @dragover.prevent="onDragOver"
+        @dragleave.prevent="onDragLeave"
+        @drop.prevent="onDrop"
+      >
         <textarea
           ref="inputEl"
           v-model="draft"
-          rows="2"
+          rows="3"
           placeholder="此刻在想什么…  (⌘/Ctrl + Enter 记下)"
           :disabled="busy"
           class="w-full resize-none bg-transparent text-[15px] leading-relaxed text-nt outline-none placeholder:text-nt-hint"
+          @paste="onPaste"
           @keydown.meta.enter.prevent="onSubmit"
           @keydown.ctrl.enter.prevent="onSubmit"
         ></textarea>
-        <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex flex-wrap gap-1.5">
+
+        <!-- 待发送图片预览 -->
+        <div v-if="pendingImages.length" class="mt-2 flex flex-wrap gap-2">
+          <div
+            v-for="(img, idx) in pendingImages"
+            :key="img.url"
+            class="group relative overflow-hidden rounded border border-nt-divider"
+          >
+            <img :src="img.url" class="block h-20 w-20 object-cover" alt="" />
             <button
-              v-for="t in tagPalette"
-              :key="t"
               type="button"
-              :class="[
-                'rounded-full border px-2 py-0.5 text-xs transition',
-                draftTags.includes(t)
-                  ? 'border-nt bg-nt text-white'
-                  : 'border-nt-divider text-nt-muted hover:bg-nt-hover',
-              ]"
-              @click="toggleTag(t)"
-            >#{{ t }}</button>
+              class="absolute right-0 top-0 hidden h-5 w-5 items-center justify-center rounded-bl bg-black/60 text-xs text-white group-hover:flex"
+              @click="removePending(idx)"
+            >✕</button>
+          </div>
+        </div>
+
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              :disabled="uploading"
+              class="rounded px-2 py-1 text-xs text-nt-muted hover:bg-nt-hover hover:text-nt disabled:opacity-50"
+              title="添加图片"
+              @click="triggerPick"
+            >🖼️ {{ uploading ? '上传中…' : '图片' }}</button>
+            <input
+              ref="fileInputEl"
+              type="file"
+              accept="image/*"
+              multiple
+              class="hidden"
+              @change="onFilePicked"
+            />
           </div>
           <button
             type="button"
-            :disabled="busy || !draft.trim()"
+            :disabled="busy || (!draft.trim() && !pendingImages.length)"
             class="rounded-md bg-nt px-4 py-1.5 text-sm text-white hover:bg-black disabled:opacity-50"
             @click="onSubmit"
           >{{ busy ? '记下中…' : '记下' }}</button>
@@ -94,30 +120,61 @@
               :key="m.id"
               class="group relative pl-6"
             >
-              <span
-                class="absolute left-1.5 top-3 h-2.5 w-2.5 rounded-full bg-white ring-2 ring-nt-divider"
-              ></span>
+              <span class="absolute left-1.5 top-3 h-2.5 w-2.5 rounded-full bg-white ring-2 ring-nt-divider"></span>
               <span
                 v-if="idx !== group.items.length - 1"
                 class="absolute left-[10px] top-5 bottom-[-12px] w-px bg-nt-divider"
               ></span>
 
               <div class="rounded-md border border-nt-divider bg-white p-3 md:p-4">
-                <div class="mb-1 text-xs text-nt-soft">{{ formatTime(m.created_at) }}</div>
-                <p class="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-nt">{{ m.content }}</p>
-                <div v-if="m.tags.length" class="mt-2 flex flex-wrap gap-1.5">
-                  <span
-                    v-for="t in m.tags"
-                    :key="t"
-                    class="rounded-full bg-nt-hover px-2 py-0.5 text-xs text-nt-muted"
-                  >#{{ t }}</span>
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <span class="text-xs text-nt-soft">{{ formatTime(m.created_at) }}</span>
+                  <div class="opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                    <button
+                      v-if="editingId !== m.id"
+                      type="button"
+                      class="text-xs text-nt-soft hover:text-nt"
+                      @click="onEdit(m)"
+                    >编辑</button>
+                    <button
+                      v-if="editingId !== m.id"
+                      type="button"
+                      class="text-xs text-nt-soft hover:text-nt-danger"
+                      @click="onDelete(m)"
+                    >删除</button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  class="absolute right-3 top-3 hidden text-nt-soft hover:text-nt-danger group-hover:block"
-                  title="删除"
-                  @click="onDelete(m)"
-                >✕</button>
+
+                <!-- 编辑态 -->
+                <template v-if="editingId === m.id">
+                  <textarea
+                    v-model="editDraft"
+                    rows="3"
+                    class="w-full resize-none rounded border border-nt-divider bg-white px-2 py-1.5 text-[15px] leading-relaxed text-nt outline-none focus:border-nt-accent"
+                    @keydown.meta.enter.prevent="onEditSave(m)"
+                    @keydown.ctrl.enter.prevent="onEditSave(m)"
+                    @keydown.esc.prevent="onEditCancel"
+                    @paste="onEditPaste"
+                  ></textarea>
+                  <div class="mt-2 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      class="rounded px-3 py-1 text-xs text-nt-muted hover:bg-nt-hover"
+                      @click="onEditCancel"
+                    >取消</button>
+                    <button
+                      type="button"
+                      :disabled="editBusy || !editDraft.trim()"
+                      class="rounded-md bg-nt px-3 py-1 text-xs text-white hover:bg-black disabled:opacity-50"
+                      @click="onEditSave(m)"
+                    >{{ editBusy ? '保存中…' : '保存' }}</button>
+                  </div>
+                </template>
+
+                <!-- 显示态 -->
+                <template v-else>
+                  <MemoContent :content="m.content" />
+                </template>
               </div>
             </article>
           </div>
@@ -145,7 +202,9 @@ import { ref, computed, onMounted } from 'vue'
 import Cover from '@/components/Cover.vue'
 import CoverPicker from '@/components/CoverPicker.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
+import MemoContent from '@/components/MemoContent.vue'
 import { apiMemos, apiSettings } from '@/api/client'
+import { uploadImage } from '@/lib/image'
 
 // === 头部 icon / cover ===
 const icon  = ref('')
@@ -175,7 +234,7 @@ async function loadSettings() {
   } catch {}
 }
 
-async function persist(patch) {
+async function persistSettings(patch) {
   try {
     const { settings } = await apiSettings.update(patch)
     icon.value  = settings.memos_icon  || ''
@@ -185,30 +244,14 @@ async function persist(patch) {
   }
 }
 
-async function onPickEmoji(emoji) {
-  emojiOpen.value = false
-  await persist({ memos_icon: emoji ?? '' })
-}
+async function onPickEmoji(emoji) { emojiOpen.value = false; await persistSettings({ memos_icon: emoji ?? '' }) }
+async function onPickCover(value) { coverOpen.value = false; await persistSettings({ memos_cover: value ?? '' }) }
+async function updateCover(value) { await persistSettings({ memos_cover: value ?? '' }) }
 
-async function onPickCover(value) {
-  coverOpen.value = false
-  await persist({ memos_cover: value ?? '' })
-}
-
-async function updateCover(value) {
-  await persist({ memos_cover: value ?? '' })
-}
-
-// === 想法 ===
-const memos     = ref([])
-const loading   = ref(true)
-const error     = ref('')
-const busy      = ref(false)
-
-const draft     = ref('')
-const draftTags = ref([])
-const tagPalette = ['idea', '工作', '生活', '读书']
-const inputEl = ref(null)
+// === 想法列表 ===
+const memos   = ref([])
+const loading = ref(true)
+const error   = ref('')
 
 async function load() {
   loading.value = true
@@ -223,21 +266,81 @@ async function load() {
   }
 }
 
-function toggleTag(t) {
-  const i = draftTags.value.indexOf(t)
-  if (i >= 0) draftTags.value.splice(i, 1)
-  else draftTags.value.push(t)
+// === 新增想法 ===
+const draft = ref('')
+const busy  = ref(false)
+const inputEl = ref(null)
+const fileInputEl = ref(null)
+const pendingImages = ref([])   // [{ url }]
+const uploading = ref(false)
+const dropping  = ref(false)
+
+function triggerPick() { fileInputEl.value?.click() }
+function removePending(idx) { pendingImages.value.splice(idx, 1) }
+
+async function handleFiles(files) {
+  if (!files || !files.length) return
+  uploading.value = true
+  try {
+    for (const file of files) {
+      if (!file || !file.type?.startsWith('image/')) continue
+      try {
+        const { url } = await uploadImage(file)
+        pendingImages.value.push({ url })
+      } catch (e) {
+        alert(`图片上传失败: ${e?.message || ''}`)
+      }
+    }
+  } finally {
+    uploading.value = false
+  }
+}
+
+function onFilePicked(e) {
+  const files = Array.from(e.target.files || [])
+  handleFiles(files)
+  e.target.value = ''
+}
+
+async function onPaste(e) {
+  const files = []
+  for (const item of e.clipboardData?.items || []) {
+    if (item.kind === 'file') {
+      const f = item.getAsFile()
+      if (f && f.type?.startsWith('image/')) files.push(f)
+    }
+  }
+  if (files.length) {
+    e.preventDefault()
+    await handleFiles(files)
+  }
+}
+
+function onDragEnter() { dropping.value = true }
+function onDragOver()  { dropping.value = true }
+function onDragLeave() { dropping.value = false }
+async function onDrop(e) {
+  dropping.value = false
+  const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type?.startsWith('image/'))
+  if (files.length) await handleFiles(files)
+}
+
+function buildContent(text, images) {
+  const t = (text || '').trim()
+  const imgLines = images.map(i => `![](${i.url})`).join('\n')
+  if (t && imgLines) return `${t}\n\n${imgLines}`
+  return t || imgLines
 }
 
 async function onSubmit() {
-  const content = draft.value.trim()
+  const content = buildContent(draft.value, pendingImages.value)
   if (!content || busy.value) return
   busy.value = true
   try {
-    const { memo } = await apiMemos.create({ content, tags: [...draftTags.value] })
+    const { memo } = await apiMemos.create({ content })
     memos.value.unshift(memo)
     draft.value = ''
-    draftTags.value = []
+    pendingImages.value = []
     inputEl.value?.focus()
   } catch (e) {
     alert(e?.message || '记下失败')
@@ -246,6 +349,60 @@ async function onSubmit() {
   }
 }
 
+// === 编辑已有想法 ===
+const editingId = ref('')
+const editDraft = ref('')
+const editBusy  = ref(false)
+
+function onEdit(m) {
+  editingId.value = m.id
+  editDraft.value = m.content
+}
+function onEditCancel() {
+  editingId.value = ''
+  editDraft.value = ''
+}
+async function onEditSave(m) {
+  const content = editDraft.value.trim()
+  if (!content || editBusy.value) return
+  editBusy.value = true
+  try {
+    const { memo } = await apiMemos.update(m.id, { content })
+    const i = memos.value.findIndex(x => x.id === m.id)
+    if (i >= 0) memos.value[i] = memo
+    onEditCancel()
+  } catch (e) {
+    alert(e?.message || '保存失败')
+  } finally {
+    editBusy.value = false
+  }
+}
+async function onEditPaste(e) {
+  const files = []
+  for (const item of e.clipboardData?.items || []) {
+    if (item.kind === 'file') {
+      const f = item.getAsFile()
+      if (f && f.type?.startsWith('image/')) files.push(f)
+    }
+  }
+  if (!files.length) return
+  e.preventDefault()
+  uploading.value = true
+  try {
+    for (const file of files) {
+      try {
+        const { url } = await uploadImage(file)
+        editDraft.value = (editDraft.value ? editDraft.value + '\n' : '') + `![](${url})`
+      } catch (err) {
+        alert(`图片上传失败: ${err?.message || ''}`)
+      }
+    }
+  } finally {
+    uploading.value = false
+  }
+}
+
+// === 删除 ===
 async function onDelete(m) {
   if (!window.confirm('删除这条想法?')) return
   try {
@@ -256,6 +413,7 @@ async function onDelete(m) {
   }
 }
 
+// === 时间分组 ===
 function pad(n) { return String(n).padStart(2, '0') }
 function formatTime(ts) {
   const d = parseTs(ts)

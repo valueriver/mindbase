@@ -59,10 +59,10 @@ export const apiTokens = {
 }
 
 export const apiMemos = {
-  list:   ()                  => api.get('/api/memos'),
-  create: ({ content, tags }) => api.post('/api/memos', { content, tags }),
-  update: (id, patch)         => api.patch(`/api/memos/${id}`, patch),
-  remove: (id)                => api.delete(`/api/memos/${id}`),
+  list:   ()           => api.get('/api/memos'),
+  create: ({ content }) => api.post('/api/memos', { content }),
+  update: (id, { content }) => api.patch(`/api/memos/${id}`, { content }),
+  remove: (id)         => api.delete(`/api/memos/${id}`),
 }
 
 export const apiSettings = {

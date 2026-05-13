@@ -65,9 +65,11 @@
             </details>
           </div>
 
-          <!-- 助手气泡 -->
+          <!-- 助手气泡(markdown 渲染) -->
           <div v-else-if="item.kind === 'assistant'" class="flex justify-start">
-            <div class="max-w-[85%] rounded-2xl rounded-bl-sm bg-nt-hover px-3.5 py-2.5 text-[15px] leading-relaxed text-nt whitespace-pre-wrap break-words">{{ item.content }}<span v-if="item.streaming" class="ml-0.5 inline-block h-4 w-1.5 align-middle bg-nt-soft animate-pulse"></span></div>
+            <div class="md max-w-[85%] rounded-2xl rounded-bl-sm bg-nt-hover px-3.5 py-2.5 text-[15px] leading-relaxed text-nt break-words">
+              <div v-html="renderMd(item.content)"></div><span v-if="item.streaming" class="ml-0.5 inline-block h-4 w-1.5 align-middle bg-nt-soft animate-pulse"></span>
+            </div>
           </div>
         </template>
       </div>
@@ -102,7 +104,16 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import { apiChat, apiSettings } from '@/api/client'
+
+marked.setOptions({ breaks: true, gfm: true })
+function renderMd(text) {
+  if (!text) return ''
+  const html = marked.parse(String(text))
+  return DOMPurify.sanitize(html, { ADD_ATTR: ['target', 'rel'] })
+}
 
 const suggestions = [
   '我的想法里有多少条带 idea 标签的?',

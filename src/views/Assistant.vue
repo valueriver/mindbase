@@ -1,5 +1,6 @@
 <template>
-  <div class="flex flex-col min-h-screen">
+  <!-- 整页固定为 视口 - 顶栏(44px) 的高度,内部 flex-col,中间 flex-1 滚动 -->
+  <div class="flex flex-col h-[calc(100dvh-44px)]">
     <!-- 未配置提示 -->
     <div
       v-if="!aiReady && !checkingSettings"
@@ -13,7 +14,7 @@
     <!-- 消息列表 -->
     <div
       ref="scrollEl"
-      class="relative flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6"
+      class="relative min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6"
       @scroll.passive="onScroll"
     >
       <div ref="contentEl" class="mx-auto max-w-3xl space-y-4">
@@ -82,7 +83,7 @@
     </div>
 
     <!-- 输入区 -->
-    <div class="sticky bottom-0 border-t border-nt-divider bg-white px-3 py-3 md:px-8">
+    <div class="shrink-0 border-t border-nt-divider bg-white px-3 py-3 md:px-8">
       <div class="mx-auto flex max-w-3xl items-end gap-2">
         <textarea
           ref="inputEl"

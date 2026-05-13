@@ -6,15 +6,12 @@
 
     <div v-if="checking" class="mt-8 text-sm text-nt-soft">加载中…</div>
 
-    <!-- 首次访问:设置账号密码 -->
+    <!-- 首次访问:创建账户 -->
     <form
       v-else-if="!initialized"
       class="mt-8 flex w-full max-w-72 flex-col gap-3"
       @submit.prevent="onSetup"
     >
-      <div class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
-        ⚠️ 这是首次访问,设置一次账号密码后,以后用它来登录。
-      </div>
       <input
         v-model="username"
         type="text"
@@ -43,7 +40,7 @@
         type="submit"
         :disabled="busy || !canSetup"
         class="rounded-md bg-nt px-4 py-2.5 text-sm text-white hover:bg-black disabled:opacity-50"
-      >{{ busy ? '设置中…' : '设置并登录' }}</button>
+      >{{ busy ? '创建中…' : '创建账户' }}</button>
     </form>
 
     <!-- 已初始化:登录 -->

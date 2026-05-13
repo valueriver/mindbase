@@ -50,7 +50,7 @@
             class="rounded px-1.5 py-1 text-sm hover:bg-nt-hover hover:text-nt-muted"
             @click="openManage"
           >
-            ⚙ 管理笔记本
+            ⚙️ 管理笔记本
           </button>
         </div>
 

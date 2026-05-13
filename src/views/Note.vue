@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen">
-    <AppHeader />
-
     <Cover
       v-if="note?.cover"
       :cover="note.cover"
@@ -103,7 +101,6 @@
 <script setup>
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import AppHeader from '@/components/AppHeader.vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import ContentEditor from '@/components/ContentEditor.vue'
 import Cover from '@/components/Cover.vue'

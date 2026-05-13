@@ -9,6 +9,9 @@ import { handleTokenApi } from './tokens.js'
 import { handleSearchApi } from './search.js'
 import { handleAiApi } from './ai.js'
 import { handleItemApi } from './items.js'
+import { handleMemoApi } from './memos.js'
+import { handleChatApi } from './chat.js'
+import { handleSettingsApi } from './settings.js'
 
 export async function handleApiRoutes(request, env, url) {
   const path = url.pathname
@@ -76,6 +79,24 @@ export async function handleApiRoutes(request, env, url) {
 
     if (path.startsWith('/api/items')) {
       const r = await handleItemApi(request, env, path, method)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/memos')) {
+      const r = await handleMemoApi(request, env, path, method, url)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/chat')) {
+      const r = await handleChatApi(request, env, path, method, url)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/settings')) {
+      const r = await handleSettingsApi(request, env, path, method)
       if (r) return r
       return fail('not_found', 404)
     }

@@ -1,13 +1,13 @@
 <template>
   <div class="min-h-screen">
-    <AppHeader />
+    <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
+      <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">🔑 对外授权</h1>
 
-    <main class="mx-auto w-full max-w-3xl px-12 pt-16 pb-20">
-      <Breadcrumb :items="[{ name: 'AI 授权', icon: '🤖' }]" />
-      <h1 class="mt-8 text-[40px] font-bold leading-tight tracking-tight text-nt">AI 授权</h1>
-
-      <p class="mt-3 text-sm leading-relaxed text-nt-muted">
+      <p class="mt-2 text-sm leading-relaxed text-nt-muted">
         通过标准 OpenAPI 接口,让 ChatGPT、Claude 或任何支持 OpenAPI 的 AI 工具读写你的笔记。
+        (这与「助理」内部使用的大模型是两件事 —— 那个在
+        <router-link :to="{ name: 'assistant-settings' }" class="underline">设置</router-link>
+        里配置。)
       </p>
 
       <div v-if="loading" class="mt-10 py-6 text-sm text-nt-soft">加载中…</div>
@@ -80,8 +80,6 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import AppHeader from '@/components/AppHeader.vue'
-import Breadcrumb from '@/components/Breadcrumb.vue'
 import { apiTokens } from '@/api/client'
 
 const loading = ref(true)

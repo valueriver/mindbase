@@ -1,20 +1,14 @@
 import { readJsonBody } from '../api/utils/body.js'
 import { ok, fail } from '../api/utils/json.js'
-import { createUserId } from '../api/utils/id.js'
 import {
   getUserFromRequest,
-  verifyGoogleIdToken,
+  verifyCredentials,
   signJwt,
   buildAuthCookie,
   clearAuthCookie,
+  SINGLE_USER_ID,
 } from '../domain/auth/index.js'
-import {
-  createUser,
-  findUserByGoogleId,
-  findUserByEmail,
-  findUserById,
-  updateUserProfile,
-} from '../repository/user.js'
+import { ensureUser, findUserById } from '../repository/user.js'
 
 const sanitize = (u) => u && ({
   id:         u.id,
@@ -26,46 +20,27 @@ const sanitize = (u) => u && ({
 const issueCookie = (token, url) =>
   buildAuthCookie(token, { secure: url.protocol === 'https:' })
 
-export const googleLoginAction = async (request, env, url) => {
+export const passwordLoginAction = async (request, env, url) => {
   const body = await readJsonBody(request)
-  const idToken = body?.token
-  if (!idToken) return fail('token_required', 400)
+  const username = String(body?.username || '').trim()
+  const password = String(body?.password || '')
+  if (!username || !password) return fail('username_and_password_required', 400)
 
-  const clientId = env.GOOGLE_CLIENT_ID
-  if (!clientId) return fail('google_client_id_missing', 500)
+  let valid
+  try { valid = verifyCredentials(env, username, password) }
+  catch { return fail('auth_not_configured', 500) }
+  if (!valid) return fail('invalid_credentials', 401)
 
-  let payload
-  try {
-    payload = await verifyGoogleIdToken(idToken, clientId)
-  } catch (err) {
-    return fail(`google_verify_failed: ${err?.message || 'unknown'}`, 401)
-  }
-
-  const googleId = String(payload.sub)
-  const email    = String(payload.email || '')
-  const name     = String(payload.name || email.split('@')[0] || 'user')
-  const avatar   = String(payload.picture || '')
-
-  let user = await findUserByGoogleId(env.DB, googleId)
-  if (!user && email) user = await findUserByEmail(env.DB, email)
-
-  if (user) {
-    user = await updateUserProfile(env.DB, user.id, { name, avatarUrl: avatar })
-  } else {
-    user = await createUser(env.DB, {
-      id:        createUserId(),
-      googleId,
-      email,
-      name,
-      avatarUrl: avatar,
-    })
-  }
+  const user = await ensureUser(env.DB, {
+    id:    SINGLE_USER_ID,
+    email: `${username}@mindbase.local`,
+    name:  username,
+  })
 
   const token = await signJwt(env, {
-    sub:    user.id,
-    email:  user.email,
-    name:   user.name,
-    avatar: user.avatar_url,
+    sub:   user.id,
+    email: user.email,
+    name:  user.name,
   })
 
   return ok({ user: sanitize(user) }, 200, issueCookie(token, url))

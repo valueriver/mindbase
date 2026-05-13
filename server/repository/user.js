@@ -1,5 +1,5 @@
 const USER_COLS = `
-  id, google_id, email, name, avatar_url,
+  id, email, name, avatar_url,
   home_name, home_icon, home_cover,
   created_at, updated_at
 `
@@ -7,28 +7,15 @@ const USER_COLS = `
 export const findUserById = (db, id) =>
   db.prepare(`SELECT ${USER_COLS} FROM users WHERE id = ?1`).bind(id).first()
 
-export const findUserByGoogleId = (db, googleId) =>
-  db.prepare(`SELECT ${USER_COLS} FROM users WHERE google_id = ?1`).bind(googleId).first()
-
-export const findUserByEmail = (db, email) =>
-  db.prepare(`SELECT ${USER_COLS} FROM users WHERE email = ?1`).bind(email).first()
-
-export const createUser = async (db, { id, googleId, email, name, avatarUrl }) => {
+// 单用户首次登录种子化:若不存在则插入。
+// 旧库的 users.google_id 字段保留可空,不再写入。
+export const ensureUser = async (db, { id, email, name }) => {
+  const existing = await findUserById(db, id)
+  if (existing) return existing
   await db.prepare(
-    `INSERT INTO users (id, google_id, email, name, avatar_url, created_at, updated_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'), datetime('now'))`
-  ).bind(id, googleId, email, name, avatarUrl).run()
-  return findUserById(db, id)
-}
-
-export const updateUserProfile = async (db, id, { name, avatarUrl }) => {
-  await db.prepare(
-    `UPDATE users
-       SET name       = COALESCE(?2, name),
-           avatar_url = COALESCE(?3, avatar_url),
-           updated_at = datetime('now')
-     WHERE id = ?1`
-  ).bind(id, name ?? null, avatarUrl ?? null).run()
+    `INSERT INTO users (id, email, name, created_at, updated_at)
+     VALUES (?1, ?2, ?3, datetime('now'), datetime('now'))`
+  ).bind(id, email, name).run()
   return findUserById(db, id)
 }
 

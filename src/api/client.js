@@ -24,9 +24,9 @@ export const api = {
 }
 
 export const apiUser = {
-  me:          ()      => api.get('/api/user/me'),
-  googleLogin: (token) => api.post('/api/user/login/google', { token }),
-  logout:      ()      => api.post('/api/user/logout'),
+  me:     ()                   => api.get('/api/user/me'),
+  login:  (username, password) => api.post('/api/user/login', { username, password }),
+  logout: ()                   => api.post('/api/user/logout'),
 }
 
 export const apiRoot = {
@@ -56,6 +56,25 @@ export const apiTokens = {
   list:   ()     => api.get('/api/tokens'),
   create: (name) => api.post('/api/tokens', { name }),
   remove: (id)   => api.delete(`/api/tokens/${id}`),
+}
+
+export const apiMemos = {
+  list:   ()                  => api.get('/api/memos'),
+  create: ({ content, tags }) => api.post('/api/memos', { content, tags }),
+  update: (id, patch)         => api.patch(`/api/memos/${id}`, patch),
+  remove: (id)                => api.delete(`/api/memos/${id}`),
+}
+
+export const apiSettings = {
+  detail: ()      => api.get('/api/settings'),
+  update: (patch) => api.patch('/api/settings', patch),
+}
+
+export const apiChat = {
+  conversations:    ()                  => api.get('/api/chat/conversations'),
+  messages:         (conversationId)    => api.get(`/api/chat/conversations/${conversationId}/messages`),
+  sendUrl:          ()                  => '/api/chat/send',
+  removeConversation: (id)              => api.delete(`/api/chat/conversations/${id}`),
 }
 
 export const apiItems = {

@@ -23,8 +23,8 @@ export async function checkAuth() {
   return inflight
 }
 
-export async function loginWithGoogle(idToken) {
-  const { user: u } = await apiUser.googleLogin(idToken)
+export async function login(username, password) {
+  const { user: u } = await apiUser.login(username, password)
   user.value = u
   ready.value = true
   return u
@@ -42,7 +42,7 @@ export function useAuth() {
     ready,
     isAuthenticated: computed(() => !!user.value),
     checkAuth,
-    loginWithGoogle,
+    login,
     logout,
   }
 }

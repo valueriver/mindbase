@@ -1,7 +1,6 @@
--- 用户
+-- 单用户:wrangler.jsonc 配 AUTH_USERNAME / AUTH_PASSWORD,首次登录写入 users 表(固定 id)
 CREATE TABLE users (
   id          TEXT PRIMARY KEY,
-  google_id   TEXT UNIQUE,
   email       TEXT NOT NULL,
   name        TEXT,
   avatar_url  TEXT,
@@ -44,7 +43,37 @@ CREATE TABLE notes (
 CREATE INDEX idx_notes_user     ON notes(user_id);
 CREATE INDEX idx_notes_notebook ON notes(notebook_id);
 
--- AI 授权令牌:一用户最多一条,开启即生成、关闭即删除。
+-- 想法:时间轴随手记
+CREATE TABLE memos (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content     TEXT NOT NULL DEFAULT '',
+  tags        TEXT,   -- JSON array,e.g. '["idea","工作"]'
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_memos_user_created ON memos(user_id, created_at DESC);
+
+-- 助理对话:message 直接存大模型返回的 message 字段(含 role/content/tool_calls 等)
+CREATE TABLE messages (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  conversation_id TEXT NOT NULL,
+  message         TEXT NOT NULL,
+  memo            TEXT,
+  usage           TEXT,
+  meta            TEXT,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_messages_conv ON messages(conversation_id, id);
+
+-- 应用级 KV 设置:AI 模型 url/key/model 等
+CREATE TABLE settings (
+  key         TEXT PRIMARY KEY,
+  value       TEXT,
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- AI 对外授权令牌:一用户最多一条,开启即生成、关闭即删除。
 CREATE TABLE tokens (
   id            TEXT PRIMARY KEY,
   user_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

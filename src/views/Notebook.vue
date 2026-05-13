@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen">
-    <AppHeader />
-
     <Cover
       v-if="notebook?.cover"
       :cover="notebook.cover"
@@ -106,7 +104,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import AppHeader from '@/components/AppHeader.vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import Cover from '@/components/Cover.vue'
 import CoverPicker from '@/components/CoverPicker.vue'

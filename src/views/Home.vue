@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen">
-    <AppHeader />
-
     <Cover
       v-if="home?.cover"
       :cover="home.cover"
@@ -85,7 +83,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import AppHeader from '@/components/AppHeader.vue'
 import Cover from '@/components/Cover.vue'
 import CoverPicker from '@/components/CoverPicker.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'

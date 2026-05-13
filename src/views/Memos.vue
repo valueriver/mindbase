@@ -122,20 +122,13 @@
               <div class="rounded-md border border-nt-divider bg-white p-3 md:p-4">
                 <div class="mb-1 flex items-center justify-between gap-2">
                   <span class="text-xs text-nt-soft">{{ formatTime(m.created_at) }}</span>
-                  <div class="opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                    <button
-                      v-if="editingId !== m.id"
-                      type="button"
-                      class="text-xs text-nt-soft hover:text-nt"
-                      @click="onEdit(m)"
-                    >编辑</button>
-                    <button
-                      v-if="editingId !== m.id"
-                      type="button"
-                      class="text-xs text-nt-soft hover:text-nt-danger"
-                      @click="onDelete(m)"
-                    >删除</button>
-                  </div>
+                  <button
+                    v-if="editingId !== m.id"
+                    type="button"
+                    class="flex h-6 w-6 items-center justify-center rounded text-nt-soft hover:bg-nt-hover hover:text-nt"
+                    title="更多"
+                    @click="openMenu(m.id, $event)"
+                  ><span class="text-base leading-none">⋯</span></button>
                 </div>
 
                 <!-- 编辑态 -->
@@ -187,6 +180,20 @@
       @pick="onPickCover"
       @close="coverOpen = false"
     />
+
+    <!-- 想法卡片的更多菜单 -->
+    <Popover :open="!!menuOpenId" :anchor="menuAnchor" :width="120" @close="closeMenu">
+      <button
+        type="button"
+        class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt hover:bg-nt-hover"
+        @click="onMenuEdit"
+      ><span>✏️</span> 编辑</button>
+      <button
+        type="button"
+        class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-nt-muted hover:bg-nt-hover hover:text-nt-danger"
+        @click="onMenuDelete"
+      ><span>🗑️</span> 删除</button>
+    </Popover>
   </div>
 </template>
 
@@ -196,6 +203,7 @@ import Cover from '@/components/Cover.vue'
 import CoverPicker from '@/components/CoverPicker.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
 import MemoContent from '@/components/MemoContent.vue'
+import Popover from '@/components/Popover.vue'
 import { apiMemos, apiSettings } from '@/api/client'
 import { uploadImage } from '@/lib/image'
 
@@ -393,6 +401,29 @@ async function onEditPaste(e) {
   } finally {
     uploading.value = false
   }
+}
+
+// === 卡片更多菜单 ===
+const menuOpenId = ref('')
+const menuAnchor = ref(null)
+
+function openMenu(id, evt) {
+  menuOpenId.value = id
+  menuAnchor.value = evt.currentTarget.getBoundingClientRect()
+}
+function closeMenu() {
+  menuOpenId.value = ''
+  menuAnchor.value = null
+}
+function onMenuEdit() {
+  const m = memos.value.find(x => x.id === menuOpenId.value)
+  closeMenu()
+  if (m) onEdit(m)
+}
+function onMenuDelete() {
+  const m = memos.value.find(x => x.id === menuOpenId.value)
+  closeMenu()
+  if (m) onDelete(m)
 }
 
 // === 删除 ===

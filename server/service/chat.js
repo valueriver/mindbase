@@ -107,29 +107,28 @@ export const sendChatAction = async (request, env) => {
         try { controller.close() } catch {}
       }
 
+      // 收集所有副作用 DB 写入,close 前 awaitAll,确保 Worker 不在写完前退出
+      const pending = []
+
       const send = (evt) => {
-        // 透传给前端
         sse(evt)
-        // 副作用:把过程中产生的消息持久化
-        // - assistant_tool_calls: 模型决定调用工具,需要存(下次重启对话能恢复 LLM 上下文)
-        // - tool_result:工具结果
-        // - done:最终 assistant 文本
+        // 持久化:assistant_tool_calls / tool_result / 最终 done
         if (evt.type === 'assistant_tool_calls' && evt.message) {
-          insertMessage(env.DB, {
+          pending.push(insertMessage(env.DB, {
             conversationId: CONVERSATION_ID,
             message: evt.message,
-          }).catch(err => console.error('insert tool_calls failed', err?.message))
+          }))
         } else if (evt.type === 'tool_result' && evt.message) {
-          insertMessage(env.DB, {
+          pending.push(insertMessage(env.DB, {
             conversationId: CONVERSATION_ID,
             message: evt.message,
-          }).catch(err => console.error('insert tool_result failed', err?.message))
+          }))
         } else if (evt.type === 'done' && evt.message) {
-          insertMessage(env.DB, {
+          pending.push(insertMessage(env.DB, {
             conversationId: CONVERSATION_ID,
             message: evt.message,
             meta: { model },
-          }).catch(err => console.error('insert done failed', err?.message))
+          }))
         }
       }
 
@@ -144,6 +143,10 @@ export const sendChatAction = async (request, env) => {
       } catch (err) {
         sse({ type: 'error', message: err?.message || 'chat_failed' })
       } finally {
+        const results = await Promise.allSettled(pending)
+        for (const r of results) {
+          if (r.status === 'rejected') console.error('insert failed', r.reason?.message || r.reason)
+        }
         close()
       }
     },

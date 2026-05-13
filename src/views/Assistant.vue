@@ -11,7 +11,11 @@
     </div>
 
     <!-- 消息列表 -->
-    <div ref="scrollEl" class="flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6">
+    <div
+      ref="scrollEl"
+      class="flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6"
+      @scroll.passive="onScroll"
+    >
       <div class="mx-auto max-w-3xl space-y-4">
         <div v-if="loadingHistory" class="py-12 text-center text-sm text-nt-soft">加载中…</div>
 
@@ -138,7 +142,18 @@ function autosize(e) {
   el.style.height = Math.min(el.scrollHeight, 160) + 'px'
 }
 
-function scrollBottom() {
+// 智能滚动:用户在底部时才跟随;手动上滑后暂停,再次滚回底部恢复
+const SCROLL_THRESHOLD = 50
+const stickToBottom = ref(true)
+
+function onScroll(e) {
+  const el = e.target
+  const distance = el.scrollHeight - el.scrollTop - el.clientHeight
+  stickToBottom.value = distance < SCROLL_THRESHOLD
+}
+
+function scrollBottom(force = false) {
+  if (!force && !stickToBottom.value) return
   nextTick(() => {
     if (scrollEl.value) scrollEl.value.scrollTop = scrollEl.value.scrollHeight
   })
@@ -206,7 +221,7 @@ async function loadHistory() {
   try {
     const { messages: rows } = await apiChat.messages()
     for (const r of rows) pushFromMessage(r.message)
-    scrollBottom()
+    scrollBottom(true) // 首次加载强制滚到底
   } catch {} finally {
     loadingHistory.value = false
   }
@@ -230,7 +245,9 @@ async function ask(preset) {
   }
 
   streaming.value = true
-  scrollBottom()
+  // 用户主动发送:强制粘底
+  stickToBottom.value = true
+  scrollBottom(true)
 
   try {
     const resp = await fetch(apiChat.sendUrl(), {

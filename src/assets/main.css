@@ -47,3 +47,6 @@ textarea:focus-visible,
 
 ::selection { background: rgba(35,131,226,0.22); }
 
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+

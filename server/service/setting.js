@@ -2,6 +2,7 @@ import { ok, fail } from '../api/utils/json.js'
 import { readJsonBody } from '../api/utils/body.js'
 import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings, setSetting } from '../repository/setting.js'
+import { DEFAULT_SYSTEM_PROMPT } from '../ai/system-prompt.js'
 
 const ROUND_CHOICES = [30, 100, 500]
 const DEFAULT_ROUNDS = 100
@@ -11,6 +12,7 @@ const WRITABLE = new Set([
   'ai_api_key',
   'ai_model',
   'ai_context_rounds',
+  'ai_system_prompt',
   'memos_icon',
   'memos_cover',
   'home_name',
@@ -25,12 +27,14 @@ const normalizeRounds = (raw) => {
 }
 
 const serialize = (all) => ({
-  ai_base_url:       all.ai_base_url || '',
-  ai_api_key:        all.ai_api_key  || '',
-  ai_model:          all.ai_model    || '',
-  ai_context_rounds: normalizeRounds(all.ai_context_rounds),
-  memos_icon:        all.memos_icon  || '',
-  memos_cover:       all.memos_cover || '',
+  ai_base_url:              all.ai_base_url || '',
+  ai_api_key:               all.ai_api_key  || '',
+  ai_model:                 all.ai_model    || '',
+  ai_context_rounds:        normalizeRounds(all.ai_context_rounds),
+  ai_system_prompt:         all.ai_system_prompt || '',
+  ai_system_prompt_default: DEFAULT_SYSTEM_PROMPT,
+  memos_icon:               all.memos_icon  || '',
+  memos_cover:              all.memos_cover || '',
 })
 
 export const getSettingsAction = async (request, env) => {

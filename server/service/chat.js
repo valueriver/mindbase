@@ -4,27 +4,10 @@ import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings } from '../repository/setting.js'
 import { insertMessage, listMessages } from '../repository/message.js'
 import { chat } from '../ai/handler.js'
+import { DEFAULT_SYSTEM_PROMPT } from '../ai/system-prompt.js'
 
 // 单一全局对话。
 const CONVERSATION_ID = 'main'
-
-// 给 AI 的系统提示:工作场景 + 数据库 schema 概览。
-const SYSTEM_PROMPT = `你是 MindBase 的助理。MindBase 是单机自部署的笔记应用(Cloudflare Workers + D1),没有多用户概念。
-
-你拥有一个工具 sql_query,可以对 D1 数据库执行任意 SQL(SELECT/INSERT/UPDATE/DELETE/DDL 都行,但每次只能一条语句、不要带末尾分号)。
-
-数据库表(SQLite 风格,均无 user_id 字段):
-- notebooks(id, parent_id, name, icon, cover, sort_order, created_at, updated_at) — 笔记本树
-- notes(id, notebook_id, title, content, icon, cover, sort_order, created_at, updated_at) — content 是 HTML
-- memos(id, content, created_at, updated_at) — 想法/时间轴随手记,content 是纯文本,可内嵌 markdown 图片 ![](/i/...)
-- messages(id, conversation_id, message, memo, usage, meta, created_at) — 你正在写入的这张表
-- settings(key, value, updated_at) — KV,含 ai_base_url/ai_api_key/ai_model/home_name/home_icon/home_cover/memos_icon/memos_cover 等
-- tokens(id, name, token, scope, created_at, last_used_at) — 对外 AI 授权 token,不要 SELECT 出 token 字段
-
-约定:
-- 回答用中文,简洁直接,不要长篇大论。
-- 涉及 UPDATE/DELETE/DROP 等写入操作时,先用 SELECT 看一眼,再次确认后再写入。不可逆操作避免连续多步自动执行。
-- 查询大表请用 LIMIT。`
 
 const safeParse = (s, fallback = null) => {
   if (s == null) return fallback
@@ -92,8 +75,9 @@ export const sendChatAction = async (request, env) => {
   const userMsg = { role: 'user', content }
   await insertMessage(env.DB, { conversationId: CONVERSATION_ID, message: userMsg })
 
+  const systemPrompt = String(settings.ai_system_prompt || '').trim() || DEFAULT_SYSTEM_PROMPT
   const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: systemPrompt },
     ...history,
     userMsg,
   ]

@@ -6,83 +6,143 @@
 📦 数据全在你自己 Cloudflare 账号下,一份 SQLite 文件,可以随时下载备份  
 🤖 接入任何 AI(ChatGPT / Claude / Gemini …),它能直接读写你的数据
 
-
 ---
 
-## 长什么样
+## 想法
 
 <table>
 <tr>
-  <td width="50%">
-    <img src="./public/screenshots/v2/01-launcher.png" alt="应用切换面板"/>
-    <p align="center"><sub>七个模块,各做一件事</sub></p>
+  <td width="55%" valign="top">
+    <h3>💡 心里想到的,顺手记一下。</h3>
+    <p>时间线随手记。<code>⌘ + Enter</code> 记下,<code>⌘ + V</code> 直接粘截图;
+    图片传到你自己的 R2 桶,删想法时自动清理。</p>
+    <p>按天分组,沉淀下来就是一本属于自己的日记。</p>
   </td>
-  <td width="50%">
+  <td width="45%" valign="top">
     <img src="./public/screenshots/v2/02-memos.png" alt="想法"/>
-    <p align="center"><sub>💡 想法 —— 心里想到的,顺手记一下</sub></p>
-  </td>
-</tr>
-<tr>
-  <td width="50%">
-    <img src="./public/screenshots/v2/03-todos.png" alt="待办"/>
-    <p align="center"><sub>✅ 待办 —— 要做的事,一项一项完成</sub></p>
-  </td>
-  <td width="50%">
-    <img src="./public/screenshots/v2/04-notes.png" alt="笔记"/>
-    <p align="center"><sub>📚 笔记 —— 无限嵌套笔记本,Notion 风可定制图标和封面</sub></p>
-  </td>
-</tr>
-<tr>
-  <td width="50%">
-    <img src="./public/screenshots/v2/05-ledger.png" alt="记账"/>
-    <p align="center"><sub>💰 记账 —— 逐笔记录的收支,助理可以查询统计</sub></p>
-  </td>
-  <td width="50%">
-    <img src="./public/screenshots/v2/06-memory.png" alt="记忆"/>
-    <p align="center"><sub>🧠 记忆 —— 希望助理始终记得的事情,三档可见性</sub></p>
-  </td>
-</tr>
-<tr>
-  <td width="50%">
-    <img src="./public/screenshots/v2/07-search.png" alt="搜索"/>
-    <p align="center"><sub>🔍 搜索 —— 笔记、想法、记账,一处查找</sub></p>
-  </td>
-  <td width="50%">
-    <img src="./public/screenshots/v2/08-assistant.png" alt="助理"/>
-    <p align="center"><sub>💬 助理 —— 接入任何大模型,带工具直查 D1</sub></p>
   </td>
 </tr>
 </table>
 
 ---
 
-## 为什么再做一个
+## 待办
 
-| 别人 | MindBase |
-|---|---|
-| 云笔记 SaaS | **单人单机自部署**,数据在你自己的 Cloudflare 账号里 |
-| 向量数据库 + RAG | 助理直接 SQL,因为表清晰、量小,SQL 就是最自然的查询语言 |
-| 多用户协同 | **一个人用**,没有用户系统,没有分享,没有权限管理 |
-| 一个工具一个 app | 笔记、待办、记账、记忆、想法 **共用一份 SQLite**,助理一次能看全 |
-
-设计哲学一句话:**数据握在自己手里,AI 像你一样翻这些数据。**
+<table>
+<tr>
+  <td width="45%" valign="top">
+    <img src="./public/screenshots/v2/03-todos.png" alt="待办"/>
+  </td>
+  <td width="55%" valign="top">
+    <h3>✅ 要做的事,一项一项完成。</h3>
+    <p>没有项目、没有标签、没有优先级 —— 一个清单,加进去、勾掉、删掉。</p>
+    <p>克制是这个模块的设计原则。</p>
+  </td>
+</tr>
+</table>
 
 ---
 
-## 每个模块
+## 笔记
 
-| 模块 | 一句话 |
-|---|---|
-| 💬 **助理** | 接入任意大模型,带 `sql_query` 工具,可以直接读写你的库 |
-| 💡 **想法** | 时间线随手记,⌘ + Enter 记下,⌘ + V 粘截图 |
-| ✅ **待办** | 单一任务清单 |
-| 📚 **笔记** | 无限嵌套笔记本,自定义 emoji 图标 + 8 张预置封面 + 自上传封面;Notion 式编辑器(H1/H2/H3/粗斜体);三种拖动:重排 / 嵌套 / 跨级移动 |
-| 💰 **记账** | 收支流水,按日分组,月度统计,分类自动补全 |
-| 🧠 **记忆** | 给助理看的长期上下文。三档可见性: |
-|   |   · **count** —— 只让助理知道"有 N 条记忆" |
-|   |   · **summary** —— 注入标题 + 描述,内容隐藏 |
-|   |   · **full** —— 全部注入 |
-| 🔍 **搜索** | 一处查找所有模块的内容 |
+<table>
+<tr>
+  <td width="55%" valign="top">
+    <h3>📚 无限嵌套笔记本,Notion 风可定制图标和封面。</h3>
+    <p>笔记本可以无限嵌套,每个笔记本和笔记都能配 emoji 图标 + 封面图(8 张预置或自己上传)。</p>
+    <p>编辑器是 Notion 风:H1/H2/H3、粗斜体、行首 <code>#</code> Markdown 快捷键、粘贴即上传图。</p>
+    <p>三种拖动语义:同级<strong>重排</strong> / 拖到笔记本上 0.5s 自动<strong>嵌套</strong>进去 / 拖到面包屑<strong>跨级移动</strong>。</p>
+  </td>
+  <td width="45%" valign="top">
+    <img src="./public/screenshots/v2/04-notes.png" alt="笔记"/>
+  </td>
+</tr>
+</table>
+
+---
+
+## 记账
+
+<table>
+<tr>
+  <td width="45%" valign="top">
+    <img src="./public/screenshots/v2/05-ledger.png" alt="记账"/>
+  </td>
+  <td width="55%" valign="top">
+    <h3>💰 逐笔记录的收支,助理可以查询统计。</h3>
+    <p>每一笔收 / 支记下来,按日期分组,顶部显示当月支出 / 收入 / 结余三块统计。</p>
+    <p>金额用整数"分"存,永远不出现浮点误差。分类是自由文本,但会按用过的历史自动补全。</p>
+    <p>问助理"上个月在外卖上花了多少",直接得到结果。</p>
+  </td>
+</tr>
+</table>
+
+---
+
+## 记忆
+
+<table>
+<tr>
+  <td width="55%" valign="top">
+    <h3>🧠 希望助理始终记得的事情。</h3>
+    <p>你写下来的长期事实,会拼进助理的 system prompt,每轮对话都看得到 —— 不用每次重新说"我是后端工程师"或者"回答时直接说重点"。</p>
+    <p>三档可见性,控制助理能看到多少:</p>
+    <ul>
+      <li><strong>count</strong> —— 只知道"你有 N 条记忆",看不到内容</li>
+      <li><strong>summary</strong> —— 看得到标题 + 一句话摘要</li>
+      <li><strong>full</strong> —— 全部注入</li>
+    </ul>
+    <p>"知道存在但看不见"是一个独立的状态 —— 适合身份证、工资单这种你想自己有记录、但不希望任意 LLM 看到的信息。</p>
+  </td>
+  <td width="45%" valign="top">
+    <img src="./public/screenshots/v2/06-memory.png" alt="记忆"/>
+  </td>
+</tr>
+</table>
+
+---
+
+## 搜索
+
+<table>
+<tr>
+  <td width="45%" valign="top">
+    <img src="./public/screenshots/v2/07-search.png" alt="搜索"/>
+  </td>
+  <td width="55%" valign="top">
+    <h3>🔍 笔记、想法、记账,一处查找。</h3>
+    <p>一个关键词,跨所有模块。结果按类型分组,点击直达原文。</p>
+  </td>
+</tr>
+</table>
+
+---
+
+## 助理
+
+<table>
+<tr>
+  <td width="55%" valign="top">
+    <h3>💬 接入任意大模型,读写你的库。</h3>
+    <p>OpenAI 兼容协议,任何 base url 都能填(DeepSeek、SiliconFlow、自部署的 vLLM 都行)。</p>
+    <p>带一个 <code>sql_query</code> 工具,可以直接对 D1 写 SQL。问"上个月外卖花了多少"它能给你算出来,让它"把今天的想法整理成一篇笔记"它能跨模块完成。</p>
+    <p>启用的「记忆」会自动注入 system prompt,模型当前用什么、运行在什么环境也都会告诉它。</p>
+  </td>
+  <td width="45%" valign="top">
+    <img src="./public/screenshots/v2/08-assistant.png" alt="助理"/>
+  </td>
+</tr>
+</table>
+
+---
+
+## 七个模块,一份数据库
+
+<p align="center">
+  <img src="./public/screenshots/v2/01-launcher.png" alt="应用切换面板" width="60%"/>
+</p>
+
+笔记 / 想法 / 待办 / 记账 / 记忆 / 搜索 / 助理 —— 共用一份 SQLite。助理一次能看全,跨模块整理零摩擦。
 
 ---
 

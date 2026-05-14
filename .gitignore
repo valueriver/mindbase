@@ -38,3 +38,4 @@ wrangler.jsonc
 
 # 由 scripts/build-skill.mjs 生成的 skill zip
 public/skills/
+.dev/

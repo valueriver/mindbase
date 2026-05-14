@@ -86,13 +86,13 @@
   <td width="55%" valign="top">
     <h3>🧠 希望助理始终记得的事情。</h3>
     <p>你写下来的长期事实,会拼进助理的 system prompt,每轮对话都看得到 —— 不用每次重新说"我是后端工程师"或者"回答时直接说重点"。</p>
-    <p>三档可见性,控制助理能看到多少:</p>
+    <p>三档可见性,控制<strong>默认注入 system prompt 的多少</strong>:</p>
     <ul>
       <li><strong>必读</strong> —— 全部注入,助理把它当成事实背景</li>
-      <li><strong>摘要</strong> —— 看得到标题 + 一句话简述,正文不可见</li>
-      <li><strong>已存</strong> —— 助理只知道"有这条",任何字段都看不到</li>
+      <li><strong>摘要</strong> —— 看得到标题 + 一句话简述,正文默认不可见</li>
+      <li><strong>已存</strong> —— 助理只知道"有这条",任何字段默认看不到</li>
     </ul>
-    <p>"知道存在但看不见"是一个独立的状态 —— 适合身份证、工资单这种你想自己有记录、但不希望任意 LLM 看到的信息。</p>
+    <p>助理始终带 SQL 工具,需要时可以 <code>SELECT memories</code> 读到更多 —— 但你能看到它写的查询,主动访问是<strong>可观测</strong>的。适合身份证、工资单这种你想自己有记录、不希望被默认带进 prompt 的信息。</p>
   </td>
   <td width="45%" valign="top">
     <img src="./public/screenshots/v2/06-memory.png" alt="记忆"/>

@@ -59,6 +59,33 @@ This file defines every operation, parameter, and response shape. Use it as the 
 1. Upload: `POST /api/images` as `multipart/form-data` with field `file` → returns `{ "url": "/i/<key>" }`
 2. Embed in a note: include `<img src="<base>/i/<key>"/>` inside `content`
 
+### Long-term memories
+
+The user can write down facts they want you to remember across all conversations (preferences, project context, personal info). Three visibility levels control what the local assistant sees — but **as an external AI accessing via this skill, you can read every memory regardless of `visibility`**.
+
+- `GET /api/memories` — list everything
+- `GET /api/memories/<id>` — one entry
+- `POST /api/memories` — create (`title`, `content` required; `description` and `visibility` optional)
+- `PATCH /api/memories/<id>` — update
+- `DELETE /api/memories/<id>` — remove
+
+`visibility` ∈ `{ count, summary, full }` — only matters for what the local MindBase assistant gets injected into its prompt. Set it when the user says "记一条记忆但内容不要给本地助理看" or similar.
+
+### Personal ledger (expense / income tracking)
+
+The user tracks expenses and income here.
+
+- `GET /api/ledger?month=YYYY-MM&type=expense|income` — list, newest first
+- `GET /api/ledger/stats?month=YYYY-MM` — `{ expense, income, balance }` for the month, all in **cents**
+- `GET /api/ledger/categories` — distinct categories the user has used, sorted by frequency (use these for autocomplete-style suggestions)
+- `POST /api/ledger` — record one. Body: `{ type, amount, category, note, happened_at }`
+  - `amount` is **yuan as a number** (e.g. `30.5`), server converts to cents internally
+  - `type` ∈ `{ expense, income }`, default `expense`
+  - `happened_at` is `YYYY-MM-DD`, defaults to today
+- `PATCH /api/ledger/<id>` / `DELETE /api/ledger/<id>` — edit / remove
+
+When the user asks "上个月外卖花了多少" or "记一笔今天午餐 30 块", use these endpoints directly. **Amounts in responses are in cents — divide by 100 for display.**
+
 ## Conventions
 
 - Don't bulk-pull the whole library proactively. Use `/api/ai/index` for structure; fetch bodies on demand.

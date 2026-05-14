@@ -34,6 +34,38 @@ const NoteSchema = {
   },
 }
 
+const MemorySchema = {
+  type: 'object',
+  description: '用户写给 AI 看的长期上下文条目。启用的条目会被自动注入助理的 system prompt。',
+  properties: {
+    id:          { type: 'integer' },
+    title:       { type: 'string' },
+    description: { type: 'string', description: '一句话摘要;visibility=summary 档会被注入' },
+    content:     { type: 'string', description: '完整内容;仅 visibility=full 档会被注入' },
+    visibility:  {
+      type: 'string',
+      enum: ['count', 'summary', 'full'],
+      description: 'count 只告诉助理"有这条";summary 注入标题+摘要;full 全部注入',
+    },
+    created_at: { type: 'string' },
+  },
+}
+
+const LedgerSchema = {
+  type: 'object',
+  description: '记账流水。amount 是整数"分"(100 = 1 元);happened_at 是 YYYY-MM-DD。',
+  properties: {
+    id:          { type: 'string' },
+    type:        { type: 'string', enum: ['expense', 'income'] },
+    amount:      { type: 'integer', description: '单位"分",前端 ÷ 100 显示' },
+    category:    { type: 'string', description: '分类,自由文本(餐饮 / 交通 / 工资 …)' },
+    note:        { type: 'string' },
+    happened_at: { type: 'string', description: '发生日期 YYYY-MM-DD' },
+    created_at:  { type: 'string' },
+    updated_at:  { type: 'string' },
+  },
+}
+
 const wrap = (extra) => ({
   type: 'object',
   properties: { success: { type: 'boolean' }, ...extra },
@@ -61,6 +93,8 @@ const buildSpec = (origin) => ({
     schemas: {
       Notebook: NotebookSchema,
       Note:     NoteSchema,
+      Memory:   MemorySchema,
+      Ledger:   LedgerSchema,
     },
   },
   security: [{ BearerAuth: [] }],
@@ -287,6 +321,147 @@ const buildSpec = (origin) => ({
           key:  { type: 'string' },
           size: { type: 'integer' },
           type: { type: 'string' },
+        }))},
+      },
+    },
+
+    '/api/memories': {
+      get: {
+        operationId: 'listMemories',
+        summary: '列出用户写下的长期记忆条目(含所有 visibility 档)',
+        responses: { '200': okJson('OK', wrap({
+          items: { type: 'array', items: { $ref: '#/components/schemas/Memory' } },
+        }))},
+      },
+      post: {
+        operationId: 'createMemory',
+        summary: '新建一条记忆',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: {
+            type: 'object',
+            required: ['title', 'content'],
+            properties: {
+              title:       { type: 'string' },
+              description: { type: 'string' },
+              content:     { type: 'string' },
+              visibility:  { type: 'string', enum: ['count', 'summary', 'full'], default: 'full' },
+            },
+          }}},
+        },
+        responses: { '200': okJson('OK', wrap({ item: { $ref: '#/components/schemas/Memory' } }))},
+      },
+    },
+
+    '/api/memories/{id}': {
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+      get: {
+        operationId: 'getMemory',
+        summary: '获取单条记忆',
+        responses: { '200': okJson('OK', wrap({ item: { $ref: '#/components/schemas/Memory' } }))},
+      },
+      patch: {
+        operationId: 'updateMemory',
+        summary: '更新记忆(可改 title / description / content / visibility)',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: {
+            type: 'object',
+            properties: {
+              title:       { type: 'string' },
+              description: { type: 'string' },
+              content:     { type: 'string' },
+              visibility:  { type: 'string', enum: ['count', 'summary', 'full'] },
+            },
+          }}},
+        },
+        responses: { '200': okJson('OK', wrap({ item: { $ref: '#/components/schemas/Memory' } }))},
+      },
+      delete: {
+        operationId: 'deleteMemory',
+        summary: '删除记忆',
+        responses: { '200': okJson('OK', wrap({}))},
+      },
+    },
+
+    '/api/ledger': {
+      get: {
+        operationId: 'listLedger',
+        summary: '列出记账流水,按 happened_at 倒序',
+        parameters: [
+          { name: 'month', in: 'query', schema: { type: 'string', description: 'YYYY-MM,过滤某个月' } },
+          { name: 'type',  in: 'query', schema: { type: 'string', enum: ['expense', 'income'] } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 500, maximum: 1000 } },
+        ],
+        responses: { '200': okJson('OK', wrap({
+          items: { type: 'array', items: { $ref: '#/components/schemas/Ledger' } },
+        }))},
+      },
+      post: {
+        operationId: 'createLedger',
+        summary: '记一笔。amount 用"元"传(数字,两位小数),后端转成"分"存',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: {
+            type: 'object',
+            required: ['amount'],
+            properties: {
+              type:        { type: 'string', enum: ['expense', 'income'], default: 'expense' },
+              amount:      { type: 'number', description: '元,>0,两位小数;后端 × 100 转分存' },
+              category:    { type: 'string' },
+              note:        { type: 'string' },
+              happened_at: { type: 'string', description: 'YYYY-MM-DD,默认今天' },
+            },
+          }}},
+        },
+        responses: { '200': okJson('OK', wrap({ item: { $ref: '#/components/schemas/Ledger' } }))},
+      },
+    },
+
+    '/api/ledger/{id}': {
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      get:    { operationId: 'getLedger',    summary: '获取一笔',  responses: { '200': okJson('OK', wrap({ item: { $ref: '#/components/schemas/Ledger' } }))} },
+      patch: {
+        operationId: 'updateLedger',
+        summary: '改一笔',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: {
+            type: 'object',
+            properties: {
+              type:        { type: 'string', enum: ['expense', 'income'] },
+              amount:      { type: 'number' },
+              category:    { type: 'string' },
+              note:        { type: 'string' },
+              happened_at: { type: 'string' },
+            },
+          }}},
+        },
+        responses: { '200': okJson('OK', wrap({ item: { $ref: '#/components/schemas/Ledger' } }))},
+      },
+      delete: { operationId: 'deleteLedger', summary: '删一笔', responses: { '200': okJson('OK', wrap({}))} },
+    },
+
+    '/api/ledger/stats': {
+      get: {
+        operationId: 'ledgerStats',
+        summary: '某月统计:支出 / 收入 / 结余(单位"分")',
+        parameters: [{ name: 'month', in: 'query', schema: { type: 'string', description: 'YYYY-MM,默认当前月' } }],
+        responses: { '200': okJson('OK', wrap({
+          month:   { type: 'string' },
+          expense: { type: 'integer', description: '支出合计(分)' },
+          income:  { type: 'integer', description: '收入合计(分)' },
+          balance: { type: 'integer', description: 'income - expense(分)' },
+        }))},
+      },
+    },
+
+    '/api/ledger/categories': {
+      get: {
+        operationId: 'ledgerCategories',
+        summary: '历史用过的分类清单,按使用次数倒序',
+        responses: { '200': okJson('OK', wrap({
+          categories: { type: 'array', items: { type: 'string' } },
         }))},
       },
     },

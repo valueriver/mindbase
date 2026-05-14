@@ -160,13 +160,26 @@
         </div>
 
         <template v-else>
-          <div class="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
-            <span>⚠️</span>
-            <span>泄漏即丢号,谨慎复制。</span>
+          <div class="rounded-md border border-amber-300 bg-amber-50 px-3.5 py-3 text-xs leading-relaxed text-amber-900">
+            <div class="flex items-start gap-1.5 font-medium">
+              <span>⚠️</span>
+              <span>泄漏即丢号,谨慎复制</span>
+            </div>
+            <p class="mt-1.5 text-amber-900/85">
+              下方消息含一把通行证(token),任何拿到的人或 AI 都能完整读写你 MindBase 里的笔记、想法、待办、记账等所有数据。
+            </p>
+            <ul class="mt-1.5 list-disc pl-5 text-amber-900/85">
+              <li>只贴给你自己用的 AI,不要发群、不要进公开仓库</li>
+              <li>一旦泄漏,立刻点下方「关闭协作」即作废</li>
+              <li>没有自动过期 —— 自己手动管理</li>
+            </ul>
           </div>
 
           <section class="mt-4 rounded-md border border-nt-divider p-4">
             <h2 class="text-sm font-medium text-nt">💬 快捷消息</h2>
+            <p class="mt-1 text-xs text-nt-muted">
+              复制后粘进 ChatGPT / Claude / Gemini 等任意 AI 的对话框 —— 它会读到 token 和使用说明,接管你的 MindBase。
+            </p>
             <pre class="mt-3 max-h-72 overflow-y-auto whitespace-pre-wrap break-all rounded-md bg-nt-hover p-3 font-mono text-xs leading-relaxed text-nt">{{ aiMessage }}</pre>
             <button
               type="button"
@@ -182,6 +195,7 @@
               class="rounded-md border border-nt-divider px-3 py-1.5 text-xs text-nt-muted hover:bg-nt-danger-bg hover:text-nt-danger disabled:opacity-50"
               @click="onDisable"
             >{{ authBusy ? '关闭中…' : '关闭协作' }}</button>
+            <p class="mt-1.5 text-[11px] text-nt-soft">关闭后 token 立即作废;重新开启会生成新 token,旧的同时失效。</p>
           </div>
         </template>
       </section>
@@ -190,12 +204,30 @@
       <section v-else-if="tab === 'skills'" class="mt-6">
         <section class="rounded-md border border-nt-divider p-4">
           <h2 class="text-sm font-medium text-nt">📦 MindBase 技能包</h2>
-          <p class="mt-1 text-xs text-nt-muted">Claude Code 装到 <code class="rounded bg-nt-hover px-1 py-0.5 font-mono">~/.claude/skills/</code>。</p>
+          <p class="mt-1 text-xs leading-relaxed text-nt-muted">
+            一个 <code class="rounded bg-nt-hover px-1 py-0.5 font-mono">SKILL.md</code> 教 AI 用 MindBase 的 API。
+            任何支持
+            <a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills" target="_blank" rel="noopener" class="underline hover:text-nt">Anthropic Skills 格式</a>
+            的运行时都能装,装好后这个 AI 就长期"会用"MindBase,不用每次重新粘说明。
+          </p>
+
+          <div class="mt-3 rounded-md bg-nt-hover/60 px-3 py-2.5 text-xs leading-relaxed text-nt-muted">
+            <div class="font-medium text-nt">安装位置</div>
+            <ul class="mt-1 space-y-0.5">
+              <li>· Claude Code:<code class="ml-1 rounded bg-white px-1 py-0.5 font-mono text-[11px]">~/.claude/skills/mindbase/</code></li>
+              <li>· 其它支持 Skills 的工具(Claude Desktop / Cursor 扩展 / Cline / 自建 agent 框架等):把整个 <code class="mx-0.5 rounded bg-white px-1 py-0.5 font-mono text-[11px]">mindbase/</code> 目录放进它自己的 skills 路径,具体路径查工具文档</li>
+            </ul>
+          </div>
+
           <a
             href="/skills/mindbase.zip"
             download="mindbase-skill.zip"
-            class="mt-3 inline-flex items-center gap-2 rounded-md bg-nt px-4 py-2 text-sm text-white hover:bg-black"
+            class="mt-4 inline-flex items-center gap-2 rounded-md bg-nt px-4 py-2 text-sm text-white hover:bg-black"
           >⬇ 下载 mindbase-skill.zip</a>
+
+          <p class="mt-3 text-[11px] leading-relaxed text-nt-soft">
+            装好之后,回「协作」标签页复制快捷消息粘进 AI —— 它会读到 token 和 SKILL.md,直接接管。
+          </p>
         </section>
       </section>
 

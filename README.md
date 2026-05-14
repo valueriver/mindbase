@@ -57,7 +57,7 @@ Cloudflare Workers · D1 · R2 · Vue 3 · Tailwind CSS 4 · Vite · OpenAPI 3.1
 需要:**Cloudflare 账号**、**Google 账号**、**Node 20.19+**
 
 ```bash
-git clone https://github.com/valueriver/mindbase
+git clone https://github.com/realuckyang/mindbase
 cd mindbase && npm install
 
 # 1️⃣  建 D1 + R2(记下返回的 database_id)

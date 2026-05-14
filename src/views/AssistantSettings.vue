@@ -218,12 +218,12 @@
         <div class="rounded-md border border-nt-divider p-4">
           <div class="text-xs text-nt-soft">项目地址</div>
           <a
-            href="https://github.com/valueriver/mindbase"
+            href="https://github.com/realuckyang/mindbase"
             target="_blank"
             rel="noopener"
             class="mt-1 inline-flex items-center gap-1 text-sm font-medium text-nt-accent hover:underline break-all"
           >
-            github.com/valueriver/mindbase
+            github.com/realuckyang/mindbase
             <span class="text-xs">↗</span>
           </a>
         </div>

@@ -17,7 +17,7 @@
       class="relative min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-6"
       @scroll.passive="onScroll"
     >
-      <div ref="contentEl" class="mx-auto max-w-3xl space-y-4">
+      <div class="mx-auto max-w-3xl space-y-4">
         <!-- 顶部 sentinel:上滑触发加载更早 -->
         <div ref="topSentinelEl" class="py-2 text-center text-xs text-nt-soft">
           <span v-if="loadingOlder">加载更早…</span>
@@ -110,17 +110,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import { apiChat, apiSettings } from '@/api/client'
 
 marked.setOptions({ breaks: true, gfm: true })
-function renderMd(text) {
-  if (!text) return ''
-  const html = marked.parse(String(text))
-  return DOMPurify.sanitize(html, { ADD_ATTR: ['target', 'rel'] })
-}
+const renderMd = (text) => marked.parse(String(text || ''))
 
 const suggestions = [
   '我的想法里有多少条带 idea 标签的?',
@@ -142,10 +137,9 @@ const loadingHistory = ref(true)
 const checkingSettings = ref(true)
 const aiReady = ref(false)
 
-const scrollEl       = ref(null)
-const contentEl      = ref(null)
-const topSentinelEl  = ref(null)
-const inputEl  = ref(null)
+const scrollEl      = ref(null)
+const topSentinelEl = ref(null)
+const inputEl       = ref(null)
 
 // 回车发送;Shift+Enter 换行;中文输入法上屏时(isComposing / keyCode 229)放行,不触发发送
 function onKeydown(e) {
@@ -162,52 +156,36 @@ function autosize(e) {
   el.style.height = Math.min(el.scrollHeight, 160) + 'px'
 }
 
-// 智能滚动:
-// - ResizeObserver 监听内容容器,长高时若 stickToBottom 就 snap
-// - stickToBottom 只在"用户主动上滑"时翻 false;布局变化引发的 scroll 事件不影响
+// 智能跟随:
+// scrollSignature(条数 + 末条内容长度)变化 → 下一帧把 scrollTop 推到底。
+// scrollTop = scrollHeight 强制一次同步 layout,把 Vue 渲染队列冲掉,
+// 否则 token 流密集时浏览器会合并多帧 paint,表现成"几个字一卡"。
+// stick:用户上滑离开底部就翻 false,接近底部再回 true。
 const SCROLL_THRESHOLD = 80
-const stickToBottom = ref(true)
-let resizeObserver = null
-let topObserver    = null
-// 上次"用户视角"的 scrollTop,用于判断方向;程序性 scroll 会同步更新这个值
-let lastScrollTop  = 0
+const stick = ref(true)
+let topObserver = null
 
-function onScroll(e) {
-  const el = e.target
-  const newTop = el.scrollTop
-  // scrollTop 没动 = 仅 scrollHeight 变,布局抖动,不动 stickToBottom
-  if (newTop === lastScrollTop) return
-  const goingUp = newTop < lastScrollTop
-  lastScrollTop = newTop
-  if (goingUp) {
-    stickToBottom.value = false
-  } else {
-    // 向下滑;只要接近底部就再开启粘底
-    const distance = el.scrollHeight - newTop - el.clientHeight
-    if (distance < SCROLL_THRESHOLD) stickToBottom.value = true
-  }
+const lastTurnLen = () => {
+  const t = turns.value[turns.value.length - 1]
+  if (!t) return 0
+  return String((t.kind === 'tool' ? t.result : t.content) || '').length
 }
+const scrollSignature = computed(() => `${turns.value.length}:${lastTurnLen()}`)
 
-function snapToBottom() {
+const isNearBottom = () => {
   const el = scrollEl.value
-  if (!el) return
-  if (el.scrollHeight - el.scrollTop - el.clientHeight < 1) return
-  el.scrollTop = el.scrollHeight
-  lastScrollTop = el.scrollTop  // 自己滚的同步记下来,不会被 onScroll 误判
+  if (!el) return true
+  return el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD
 }
+const scrollToBottom = () => {
+  const el = scrollEl.value
+  if (el) el.scrollTop = el.scrollHeight
+}
+const onScroll = () => { stick.value = isNearBottom() }
 
-// 兼容旧调用:force=true 强制粘底并连续 snap 几次,扛住后续异步渲染(markdown/图)
-function scrollBottom(force = false) {
-  if (!force) return
-  stickToBottom.value = true
-  nextTick(() => {
-    snapToBottom()
-    requestAnimationFrame(() => {
-      snapToBottom()
-      setTimeout(snapToBottom, 120)
-    })
-  })
-}
+watch(scrollSignature, () => {
+  if (stick.value) nextTick(scrollToBottom)
+})
 
 async function checkAi() {
   checkingSettings.value = true
@@ -233,7 +211,7 @@ function pushFromMessage(msg, dest) {
       for (const tc of msg.tool_calls) {
         let argsObj = {}
         try { argsObj = JSON.parse(tc.function?.arguments || '{}') } catch {}
-        const turn = {
+        const turn = reactive({
           kind: 'tool',
           id: tc.id,
           name: tc.function?.name || 'tool',
@@ -242,7 +220,7 @@ function pushFromMessage(msg, dest) {
           result: undefined,
           status: 'done',
           open: false,
-        }
+        })
         out.push(turn)
         toolMap.set(tc.id, turn)
       }
@@ -279,8 +257,9 @@ async function loadInitial() {
       for (const r of rows) pushFromMessage(r.message)
     }
     if (rows.length < PAGE_SIZE) hasMoreHistory.value = false
-    // 首次:多次 snap,扛住 markdown / 工具卡片 / 图片 异步渲染
-    scrollBottom(true)
+    stick.value = true
+    await nextTick()
+    scrollToBottom()
   } catch {} finally {
     loadingHistory.value = false
   }
@@ -301,17 +280,10 @@ async function loadOlder() {
       turns.value = [...prepend, ...turns.value]
     }
     if (rows.length < PAGE_SIZE) hasMoreHistory.value = false
-    // 维持可视位置:上方插入新内容后,scrollTop += (新高 - 旧高)
+    // 上方 prepend 时保持可视位置:scrollTop += (新高 - 旧高)。
+    // 此时用户在顶部,stick 已经是 false,watch 不会自动滚到底。
     await nextTick()
-    if (el) {
-      // 等一帧让 ResizeObserver 不抢先
-      requestAnimationFrame(() => {
-        const newHeight = el.scrollHeight
-        const top = prevTop + (newHeight - prevHeight)
-        el.scrollTop = top
-        lastScrollTop = el.scrollTop
-      })
-    }
+    if (el) el.scrollTop = prevTop + (el.scrollHeight - prevHeight)
   } catch {} finally {
     loadingOlder.value = false
   }
@@ -329,15 +301,13 @@ async function ask(preset) {
   let currentAssistant = null
   const ensureAssistant = () => {
     if (currentAssistant && turns.value.includes(currentAssistant)) return currentAssistant
-    currentAssistant = { kind: 'assistant', content: '', streaming: true }
+    currentAssistant = reactive({ kind: 'assistant', content: '', streaming: true })
     turns.value.push(currentAssistant)
     return currentAssistant
   }
 
   streaming.value = true
-  // 用户主动发送:强制粘底
-  stickToBottom.value = true
-  scrollBottom(true)
+  stick.value = true
 
   try {
     const resp = await fetch(apiChat.sendUrl(), {
@@ -378,7 +348,6 @@ async function ask(preset) {
           if (evt.type === 'delta' && typeof evt.delta === 'string') {
             const a = ensureAssistant()
             a.content += evt.delta
-            scrollBottom()
           } else if (evt.type === 'assistant_tool_calls' && evt.message?.tool_calls) {
             // 收到这条意味着该 assistant 文本段结束(模型转去调工具),
             // 给所有 tool_calls 创建占位卡片
@@ -387,7 +356,7 @@ async function ask(preset) {
             for (const tc of evt.message.tool_calls) {
               let argsObj = {}
               try { argsObj = JSON.parse(tc.function?.arguments || '{}') } catch {}
-              const turn = {
+              const turn = reactive({
                 kind: 'tool',
                 id: tc.id,
                 name: tc.function?.name || 'tool',
@@ -396,7 +365,7 @@ async function ask(preset) {
                 result: undefined,
                 status: 'running',
                 open: false,
-              }
+              })
               turns.value.push(turn)
               toolMap.set(tc.id, turn)
             }
@@ -423,18 +392,10 @@ async function ask(preset) {
   } finally {
     if (currentAssistant) currentAssistant.streaming = false
     streaming.value = false
-    scrollBottom()
   }
 }
 
 onMounted(async () => {
-  // 监听内容容器尺寸变化,触发自动跟随
-  if (contentEl.value && typeof ResizeObserver !== 'undefined') {
-    resizeObserver = new ResizeObserver(() => {
-      if (stickToBottom.value) snapToBottom()
-    })
-    resizeObserver.observe(contentEl.value)
-  }
   await checkAi()
   await loadInitial()
   // 注意先加载完初始内容、scroll 到底之后,再装顶部 sentinel 观察器,
@@ -449,7 +410,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  resizeObserver?.disconnect(); resizeObserver = null
-  topObserver?.disconnect();    topObserver = null
+  topObserver?.disconnect(); topObserver = null
 })
 </script>

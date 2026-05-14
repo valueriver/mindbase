@@ -27,8 +27,8 @@
         <div v-if="loadingHistory && !turns.length" class="py-12 text-center text-sm text-nt-soft">加载中…</div>
 
         <div v-else-if="!turns.length && !streaming" class="py-12 text-center">
-          <div class="text-4xl mb-2">🤖</div>
-          <div class="text-sm text-nt-soft mb-4">问点什么 —— 我可以查你的数据库</div>
+          <div class="text-4xl mb-2">💬</div>
+          <div class="text-sm text-nt-soft mb-4">有什么想问的?</div>
           <div class="flex flex-wrap justify-center gap-2">
             <button
               v-for="s in suggestions"
@@ -118,9 +118,9 @@ marked.setOptions({ breaks: true, gfm: true })
 const renderMd = (text) => marked.parse(String(text || ''))
 
 const suggestions = [
-  '我的想法里有多少条带 idea 标签的?',
-  '最近一周新建了几条 memo?',
-  '统计每个笔记本下的笔记数量',
+  '上个月在外卖上花了多少?',
+  '还有几件待办没完成?',
+  '把今天的想法整理成一篇笔记。',
 ]
 
 // turns 是面向 UI 的渲染数组(扁平):

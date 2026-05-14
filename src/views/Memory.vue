@@ -4,7 +4,7 @@
       <div class="flex items-end justify-between gap-4">
         <div>
           <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">记忆</h1>
-          <p class="mt-1 text-sm text-nt-soft">写给助理看的长期上下文,三档可见性控制注入程度。</p>
+          <p class="mt-1 text-sm text-nt-soft">希望助理始终记得的事情。</p>
         </div>
         <router-link
           :to="{ name: 'memory-new' }"

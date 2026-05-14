@@ -1,41 +1,8 @@
 <template>
   <div class="min-h-screen">
-    <Cover
-      v-if="cover"
-      :cover="cover"
-      @update="updateCover"
-    />
-
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
-      <!-- Icon -->
-      <div class="mt-2">
-        <button
-          v-if="icon"
-          ref="iconBtn"
-          type="button"
-          class="flex h-[78px] w-[78px] items-center justify-center rounded-md text-[66px] leading-none hover:bg-nt-hover"
-          @click="openEmoji"
-        >{{ icon }}</button>
-      </div>
-
-      <div class="mt-2 flex items-center gap-1 text-nt-soft">
-        <button
-          v-if="!icon"
-          ref="iconBtn"
-          type="button"
-          class="rounded px-1.5 py-1 text-sm hover:bg-nt-hover hover:text-nt-muted"
-          @click="openEmoji"
-        >😀 添加图标</button>
-        <button
-          v-if="!cover"
-          ref="coverBtn"
-          type="button"
-          class="rounded px-1.5 py-1 text-sm hover:bg-nt-hover hover:text-nt-muted"
-          @click="openCover"
-        >🏞️ 添加封面</button>
-      </div>
-
-      <h1 class="mt-2 text-[40px] font-bold leading-tight tracking-tight text-nt">想法</h1>
+      <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">想法</h1>
+      <p class="mt-1 text-sm text-nt-soft">心里想到的,顺手记一下。</p>
 
       <!-- 输入卡 -->
       <div
@@ -174,19 +141,6 @@
       </div>
     </main>
 
-    <EmojiPicker
-      :open="emojiOpen"
-      :anchor="emojiAnchor"
-      @pick="onPickEmoji"
-      @close="emojiOpen = false"
-    />
-    <CoverPicker
-      :open="coverOpen"
-      :anchor="coverAnchor"
-      @pick="onPickCover"
-      @close="coverOpen = false"
-    />
-
     <!-- 想法卡片的更多菜单 -->
     <Popover :open="!!menuOpenId" :anchor="menuAnchor" :width="120" @close="closeMenu">
       <button
@@ -205,55 +159,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import Cover from '@/components/Cover.vue'
-import CoverPicker from '@/components/CoverPicker.vue'
-import EmojiPicker from '@/components/EmojiPicker.vue'
 import MemoContent from '@/components/MemoContent.vue'
 import Popover from '@/components/Popover.vue'
-import { apiMemos, apiSettings } from '@/api/client'
+import { apiMemos } from '@/api/client'
 import { uploadImage } from '@/lib/image'
-
-// === 头部 icon / cover ===
-const icon  = ref('')
-const cover = ref('')
-
-const iconBtn  = ref(null)
-const coverBtn = ref(null)
-const emojiOpen = ref(false)
-const coverOpen = ref(false)
-const emojiAnchor = ref(null)
-const coverAnchor = ref(null)
-
-function openEmoji() {
-  emojiAnchor.value = iconBtn.value || null
-  emojiOpen.value = true
-}
-function openCover() {
-  coverAnchor.value = coverBtn.value || null
-  coverOpen.value = true
-}
-
-async function loadSettings() {
-  try {
-    const { settings } = await apiSettings.detail()
-    icon.value  = settings.memos_icon  || ''
-    cover.value = settings.memos_cover || ''
-  } catch {}
-}
-
-async function persistSettings(patch) {
-  try {
-    const { settings } = await apiSettings.update(patch)
-    icon.value  = settings.memos_icon  || ''
-    cover.value = settings.memos_cover || ''
-  } catch (e) {
-    alert(e?.message || '保存失败')
-  }
-}
-
-async function onPickEmoji(emoji) { emojiOpen.value = false; await persistSettings({ memos_icon: emoji ?? '' }) }
-async function onPickCover(value) { coverOpen.value = false; await persistSettings({ memos_cover: value ?? '' }) }
-async function updateCover(value) { await persistSettings({ memos_cover: value ?? '' }) }
 
 // === 想法列表(无限滚动)===
 const PAGE_SIZE = 30
@@ -501,7 +410,6 @@ const grouped = computed(() => {
 })
 
 onMounted(async () => {
-  loadSettings()
   await loadMore()
   await nextTick()
   ensureObserver()

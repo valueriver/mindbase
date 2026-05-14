@@ -13,8 +13,6 @@ const WRITABLE = new Set([
   'ai_model',
   'ai_context_rounds',
   'ai_system_prompt',
-  'memos_icon',
-  'memos_cover',
   'home_name',
   'home_icon',
   'home_cover',
@@ -33,8 +31,6 @@ const serialize = (all) => ({
   ai_context_rounds:        normalizeRounds(all.ai_context_rounds),
   ai_system_prompt:         all.ai_system_prompt || '',
   ai_system_prompt_default: DEFAULT_SYSTEM_PROMPT,
-  memos_icon:               all.memos_icon  || '',
-  memos_cover:              all.memos_cover || '',
 })
 
 export const getSettingsAction = async (request, env) => {

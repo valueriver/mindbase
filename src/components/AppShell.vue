@@ -71,7 +71,7 @@ const apps = [
   { name: 'notes',     icon: '📚', label: '笔记', to: { name: 'home' },               match: (p) => p === '/' || p.startsWith('/notebook') || p.startsWith('/note') },
   { name: 'ledger',    icon: '💰', label: '记账', to: { name: 'ledger' },             match: (p) => p.startsWith('/ledger') },
   { name: 'search',    icon: '🔍', label: '搜索', to: { name: 'search' },             match: (p) => p.startsWith('/search') },
-  { name: 'assistant', icon: '🤖', label: '助理', to: { name: 'assistant' },          match: (p) => p === '/assistant' },
+  { name: 'assistant', icon: '💬', label: '助理', to: { name: 'assistant' },          match: (p) => p === '/assistant' },
   { name: 'memory',    icon: '🧠', label: '记忆', to: { name: 'memory' },             match: (p) => p.startsWith('/memory') },
   { name: 'settings',  icon: '⚙️', label: '设置', to: { name: 'assistant-settings' }, match: (p) => p.startsWith('/assistant/settings') || p.startsWith('/assistant/authorize') },
 ]

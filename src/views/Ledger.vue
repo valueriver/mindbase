@@ -4,7 +4,7 @@
       <div class="flex items-end justify-between gap-4">
         <div>
           <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">记账</h1>
-          <p class="mt-1 text-sm text-nt-soft">个人收支流水。问助理"上个月外卖花了多少",它能直接查。</p>
+          <p class="mt-1 text-sm text-nt-soft">逐笔记录的收支,助理可以查询统计。</p>
         </div>
         <router-link
           :to="{ name: 'ledger-new' }"

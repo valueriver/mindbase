@@ -6,7 +6,7 @@
       @update="updateCover"
     />
 
-    <main class="mx-auto w-full max-w-3xl px-12 pt-10 pb-20">
+    <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
       <div v-if="loading" class="py-10 text-sm text-nt-soft">加载中…</div>
       <div v-else-if="error" class="py-10 text-sm text-nt-danger">{{ error }}</div>
 
@@ -47,7 +47,7 @@
         <input
           v-model="nameInput"
           placeholder="无标题"
-          class="mt-2 w-full border-0 bg-transparent py-1 text-[40px] font-bold leading-tight tracking-tight text-nt outline-none placeholder:text-nt-hint"
+          class="mt-2 w-full border-0 bg-transparent py-1 text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt outline-none placeholder:text-nt-hint"
           @blur="saveName"
           @keydown.enter.prevent="($event.target).blur()"
         />

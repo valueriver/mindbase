@@ -2,6 +2,7 @@
   <div class="min-h-screen">
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
       <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">搜索</h1>
+      <p class="mt-1 text-sm text-nt-soft">笔记、想法、记账,一处查找。</p>
 
       <div class="mt-6">
         <input

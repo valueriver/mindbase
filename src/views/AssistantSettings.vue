@@ -237,7 +237,7 @@
           <img src="/favicon.svg" alt="" class="h-12 w-12" />
           <div>
             <h2 class="text-lg font-semibold text-nt">MindBase</h2>
-            <p class="text-xs text-nt-soft">个人知识库 · 想法 · 笔记 · 助理</p>
+            <p class="text-xs text-nt-soft">你的私有个人知识库</p>
           </div>
         </div>
 

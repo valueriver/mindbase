@@ -2,7 +2,7 @@
   <div class="flex min-h-screen flex-col items-center justify-center px-6">
     <img src="/favicon.svg" alt="" class="mb-3 h-14 w-14" />
     <h1 class="text-3xl font-bold tracking-tight text-nt">MindBase</h1>
-    <p class="mt-1 text-sm text-nt-soft">个人知识库 · 想法 · 笔记 · 助理</p>
+    <p class="mt-1 text-sm text-nt-soft">你的私有个人知识库</p>
 
     <div v-if="checking" class="mt-8 text-sm text-nt-soft">加载中…</div>
 

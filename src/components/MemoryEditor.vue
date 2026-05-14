@@ -64,9 +64,9 @@
 import { reactive, watch } from 'vue'
 
 const VIS_OPTIONS = [
-  { value: 'count',   label: '仅数量', hint: '助理只知道有这条' },
+  { value: 'count',   label: '已存',  hint: '助理只知道有这条' },
   { value: 'summary', label: '摘要',  hint: '标题 + 描述可见' },
-  { value: 'full',    label: '全部',  hint: '内容也注入' },
+  { value: 'full',    label: '必读',  hint: '内容也注入' },
 ]
 
 const props = defineProps({

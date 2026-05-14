@@ -52,7 +52,7 @@ const items   = ref([])
 const loading = ref(true)
 const error   = ref('')
 
-const visLabel = (v) => ({ count: '仅数量', summary: '摘要', full: '全部' }[v] || v)
+const visLabel = (v) => ({ count: '已存', summary: '摘要', full: '必读' }[v] || v)
 const visBadgeClass = (v) => ({
   count:   'bg-nt-hover text-nt-soft',
   summary: 'bg-amber-50 text-amber-700',

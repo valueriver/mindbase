@@ -92,24 +92,30 @@ INSERT INTO ledger (id, type, amount, category, note, happened_at, created_at, u
   ('lex17', 'expense', 380000, '房租',  '5 月房租',      '2026-05-01', datetime('now','-13 days'), datetime('now','-13 days')),
   ('lex18', 'expense',  9500, '水电',   '4 月水电',      '2026-05-03', datetime('now','-11 days'), datetime('now','-11 days'));
 
--- ============ 记忆(三档都覆盖) ============
+-- ============ 记忆(必读 1 + 摘要 2 + 已存 2) ============
 INSERT INTO memories (title, description, content, visibility, created_at) VALUES
-  ('我用 VS Code,不用 Vim', '编辑器偏好',
-   '我日常代码在 VS Code 写,Vim 只在远程服务器临时改文件用。建议代码片段时按 VS Code 风格(不要给 Vim 命令)。',
+  -- 必读 ×1
+  ('关于我', '职业 / 技术栈 / 沟通偏好 / 工作时间',
+   '后端工程师,8 年经验。主要写 Node.js / TypeScript;熟悉 Cloudflare Workers + D1 + R2;前端能写但 UI 细节经常需要你给方案。
+日常代码在 VS Code 写,不用 Vim。
+回答要直接 —— 觉得对就说,觉得不对就说为什么。别用"可能"、"也许"、"如果你愿意的话"开头。
+每天 22 点之后不要再提醒待办。',
    'full', datetime('now','-15 days')),
 
-  ('我是后端工程师', '职业背景 + 技术栈',
-   '主要做 Node.js / TypeScript,有 8 年经验。Cloudflare Workers / D1 / R2 都熟悉。前端能写但不专精,UI 细节经常需要你给方案。',
-   'full', datetime('now','-12 days')),
+  -- 摘要 ×2
+  ('我维护的开源项目', '三个仓库,方向偏个人知识库 / 本地 AI / agent 工具',
+   '具体清单:mindbase(个人知识库)、meem(本地 Node 版的同类工具)、AGENT(给 LLM 用的工具集)。涉及具体改动 / commit history 时再问我或查 GitHub。',
+   'summary', datetime('now','-10 days')),
 
-  ('回答要直接,不要兜圈子', '沟通风格',
-   '别用"可能"、"也许"、"如果你愿意的话"开头。觉得对就直接说;觉得不对就说为什么不对。',
-   'full', datetime('now','-10 days')),
+  ('近期工作重心', '5 月在做的方向 + 优先级',
+   '当前优先级:1) mindbase 文档和宣发 2) meem 的桌面端打包 3) AGENT 的浏览器自动化模块。任务调度 / 待办的具体条目以 todos 表为准。',
+   'summary', datetime('now','-6 days')),
 
-  ('我维护几个开源仓库', '项目清单(只露摘要)',
-   '我维护 mindbase、meem、AGENT 这几个仓库,涉及个人知识库 / 本地 AI / agent 工具方向。具体细节按需问我或查 GitHub。',
-   'summary', datetime('now','-8 days')),
+  -- 已存 ×2
+  ('身份证 / 银行卡 / 家庭成员', '敏感个人信息',
+   '私人敏感数据,具体内容不放正文里。需要时主动让我贴。',
+   'count', datetime('now','-5 days')),
 
-  ('身份证 / 工资 / 家庭信息', '敏感信息',
-   '私人敏感数据。具体内容不放正文里,需要时我会贴。',
-   'count', datetime('now','-5 days'));
+  ('财务信息(工资 / 股票 / 资产)', '财务相关',
+   '具体数字不进 prompt。涉及报税 / 财务计算时让我先贴对应数据。',
+   'count', datetime('now','-3 days'));

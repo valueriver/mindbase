@@ -88,9 +88,9 @@
     <p>你写下来的长期事实,会拼进助理的 system prompt,每轮对话都看得到 —— 不用每次重新说"我是后端工程师"或者"回答时直接说重点"。</p>
     <p>三档可见性,控制助理能看到多少:</p>
     <ul>
-      <li><strong>count</strong> —— 只知道"你有 N 条记忆",看不到内容</li>
-      <li><strong>summary</strong> —— 看得到标题 + 一句话摘要</li>
-      <li><strong>full</strong> —— 全部注入</li>
+      <li><strong>必读</strong> —— 全部注入,助理把它当成事实背景</li>
+      <li><strong>摘要</strong> —— 看得到标题 + 一句话简述,正文不可见</li>
+      <li><strong>已存</strong> —— 助理只知道"有这条",任何字段都看不到</li>
     </ul>
     <p>"知道存在但看不见"是一个独立的状态 —— 适合身份证、工资单这种你想自己有记录、但不希望任意 LLM 看到的信息。</p>
   </td>
@@ -224,7 +224,6 @@ npx wrangler d1 export mindbase --remote --output backup-$(date +%Y%m%d).sql
 ```
 mindbase/
   mindbase.sql              单一事实源,所有表的 DDL
-  migrations/               schema 演进的增量 SQL
   server/
     api/                    HTTP 路由,只做参数校验 + 转发
     service/                业务流程编排 + 鉴权

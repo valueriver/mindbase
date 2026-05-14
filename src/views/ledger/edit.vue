@@ -34,7 +34,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiLedger } from '@/api/client'
-import LedgerEditor from '@/components/LedgerEditor.vue'
+import LedgerEditor from '@/components/ledger/LedgerEditor.vue'
 
 const props = defineProps({
   id: { type: [String, Number], default: null },

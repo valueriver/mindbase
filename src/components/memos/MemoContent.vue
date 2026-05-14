@@ -3,7 +3,7 @@
     <template v-for="(n, i) in nodes" :key="i">
       <p
         v-if="n.type === 'text'"
-        class="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-nt"
+        class="whitespace-pre-wrap break-words text-[16px] leading-[1.65] text-[color:var(--color-nt)]"
       >{{ n.value }}</p>
       <a
         v-else-if="n.type === 'image'"

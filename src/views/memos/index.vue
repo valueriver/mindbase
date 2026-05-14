@@ -80,13 +80,13 @@
           <div class="sticky top-11 z-10 -mx-4 md:-mx-12 px-4 md:px-12 py-1.5 bg-white/95 backdrop-blur text-xs font-medium text-nt-soft">
             {{ group.label }}
           </div>
-          <div class="mt-2 space-y-3">
+          <div class="mt-2">
             <article
               v-for="m in group.items"
               :key="m.id"
               class="group"
             >
-              <div class="rounded-md border border-nt-divider bg-white p-3 md:p-4">
+              <div class="-mx-3 border-b border-nt-divider px-3 py-3 md:py-4">
                 <div class="mb-1 flex items-center justify-between gap-2">
                   <span class="text-xs text-nt-soft">{{ formatTime(m.created_at) }}</span>
                   <button
@@ -126,7 +126,15 @@
 
                 <!-- 显示态 -->
                 <template v-else>
-                  <MemoContent :content="m.content" />
+                  <div :class="{ 'memo-clamp': isLong(m) && !expandedIds.has(m.id) }">
+                    <MemoContent :content="m.content" />
+                  </div>
+                  <button
+                    v-if="isLong(m)"
+                    type="button"
+                    class="mt-1 text-xs text-nt-soft hover:text-nt"
+                    @click="toggleExpand(m.id)"
+                  >{{ expandedIds.has(m.id) ? '收起' : '展开' }}</button>
                 </template>
               </div>
             </article>
@@ -159,7 +167,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import MemoContent from '@/components/MemoContent.vue'
+import MemoContent from '@/components/memos/MemoContent.vue'
 import Popover from '@/components/Popover.vue'
 import { apiMemos } from '@/api/client'
 import { uploadImage } from '@/lib/image'
@@ -284,6 +292,18 @@ async function onSubmit() {
   } finally {
     busy.value = false
   }
+}
+
+// === 展开 / 收起 ===
+const expandedIds = ref(new Set())
+function toggleExpand(id) {
+  const s = new Set(expandedIds.value)
+  if (s.has(id)) s.delete(id); else s.add(id)
+  expandedIds.value = s
+}
+function isLong(m) {
+  const c = m.content || ''
+  return c.length > 220 || (c.match(/\n/g) || []).length >= 5
 }
 
 // === 编辑已有想法 ===

@@ -100,3 +100,25 @@ textarea:focus-visible,
 .md th { background: rgba(55,53,47,0.05); font-weight: 600; }
 .md img { max-width: 100%; border-radius: 4px; }
 
+
+.memo-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 75%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 75%, transparent);
+}
+
+.mb-input {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid rgba(55, 53, 47, 0.16);
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--color-nt);
+  background: white;
+  outline: none;
+}
+.mb-input:focus { border-color: var(--color-nt-accent); }
+.mb-input::placeholder { color: var(--color-nt-hint); }

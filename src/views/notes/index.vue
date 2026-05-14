@@ -104,7 +104,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import Breadcrumb from '@/components/Breadcrumb.vue'
+import Breadcrumb from '@/components/notes/Breadcrumb.vue'
 import Cover from '@/components/Cover.vue'
 import CoverPicker from '@/components/CoverPicker.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'

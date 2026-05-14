@@ -35,7 +35,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiMemory } from '@/api/client'
-import MemoryEditor from '@/components/MemoryEditor.vue'
+import MemoryEditor from '@/components/memory/MemoryEditor.vue'
 
 const props = defineProps({
   id: { type: [String, Number], default: null },

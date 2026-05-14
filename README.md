@@ -1,10 +1,10 @@
 # MindBase
 
-**你的私有个人知识库。**
+**自建你和 AI 共同的知识库。**
 
-📝 笔记 · 想法 · 待办 · 记账 · 记忆 · 助理  
-📦 数据全在你自己 Cloudflare 账号下,一份 SQLite 文件,可以随时下载备份  
-🤖 接入任何 AI(ChatGPT / Claude / Gemini …),它能直接读写你的数据
+🧠 一份 D1 数据库,你和 AI 共用 —— 笔记 / 想法 / 待办 / 记账 / 记忆,谁写谁读都行  
+📦 部署在你自己的 Cloudflare 账号下,数据全在 D1 里,可以随时 <code>wrangler d1 export</code> 导出带走  
+🤖 内嵌助理 + 外部 AI(ChatGPT / Claude / Gemini …)都直接读写同一份数据,共享一致的事实背景
 
 ---
 

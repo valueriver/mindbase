@@ -38,6 +38,22 @@ CREATE TABLE todos (
 );
 CREATE INDEX idx_todos_done ON todos(done, sort_order);
 
+-- 记账:个人收支流水
+-- amount 用整数存"分",避免浮点;前端 ÷ 100 显示
+-- type 'expense' 支出 / 'income' 收入
+CREATE TABLE ledger (
+  id          TEXT PRIMARY KEY,
+  type        TEXT NOT NULL DEFAULT 'expense',
+  amount      INTEGER NOT NULL,
+  category    TEXT NOT NULL DEFAULT '',
+  note        TEXT NOT NULL DEFAULT '',
+  happened_at TEXT NOT NULL,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_ledger_happened ON ledger(happened_at DESC, id DESC);
+CREATE INDEX idx_ledger_type_cat ON ledger(type, category);
+
 -- 想法:时间轴随手记;content 是纯文本,内嵌图片用 markdown 语法 ![](/i/...)
 CREATE TABLE memos (
   id          TEXT PRIMARY KEY,

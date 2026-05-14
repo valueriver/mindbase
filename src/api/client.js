@@ -84,6 +84,22 @@ export const apiSettings = {
   update: (patch) => api.patch('/api/settings', patch),
 }
 
+export const apiLedger = {
+  list: ({ month = null, type = null, limit = 500 } = {}) => {
+    const p = new URLSearchParams()
+    if (month) p.set('month', month)
+    if (type)  p.set('type',  type)
+    p.set('limit', String(limit))
+    return api.get(`/api/ledger?${p}`)
+  },
+  stats:      (month = null) => api.get(`/api/ledger/stats${month ? `?month=${month}` : ''}`),
+  categories: ()              => api.get('/api/ledger/categories'),
+  get:        (id)            => api.get(`/api/ledger/${id}`),
+  create:     (patch)         => api.post('/api/ledger', patch),
+  update:     (id, patch)     => api.patch(`/api/ledger/${id}`, patch),
+  remove:     (id)            => api.delete(`/api/ledger/${id}`),
+}
+
 export const apiMemory = {
   list:   ()           => api.get('/api/memories'),
   get:    (id)         => api.get(`/api/memories/${id}`),

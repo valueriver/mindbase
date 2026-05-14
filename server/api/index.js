@@ -11,6 +11,7 @@ import { handleAiApi } from './ai.js'
 import { handleItemApi } from './items.js'
 import { handleMemoApi } from './memos.js'
 import { handleMemoryApi } from './memories.js'
+import { handleLedgerApi } from './ledger.js'
 import { handleChatApi } from './chat.js'
 import { handleSettingsApi } from './settings.js'
 import { handleTodoApi } from './todos.js'
@@ -93,6 +94,12 @@ export async function handleApiRoutes(request, env, url) {
 
     if (path.startsWith('/api/memories')) {
       const r = await handleMemoryApi(request, env, path, method)
+      if (r) return r
+      return fail('not_found', 404)
+    }
+
+    if (path.startsWith('/api/ledger')) {
+      const r = await handleLedgerApi(request, env, path, method, url)
       if (r) return r
       return fail('not_found', 404)
     }

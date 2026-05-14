@@ -6,7 +6,6 @@
 📦 数据全在你自己 Cloudflare 账号下,一份 SQLite 文件,可以随时下载备份  
 🤖 接入任何 AI(ChatGPT / Claude / Gemini …),它能直接读写你的数据
 
-🔗 **Live demo:** <https://mindbase.me>
 
 ---
 
@@ -15,41 +14,41 @@
 <table>
 <tr>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/01-launcher.png" alt="应用切换面板"/>
+    <img src="https://i.mindbase.me/screenshots/v2/01-launcher.png" alt="应用切换面板"/>
     <p align="center"><sub>七个模块,各做一件事</sub></p>
   </td>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/02-memos.png" alt="想法"/>
+    <img src="https://i.mindbase.me/screenshots/v2/02-memos.png" alt="想法"/>
     <p align="center"><sub>💡 想法 —— 心里想到的,顺手记一下</sub></p>
   </td>
 </tr>
 <tr>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/03-todos.png" alt="待办"/>
+    <img src="https://i.mindbase.me/screenshots/v2/03-todos.png" alt="待办"/>
     <p align="center"><sub>✅ 待办 —— 要做的事,一项一项完成</sub></p>
   </td>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/04-notes.png" alt="笔记"/>
+    <img src="https://i.mindbase.me/screenshots/v2/04-notes.png" alt="笔记"/>
     <p align="center"><sub>📚 笔记 —— 无限嵌套笔记本,Notion 风可定制图标和封面</sub></p>
   </td>
 </tr>
 <tr>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/05-ledger.png" alt="记账"/>
+    <img src="https://i.mindbase.me/screenshots/v2/05-ledger.png" alt="记账"/>
     <p align="center"><sub>💰 记账 —— 逐笔记录的收支,助理可以查询统计</sub></p>
   </td>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/06-memory.png" alt="记忆"/>
+    <img src="https://i.mindbase.me/screenshots/v2/06-memory.png" alt="记忆"/>
     <p align="center"><sub>🧠 记忆 —— 希望助理始终记得的事情,三档可见性</sub></p>
   </td>
 </tr>
 <tr>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/07-search.png" alt="搜索"/>
+    <img src="https://i.mindbase.me/screenshots/v2/07-search.png" alt="搜索"/>
     <p align="center"><sub>🔍 搜索 —— 笔记、想法、记账,一处查找</sub></p>
   </td>
   <td width="50%">
-    <img src="https://mindbase.me/screenshots/v2/08-assistant.png" alt="助理"/>
+    <img src="https://i.mindbase.me/screenshots/v2/08-assistant.png" alt="助理"/>
     <p align="center"><sub>💬 助理 —— 接入任何大模型,带工具直查 D1</sub></p>
   </td>
 </tr>

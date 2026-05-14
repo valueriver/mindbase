@@ -7,7 +7,7 @@ description: Read and write the user's personal MindBase nested notes library. T
 
 The user has authorized you to access their MindBase notes library. They will share two values in their first message:
 
-- **Base URL** — e.g. `https://i.mindbase.me`, or any self-hosted instance
+- **Base URL** — e.g. `https://your-worker-domain`, or any self-hosted instance
 - **Bearer token** — starts with `mb_`. Send as `Authorization: Bearer <token>` on every request
 
 ## Step 1 — discover the API

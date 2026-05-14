@@ -2,7 +2,7 @@ import { ok, fail } from '../api/utils/json.js'
 import { readJsonBody } from '../api/utils/body.js'
 import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings, setSetting } from '../repository/setting.js'
-import { DEFAULT_SYSTEM_PROMPT } from '../ai/system-prompt.js'
+import { DEFAULT_SYSTEM_PROMPT } from './prompt/default.js'
 
 const ROUND_CHOICES = [30, 100, 500]
 const DEFAULT_ROUNDS = 100

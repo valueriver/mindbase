@@ -52,12 +52,24 @@ CREATE TABLE messages (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   conversation_id TEXT NOT NULL,
   message         TEXT NOT NULL,
-  memo            TEXT,
-  usage           TEXT,
   meta            TEXT,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_messages_conv ON messages(conversation_id, id);
+
+-- 记忆:用户写给助理的长期上下文。visibility 三档(见 server/service/prompt/memory.js):
+--   count    助理只知道"有 N 条记忆"
+--   summary  注入标题 + 描述,内容隐藏
+--   full     全部注入(标题 + 描述 + 内容)
+CREATE TABLE memories (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  title       TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  content     TEXT NOT NULL DEFAULT '',
+  visibility  TEXT NOT NULL DEFAULT 'full',
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_memories_visibility_id ON memories(visibility, id DESC);
 
 -- 应用级 KV:AI 模型 url/key/model、想法 icon/cover 等
 CREATE TABLE settings (

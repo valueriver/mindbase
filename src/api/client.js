@@ -84,6 +84,14 @@ export const apiSettings = {
   update: (patch) => api.patch('/api/settings', patch),
 }
 
+export const apiMemory = {
+  list:   ()           => api.get('/api/memories'),
+  get:    (id)         => api.get(`/api/memories/${id}`),
+  create: (patch)      => api.post('/api/memories', patch),
+  update: (id, patch)  => api.patch(`/api/memories/${id}`, patch),
+  remove: (id)         => api.delete(`/api/memories/${id}`),
+}
+
 export const apiChat = {
   messages: ({ before, limit = 30 } = {}) => {
     const params = new URLSearchParams()

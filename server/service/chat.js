@@ -4,7 +4,7 @@ import { isAuthenticated } from '../domain/auth/index.js'
 import { getAllSettings } from '../repository/setting.js'
 import { insertMessage, listMessages, listMessagesPage } from '../repository/message.js'
 import { chat } from '../ai/handler.js'
-import { DEFAULT_SYSTEM_PROMPT } from '../ai/system-prompt.js'
+import { buildSystemPrompt } from './prompt/index.js'
 
 // 单一全局对话。
 const CONVERSATION_ID = 'main'
@@ -18,9 +18,7 @@ const serialize = (row) => ({
   id:              row.id,
   conversation_id: row.conversation_id,
   message:         safeParse(row.message, { role: 'assistant', content: row.message }),
-  memo:            row.memo || '',
-  usage:           safeParse(row.usage, null),
-  meta:            safeParse(row.meta,  null),
+  meta:            safeParse(row.meta, null),
   created_at:      row.created_at,
 })
 
@@ -80,9 +78,8 @@ export const sendChatAction = async (request, env) => {
   const userMsg = { role: 'user', content }
   await insertMessage(env.DB, { conversationId: CONVERSATION_ID, message: userMsg })
 
-  const systemPrompt = String(settings.ai_system_prompt || '').trim() || DEFAULT_SYSTEM_PROMPT
   const messages = [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: await buildSystemPrompt(env.DB, settings) },
     ...history,
     userMsg,
   ]

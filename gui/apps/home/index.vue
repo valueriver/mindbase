@@ -1,8 +1,8 @@
 <template>
   <div>
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
-      <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">想法</h1>
-      <p class="mt-1 text-sm text-nt-soft">心里想到的,顺手记一下。</p>
+      <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">主页</h1>
+      <p class="mt-1 text-sm text-nt-soft">日常记下来的,加上应用里发生的事都会出现在这里。</p>
 
       <!-- 输入卡 -->
       <div
@@ -69,10 +69,10 @@
       </div>
 
       <!-- 时间轴 -->
-      <div v-if="loading && !posts.length" class="mt-6 py-10 text-sm text-nt-soft">加载中…</div>
+      <div v-if="loading && !timeline.length" class="mt-6 py-10 text-sm text-nt-soft">加载中…</div>
       <div v-else-if="error" class="mt-6 py-10 text-sm text-nt-danger">{{ error }}</div>
-      <div v-else-if="!posts.length" class="mt-6 py-16 text-center text-sm text-nt-soft">
-        还没有想法。试着写下第一条 ✨
+      <div v-else-if="!timeline.length" class="mt-6 py-16 text-center text-sm text-nt-soft">
+        还没有内容。试着写下第一条 ✨
       </div>
 
       <div v-else class="mt-6">
@@ -81,86 +81,89 @@
             {{ group.label }}
           </div>
           <div class="mt-2">
-            <article
-              v-for="m in group.items"
-              :key="m.id"
-              class="group"
-            >
-              <div
-                :class="[
-                  '-mx-3 border-b border-nt-divider px-3 py-3 md:py-4',
-                  m.author === 'ai' ? 'border-l-2 border-l-nt-accent pl-3' : '',
-                ]"
-              >
-                <div class="mb-1 flex items-center justify-between gap-2">
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs text-nt-soft">{{ formatTime(m.created_at) }}</span>
-                    <span
-                      v-if="m.author === 'ai'"
-                      class="rounded-sm bg-nt-accent-bg px-1.5 py-0.5 text-[10px] font-medium text-nt-accent"
-                    >🤖 AI</span>
+            <template v-for="entry in group.items" :key="entry.kind + ':' + entry.id">
+              <!-- 用户 post -->
+              <article v-if="entry.kind === 'post'" class="group">
+                <div class="-mx-3 border-b border-nt-divider px-3 py-3 md:py-4">
+                  <div class="mb-1 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-nt-soft">{{ formatTime(entry.created_at) }}</span>
+                      <span
+                        v-if="entry.author && entry.author !== 'user'"
+                        class="rounded-sm px-1.5 py-0.5 text-[10px] font-medium"
+                        :style="{
+                          color: authorMeta(entry.author).color,
+                          background: authorMeta(entry.author).color ? authorMeta(entry.author).color + '14' : 'transparent',
+                        }"
+                      >{{ authorMeta(entry.author).emoji }} {{ authorMeta(entry.author).label }}</span>
+                    </div>
+                    <button
+                      v-if="editingId !== entry.id"
+                      type="button"
+                      class="flex h-6 w-6 items-center justify-center rounded text-nt-soft hover:bg-nt-hover hover:text-nt"
+                      title="更多"
+                      @click="openMenu(entry.id, $event)"
+                    ><span class="text-base leading-none">⋯</span></button>
                   </div>
-                  <button
-                    v-if="editingId !== m.id"
-                    type="button"
-                    class="flex h-6 w-6 items-center justify-center rounded text-nt-soft hover:bg-nt-hover hover:text-nt"
-                    title="更多"
-                    @click="openMenu(m.id, $event)"
-                  ><span class="text-base leading-none">⋯</span></button>
+
+                  <!-- 编辑态 -->
+                  <template v-if="editingId === entry.id">
+                    <textarea
+                      v-model="editDraft"
+                      rows="3"
+                      class="w-full resize-none rounded border border-nt-divider bg-white px-2 py-1.5 text-[15px] leading-relaxed text-nt outline-none focus:border-nt-accent"
+                      @keydown.meta.enter.prevent="onEditSave(entry)"
+                      @keydown.ctrl.enter.prevent="onEditSave(entry)"
+                      @keydown.esc.prevent="onEditCancel"
+                      @paste="onEditPaste"
+                    ></textarea>
+                    <div class="mt-2 flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        class="rounded px-3 py-1 text-xs text-nt-muted hover:bg-nt-hover"
+                        @click="onEditCancel"
+                      >取消</button>
+                      <button
+                        type="button"
+                        :disabled="editBusy || !editDraft.trim()"
+                        class="rounded-md bg-nt px-3 py-1 text-xs text-white hover:bg-black disabled:opacity-50"
+                        @click="onEditSave(entry)"
+                      >{{ editBusy ? '保存中…' : '保存' }}</button>
+                    </div>
+                  </template>
+
+                  <!-- 显示态 -->
+                  <template v-else>
+                    <div :class="{ 'post-clamp': isLong(entry) && !expandedIds.has(entry.id) }">
+                      <PostItem :content="entry.content" />
+                    </div>
+                    <button
+                      v-if="isLong(entry)"
+                      type="button"
+                      class="mt-1 text-xs text-nt-soft hover:text-nt"
+                      @click="toggleExpand(entry.id)"
+                    >{{ expandedIds.has(entry.id) ? '收起' : '展开' }}</button>
+                  </template>
                 </div>
+              </article>
 
-                <!-- 编辑态 -->
-                <template v-if="editingId === m.id">
-                  <textarea
-                    v-model="editDraft"
-                    rows="3"
-                    class="w-full resize-none rounded border border-nt-divider bg-white px-2 py-1.5 text-[15px] leading-relaxed text-nt outline-none focus:border-nt-accent"
-                    @keydown.meta.enter.prevent="onEditSave(m)"
-                    @keydown.ctrl.enter.prevent="onEditSave(m)"
-                    @keydown.esc.prevent="onEditCancel"
-                    @paste="onEditPaste"
-                  ></textarea>
-                  <div class="mt-2 flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      class="rounded px-3 py-1 text-xs text-nt-muted hover:bg-nt-hover"
-                      @click="onEditCancel"
-                    >取消</button>
-                    <button
-                      type="button"
-                      :disabled="editBusy || !editDraft.trim()"
-                      class="rounded-md bg-nt px-3 py-1 text-xs text-white hover:bg-black disabled:opacity-50"
-                      @click="onEditSave(m)"
-                    >{{ editBusy ? '保存中…' : '保存' }}</button>
-                  </div>
-                </template>
-
-                <!-- 显示态 -->
-                <template v-else>
-                  <div :class="{ 'memo-clamp': isLong(m) && !expandedIds.has(m.id) }">
-                    <FeedItem :content="m.content" />
-                  </div>
-                  <button
-                    v-if="isLong(m)"
-                    type="button"
-                    class="mt-1 text-xs text-nt-soft hover:text-nt"
-                    @click="toggleExpand(m.id)"
-                  >{{ expandedIds.has(m.id) ? '收起' : '展开' }}</button>
-                </template>
+              <!-- 事件 -->
+              <div v-else class="border-b border-nt-divider">
+                <EventItem :ev="entry" />
               </div>
-            </article>
+            </template>
           </div>
         </div>
 
         <!-- 分页 sentinel -->
         <div ref="sentinelEl" class="py-6 text-center text-xs text-nt-soft">
           <span v-if="loadingMore">加载中…</span>
-          <span v-else-if="!hasMore && posts.length">— 到底了 —</span>
+          <span v-else-if="!hasMore && timeline.length">— 到底了 —</span>
         </div>
       </div>
     </main>
 
-    <!-- 想法卡片的更多菜单 -->
+    <!-- post 卡片的更多菜单 -->
     <Popover :open="!!menuOpenId" :anchor="menuAnchor" :width="120" @close="closeMenu">
       <button
         type="button"
@@ -178,57 +181,84 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import FeedItem from '@/apps/feed/components/FeedItem.vue'
+import PostItem from '@/apps/home/components/PostItem.vue'
+import EventItem from '@/apps/home/components/EventItem.vue'
 import Popover from '@/components/Popover.vue'
-import { apiFeed } from '@/api'
+import { apiHome } from '@/api'
 import { uploadImage } from '@/lib/image'
+import { authorMeta } from '@/lib/authors'
 
-// === 想法列表(无限滚动)===
+// 时间轴 = 用户 posts + 应用事件,按 created_at 倒序混排。
+// posts 用 offset 分页,events 一次性拉(默认 200 条上限够用)。
 const PAGE_SIZE = 30
+
 const posts       = ref([])
+const events      = ref([])
 const offset      = ref(0)
-const loading     = ref(true)      // 初始
-const loadingMore = ref(false)     // 翻页
+const loading     = ref(true)
+const loadingMore = ref(false)
 const hasMore     = ref(true)
 const error       = ref('')
 const sentinelEl  = ref(null)
 let observer = null
 
-async function loadMore() {
-  if (loadingMore.value || !hasMore.value) return
-  const isInitial = offset.value === 0
-  if (isInitial) loading.value = true
-  else loadingMore.value = true
+async function loadInitial() {
+  loading.value = true
   error.value = ''
   try {
-    const resp = await apiFeed.list({ offset: offset.value, limit: PAGE_SIZE })
-    const list = resp.feed || resp.posts || []
-    if (isInitial) posts.value = list
-    else posts.value.push(...list)
+    const [postResp, eventResp] = await Promise.all([
+      apiHome.list({ offset: 0, limit: PAGE_SIZE }),
+      apiHome.events(),
+    ])
+    posts.value  = postResp.items || []
+    events.value = eventResp.items || []
+    offset.value = posts.value.length
+    if (posts.value.length < PAGE_SIZE) hasMore.value = false
+  } catch (e) {
+    error.value = e?.message || '加载失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadMorePosts() {
+  if (loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  try {
+    const resp = await apiHome.list({ offset: offset.value, limit: PAGE_SIZE })
+    const list = resp.items || []
+    posts.value.push(...list)
     offset.value += list.length
     if (list.length < PAGE_SIZE) hasMore.value = false
   } catch (e) {
     error.value = e?.message || '加载失败'
   } finally {
-    loading.value = false
     loadingMore.value = false
   }
 }
 
+const timeline = computed(() => {
+  const arr = []
+  for (const p of posts.value)  arr.push({ ...p, kind: 'post' })
+  for (const e of events.value) arr.push({ ...e, kind: 'event' })
+  arr.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+  return arr
+})
+
 function ensureObserver() {
   if (observer || !sentinelEl.value) return
   observer = new IntersectionObserver((entries) => {
-    if (entries[0]?.isIntersecting) loadMore()
+    if (entries[0]?.isIntersecting) loadMorePosts()
   }, { rootMargin: '300px 0px' })
   observer.observe(sentinelEl.value)
 }
 
-// === 新增想法 ===
+// === 新增 post ===
 const draft = ref('')
 const busy  = ref(false)
 const inputEl = ref(null)
 const fileInputEl = ref(null)
-const pendingImages = ref([])   // [{ url }]
+const pendingImages = ref([])
 const uploading = ref(false)
 const dropping  = ref(false)
 
@@ -294,9 +324,8 @@ async function onSubmit() {
   if (!content || busy.value) return
   busy.value = true
   try {
-    const resp = await apiFeed.create({ content })
-    const post = resp.post || resp.feed
-    if (post) posts.value.unshift(post)
+    const resp = await apiHome.create({ content })
+    if (resp.post) posts.value.unshift(resp.post)
     draft.value = ''
     pendingImages.value = []
     inputEl.value?.focus()
@@ -319,7 +348,7 @@ function isLong(m) {
   return c.length > 220 || (c.match(/\n/g) || []).length >= 5
 }
 
-// === 编辑已有想法 ===
+// === 编辑已有 post ===
 const editingId = ref('')
 const editDraft = ref('')
 const editBusy  = ref(false)
@@ -337,10 +366,9 @@ async function onEditSave(m) {
   if (!content || editBusy.value) return
   editBusy.value = true
   try {
-    const resp = await apiFeed.update(m.id, { content })
-    const post = resp.post || resp.feed
+    const resp = await apiHome.update(m.id, { content })
     const i = posts.value.findIndex(x => x.id === m.id)
-    if (i >= 0 && post) posts.value[i] = post
+    if (i >= 0 && resp.post) posts.value[i] = resp.post
     onEditCancel()
   } catch (e) {
     alert(e?.message || '保存失败')
@@ -398,9 +426,9 @@ function onMenuDelete() {
 
 // === 删除 ===
 async function onDelete(m) {
-  if (!window.confirm('删除这条想法?')) return
+  if (!window.confirm('删除这条?')) return
   try {
-    await apiFeed.remove(m.id)
+    await apiHome.remove(m.id)
     posts.value = posts.value.filter(x => x.id !== m.id)
   } catch (e) {
     alert(e?.message || '删除失败')
@@ -434,17 +462,17 @@ function dateLabel(ts) {
 
 const grouped = computed(() => {
   const groups = []
-  for (const m of posts.value) {
-    const label = dateLabel(m.created_at)
+  for (const entry of timeline.value) {
+    const label = dateLabel(entry.created_at)
     const g = groups.find(g => g.label === label)
-    if (g) g.items.push(m)
-    else groups.push({ label, items: [m] })
+    if (g) g.items.push(entry)
+    else groups.push({ label, items: [entry] })
   }
   return groups
 })
 
 onMounted(async () => {
-  await loadMore()
+  await loadInitial()
   await nextTick()
   ensureObserver()
 })

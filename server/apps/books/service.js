@@ -1,6 +1,7 @@
 import { ok, fail } from '../../lib/utils/json.js'
 import { readJsonBody } from '../../lib/utils/body.js'
 import { isAuthenticated } from '../../lib/auth/index.js'
+import { emitHomeEvent } from '../../lib/events.js'
 import {
   listBooks,
   findBookById,
@@ -8,6 +9,9 @@ import {
   updateBook,
   deleteBook,
 } from './repository.js'
+
+const STATUS_LABEL = { want: '想读', reading: '在读', read: '读过' }
+const STATUS_VERB  = { reading: '开始读', read: '读完了' }
 
 const STATUSES = new Set(['want', 'reading', 'read'])
 
@@ -57,6 +61,13 @@ export const createBookAction = async (request, env) => {
     note:   cleanStr(body?.note) || '',
     cover:  cleanStr(body?.cover),
   })
+  await emitHomeEvent(env.DB, {
+    app: 'books',
+    action: 'created',
+    ref_id: row.id,
+    summary: `${STATUS_LABEL[row.status] || '加入'}《${row.title}》`,
+    icon: '📖',
+  })
   return ok({ item: serialize(row) })
 }
 
@@ -65,14 +76,24 @@ export const updateBookAction = async (request, env, id) => {
   const existing = await findBookById(env.DB, id)
   if (!existing) return fail('not_found', 404)
   const body = await readJsonBody(request)
+  const nextStatus = body?.status !== undefined ? cleanStatus(body.status) : undefined
   const row = await updateBook(env.DB, id, {
     title:  body?.title  !== undefined ? cleanStr(body.title) : undefined,
     author: body?.author !== undefined ? (cleanStr(body.author) ?? '') : undefined,
-    status: body?.status !== undefined ? cleanStatus(body.status) : undefined,
+    status: nextStatus,
     rating: body?.rating !== undefined ? clampRating(body.rating) : undefined,
     note:   body?.note   !== undefined ? (cleanStr(body.note) ?? '') : undefined,
     cover:  body?.cover  !== undefined ? cleanStr(body.cover) : undefined,
   })
+  if (nextStatus && existing.status !== nextStatus && STATUS_VERB[nextStatus]) {
+    await emitHomeEvent(env.DB, {
+      app: 'books',
+      action: 'status_changed',
+      ref_id: id,
+      summary: `${STATUS_VERB[nextStatus]}《${existing.title}》`,
+      icon: '📖',
+    })
+  }
   return ok({ item: serialize(row) })
 }
 

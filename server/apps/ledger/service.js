@@ -2,6 +2,7 @@ import { ok, fail } from '../../lib/utils/json.js'
 import { readJsonBody } from '../../lib/utils/body.js'
 import { createLedgerId } from '../../lib/utils/id.js'
 import { isAuthenticated } from '../../lib/auth/index.js'
+import { emitHomeEvent } from '../../lib/events.js'
 import {
   listLedger, findLedgerById, insertLedger, updateLedger, deleteLedger,
   monthlyTotals, distinctCategories,
@@ -95,6 +96,13 @@ export const createLedgerAction = async (request, env) => {
     category: String(body?.category || '').trim(),
     note:     String(body?.note || '').trim(),
     happenedAt,
+  })
+  await emitHomeEvent(env.DB, {
+    app: 'ledger',
+    action: 'created',
+    ref_id: row.id,
+    summary: `${row.type === 'expense' ? '记了一笔' : '记了一笔收入'} ${row.category || '未分类'} ¥${(row.amount / 100).toFixed(2)}`,
+    icon: '💰',
   })
   return ok({ item: serialize(row) })
 }

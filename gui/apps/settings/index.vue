@@ -24,7 +24,6 @@
       <ModelTab   v-else-if="tab === 'model'"   :form="form" :loading="loading" />
       <PromptTab  v-else-if="tab === 'prompt'"  :form="form" :loading="loading" :default-prompt="defaultPrompt" />
       <ContextTab v-else-if="tab === 'context'" :form="form" :loading="loading" />
-      <SkillsTab  v-else-if="tab === 'skills'" />
       <AboutTab   v-else-if="tab === 'about'" />
     </main>
   </div>
@@ -38,7 +37,6 @@ import AccountTab from '@/apps/settings/components/AccountTab.vue'
 import ModelTab   from '@/apps/settings/components/ModelTab.vue'
 import PromptTab  from '@/apps/settings/components/PromptTab.vue'
 import ContextTab from '@/apps/settings/components/ContextTab.vue'
-import SkillsTab  from '@/apps/settings/components/SkillsTab.vue'
 import AboutTab   from '@/apps/settings/components/AboutTab.vue'
 
 const route  = useRoute()
@@ -48,7 +46,6 @@ const tabs = [
   { id: 'model',   label: '模型' },
   { id: 'prompt',  label: '提示词' },
   { id: 'context', label: '上下文' },
-  { id: 'skills',  label: '技能' },
   { id: 'about',   label: '关于' },
 ]
 const VALID = new Set(tabs.map(t => t.id))

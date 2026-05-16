@@ -9,7 +9,8 @@ export const environment = () => `
 主要表:
 - app_notes_notebooks(id, parent_id, name, icon, cover, sort_order, created_at, updated_at) — 笔记本树
 - app_notes_pages(id, notebook_id, title, content, icon, cover, sort_order, created_at, updated_at) — content 是 HTML
-- app_feed_posts(id, author, content, created_at, updated_at) — 动态时间线;author ∈ {'user','ai'};content 是纯文本,可内嵌 markdown 图片 ![](/i/...)
+- app_home_posts(id, author, content, created_at, updated_at) — 主页时间轴(用户/AI 写下的帖子);author ∈ {'user','ai'};content 是纯文本,可内嵌 markdown 图片 ![](/i/...)
+- app_home_events(id, app, action, ref_id, summary, icon, created_at) — 跨应用动作的事件流,在主页时间轴上和 posts 混排展示;app 是来源应用 slug,summary 是一行人话
 - app_todos_items(id, title, done, sort_order, created_at, updated_at) — 待办;done 是 0/1 整型,单层任务列表
 - app_ledger_entries(id, type, amount, category, note, happened_at, created_at, updated_at) — 记账流水
   type ∈ {'expense','income'};amount 是整数"分"(100 = 1 元);happened_at 是 'YYYY-MM-DD'

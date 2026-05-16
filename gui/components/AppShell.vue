@@ -22,44 +22,62 @@
       </button>
 
       <Popover :open="launcherOpen" :anchor="launcherAnchor" :width="320" @close="launcherOpen = false">
-        <div class="flex items-center justify-between px-2 pt-1 pb-1">
-          <span class="text-[10px] font-medium uppercase tracking-wider text-nt-soft">应用</span>
+        <div class="flex items-center justify-between px-2 pt-1 pb-2">
+          <span class="text-[11px] font-medium text-nt">应用中心</span>
           <div class="flex items-center gap-0.5">
             <button
               type="button"
-              class="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
-              title="应用市场"
-              @click="onMarket"
-            ><span>🛍️</span><span>市场</span></button>
+              class="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
+              title="整理应用"
+              @click="onOrganize"
+            >
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M11.5 1.5 L14.5 4.5 L5 14 H2 V11 Z"/>
+                <path d="M9.5 3.5 L12.5 6.5"/>
+              </svg>
+              <span>整理</span>
+            </button>
             <button
               type="button"
-              class="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
+              class="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
               title="创建新应用"
               @click="onCreate"
-            ><span>＋</span><span>创建</span></button>
-          </div>
-        </div>
-        <div class="max-h-[60vh] overflow-y-auto">
-          <div class="grid grid-cols-3 gap-1 px-1">
-            <button
-              v-for="app in apps"
-              :key="app.name"
-              type="button"
-              :disabled="!app.to"
-              :class="[
-                'flex flex-col items-center justify-center gap-1 rounded-md py-3 transition',
-                isActive(app)
-                  ? 'bg-nt-hover-strong text-nt'
-                  : app.to
-                    ? 'text-nt hover:bg-nt-hover'
-                    : 'cursor-not-allowed text-nt opacity-40',
-              ]"
-              @click="goTo(app)"
             >
-              <span class="text-2xl leading-none">{{ app.icon }}</span>
-              <span class="text-[11px] font-medium">{{ app.label }}</span>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                <path d="M8 3 V13 M3 8 H13"/>
+              </svg>
+              <span>创建</span>
             </button>
           </div>
+        </div>
+        <div class="border-t border-nt-divider"></div>
+
+        <div class="max-h-[60vh] overflow-y-auto px-1 pt-1">
+          <section v-for="group in renderedGroups" :key="group.name" class="mb-2 last:mb-0">
+            <div class="px-1.5 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-nt-soft">
+              {{ group.name }}
+            </div>
+            <div class="grid grid-cols-3 gap-1">
+              <button
+                v-for="app in group.items"
+                :key="app.name"
+                type="button"
+                :disabled="!app.to"
+                :class="[
+                  'flex flex-col items-center justify-center gap-1 rounded-md py-3 transition',
+                  isActive(app)
+                    ? 'bg-nt-hover-strong text-nt'
+                    : app.to
+                      ? 'text-nt hover:bg-nt-hover'
+                      : 'cursor-not-allowed text-nt opacity-40',
+                ]"
+                @click="goTo(app)"
+              >
+                <span class="text-2xl leading-none">{{ app.icon }}</span>
+                <span class="text-[11px] font-medium">{{ app.label }}</span>
+              </button>
+            </div>
+          </section>
         </div>
 
         <div class="mt-2 border-t border-nt-divider"></div>
@@ -86,78 +104,91 @@
     <main class="min-w-0 flex-1">
       <slot />
     </main>
+
+    <!-- 创建应用说明 modal -->
+    <div v-if="createOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="createOpen = false">
+      <div class="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-lg bg-white shadow-2xl">
+        <div class="flex shrink-0 items-center justify-between border-b border-nt-divider px-5 py-3">
+          <h2 class="text-sm font-semibold text-nt">怎么加一个新应用</h2>
+          <button type="button" class="rounded p-1 text-nt-soft hover:bg-nt-hover hover:text-nt" @click="createOpen = false" title="关闭">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4 L12 12 M12 4 L4 12"/></svg>
+          </button>
+        </div>
+        <div class="md min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm leading-relaxed text-nt" v-html="agentsHtml"></div>
+        <div class="flex shrink-0 items-center justify-between gap-3 border-t border-nt-divider px-5 py-3 text-xs text-nt-soft">
+          <span>把这份文档丢给 Codex / Claude Code,告诉它你想加什么 app 即可。</span>
+          <a href="https://github.com/realuckyang/mindbase/blob/main/AGENTS.md" target="_blank" rel="noopener noreferrer" class="rounded px-2 py-1 text-nt-muted hover:bg-nt-hover hover:text-nt">在 GitHub 查看 ↗</a>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { marked } from 'marked'
 import Popover from './Popover.vue'
+import { APPS_META, DEFAULT_LAYOUT, appMeta } from '@/lib/apps.js'
+import agentsSource from '../../AGENTS.md?raw'
+
+const createOpen = ref(false)
+const agentsHtml = computed(() => marked.parse(agentsSource))
+import { apiHome } from '@/api.js'
 
 const route   = useRoute()
 const router  = useRouter()
 
-// 应用 = 上下文载体。to 为 null 表示模块尚未实现,显示但不可点。
-const apps = [
-  { name: 'feed',      icon: '🌊', label: '动态',     to: { name: 'feed' },    match: (p) => p.startsWith('/feed') },
-  { name: 'todos',     icon: '✅', label: '待办',     to: { name: 'todos' },   match: (p) => p.startsWith('/todos') },
-  { name: 'ledger',    icon: '💰', label: '记账',     to: { name: 'ledger' },  match: (p) => p.startsWith('/ledger') },
-  { name: 'notes',     icon: '📚', label: '笔记',     to: { name: 'home' },    match: (p) => p === '/' || p === '/notes' || p.startsWith('/notebook') || p.startsWith('/note') },
-  { name: 'bookmarks', icon: '🔖', label: '收藏',     to: { name: 'bookmarks' },                match: (p) => p.startsWith('/bookmarks') },
-  { name: 'music',     icon: '🎵', label: '音乐',     to: { name: 'music' },                    match: (p) => p.startsWith('/music') },
-  { name: 'movies',    icon: '🎬', label: '电影',     to: { name: 'movies' },                   match: (p) => p.startsWith('/movies') },
-  { name: 'books',     icon: '📖', label: '书单',     to: { name: 'books' },                    match: (p) => p.startsWith('/books') },
-  { name: 'outline',   icon: '📑', label: '大纲',     to: null,                match: (p) => p.startsWith('/outline') },
-  { name: 'mindmap',   icon: '🕸️', label: '思维导图', to: null,                match: (p) => p.startsWith('/mindmap') },
-  { name: 'webs',      icon: '🪟', label: '网页',     to: { name: 'webs' },                     match: (p) => p.startsWith('/webs') },
-  { name: 'calendar',  icon: '📅', label: '日程',     to: { name: 'calendar' },                 match: (p) => p.startsWith('/calendar') },
-  { name: 'travel',    icon: '✈️', label: '旅行',     to: { name: 'travel' },                   match: (p) => p.startsWith('/travel') },
-  { name: 'projects',  icon: '📂', label: '项目',     to: { name: 'projects' },                 match: (p) => p.startsWith('/projects') },
-  { name: 'subs',      icon: '💸', label: '订阅',     to: { name: 'subs' },                     match: (p) => p.startsWith('/subs') },
-  { name: 'vault',     icon: '🔐', label: '密码箱',   to: { name: 'vault' },                    match: (p) => p.startsWith('/vault') },
-  { name: 'resume',    icon: '📄', label: '简历',     to: { name: 'resume' },                   match: (p) => p.startsWith('/resume') },
-  { name: 'cards',     icon: '💳', label: '银行卡',   to: { name: 'cards' },                    match: (p) => p.startsWith('/cards') },
-  { name: 'accounts',  icon: '🆔', label: '网络账号', to: { name: 'accounts' },                 match: (p) => p.startsWith('/accounts') },
-  { name: 'emails',    icon: '📧', label: '邮箱',     to: { name: 'emails' },                   match: (p) => p.startsWith('/emails') },
-  { name: 'memories',  icon: '🕰️', label: '回忆',     to: { name: 'memories' },                 match: (p) => p.startsWith('/memories') },
-  { name: 'domains',   icon: '🌐', label: '域名',     to: { name: 'domains' },                  match: (p) => p.startsWith('/domains') },
-  { name: 'articles',  icon: '✍️', label: '文章',     to: { name: 'articles' },                 match: (p) => p.startsWith('/articles') },
-  { name: 'assets',    icon: '💎', label: '资产',     to: { name: 'assets' },                   match: (p) => p.startsWith('/assets') },
-  { name: 'medical',   icon: '🏥', label: '病例',     to: { name: 'medical' },                  match: (p) => p.startsWith('/medical') },
-  { name: 'games',     icon: '🎮', label: '游戏',     to: { name: 'games' },                    match: (p) => p.startsWith('/games') },
-  { name: 'apps',      icon: '📱', label: 'App',      to: { name: 'apps' },                     match: (p) => p.startsWith('/apps') },
-  { name: 'photos',    icon: '🖼️', label: '影集',     to: { name: 'photos' },                   match: (p) => p.startsWith('/photos') },
-  { name: 'manuals',   icon: '📘', label: '说明书',   to: { name: 'manuals' },                  match: (p) => p.startsWith('/manuals') },
-  { name: 'footprints', icon: '🗺️', label: '足迹',     to: { name: 'footprints' },              match: (p) => p.startsWith('/footprints') },
-  { name: 'docs',      icon: '🛂', label: '证件库',   to: { name: 'docs' },                     match: (p) => p.startsWith('/docs') },
-  { name: 'wishlist',  icon: '🎁', label: '心愿单',   to: { name: 'wishlist' },                 match: (p) => p.startsWith('/wishlist') },
-  { name: 'contacts',  icon: '👥', label: '通讯录',   to: { name: 'contacts' },                 match: (p) => p.startsWith('/contacts') },
-  { name: 'prompts',   icon: '📜', label: '指令集',   to: { name: 'prompts' },                  match: (p) => p.startsWith('/prompts') },
-  { name: 'servers',   icon: '🖥️', label: '服务器',   to: { name: 'servers' },                  match: (p) => p.startsWith('/servers') },
-  { name: 'llms',      icon: '🤖', label: '大模型',   to: { name: 'llms' },                     match: (p) => p.startsWith('/llms') },
-  { name: 'apikeys',   icon: '🔑', label: 'API',      to: { name: 'apikeys' },                  match: (p) => p.startsWith('/apikeys') },
-  { name: 'health',    icon: '❤️', label: '健康',     to: { name: 'health' },                   match: (p) => p.startsWith('/health') },
-  { name: 'recipes',   icon: '🍳', label: '菜谱',     to: { name: 'recipes' },                  match: (p) => p.startsWith('/recipes') },
-  { name: 'devices',   icon: '💻', label: '设备',     to: { name: 'devices' },                  match: (p) => p.startsWith('/devices') },
-  { name: 'exhibitions', icon: '🎨', label: '展览',   to: { name: 'exhibitions' },              match: (p) => p.startsWith('/exhibitions') },
-  { name: 'concerts',  icon: '🎤', label: '演唱会',   to: { name: 'concerts' },                 match: (p) => p.startsWith('/concerts') },
-  { name: 'goals',     icon: '🎯', label: '目标',     to: { name: 'goals' },                    match: (p) => p.startsWith('/goals') },
-  { name: 'profile',   icon: '🪪', label: '个人档',   to: { name: 'profile' }, match: (p) => p.startsWith('/profile') },
-]
-
-// 系统级别 — 不是上下文,是产品功能。
+// 系统级别 — 不是上下文,是产品功能,固定在启动器底部,不参与布局。
 const systems = [
   { name: 'chat',     icon: '💬', label: '对话', to: { name: 'chat' },     match: (p) => p === '/chat' },
   { name: 'collab',   icon: '🔗', label: '协作', to: { name: 'collab' },   match: (p) => p.startsWith('/collab') },
   { name: 'settings', icon: '⚙️', label: '设置', to: { name: 'settings' }, match: (p) => p.startsWith('/settings') },
 ]
 
+// 用户布局。拉接口失败时兜底用默认布局,正常情况以服务端为准。
+const layout = ref(DEFAULT_LAYOUT)
+
+onMounted(async () => {
+  try {
+    const data = await apiHome.getLayout()
+    if (data?.layout?.groups) layout.value = data.layout
+  } catch {
+    // 401 / 网络失败:保持默认布局,不弹错。
+  }
+})
+
+// 按布局组装出渲染用的分组,过滤掉隐藏的,丢弃无法识别的 slug。
+// 未在任何分组、也没被隐藏的应用(新加的)自动归到末尾"未分组",提示用户去 /layout 收编。
+const renderedGroups = computed(() => {
+  const hidden = new Set(layout.value.hidden || [])
+  const used   = new Set()
+  const groups = []
+
+  for (const g of layout.value.groups || []) {
+    const items = []
+    for (const slug of g.apps || []) {
+      if (hidden.has(slug)) { used.add(slug); continue }
+      const meta = appMeta(slug)
+      if (!meta) continue
+      used.add(slug)
+      items.push(meta)
+    }
+    if (items.length) groups.push({ name: g.name, items })
+  }
+
+  const orphans = APPS_META.filter((a) => !used.has(a.name) && !hidden.has(a.name))
+  if (orphans.length) groups.push({ name: '未分组', items: orphans })
+
+  return groups
+})
+
 function isActive(app) {
   return app.match(route.path)
 }
 
 const currentApp = computed(() => {
-  const a = [...apps, ...systems].find(isActive)
+  const a = [...APPS_META, ...systems].find(isActive)
   return a || { icon: '🧠', label: 'MindBase' }
 })
 
@@ -177,11 +208,13 @@ function goTo(app) {
   router.push(app.to)
 }
 
-function onMarket() {
+function onOrganize() {
   launcherOpen.value = false
+  router.push({ name: 'layout' })
 }
 
 function onCreate() {
   launcherOpen.value = false
+  createOpen.value = true
 }
 </script>

@@ -1,6 +1,7 @@
 import { ok, fail } from '../../lib/utils/json.js'
 import { readJsonBody } from '../../lib/utils/body.js'
 import { isAuthenticated } from '../../lib/auth/index.js'
+import { emitHomeEvent } from '../../lib/events.js'
 import { listGoals, findGoalById, insertGoal, updateGoal, deleteGoal } from './repository.js'
 
 const STATUSES = new Set(['active', 'done', 'gave_up'])
@@ -45,6 +46,13 @@ export const createGoalAction = async (request, env) => {
     status:   STATUSES.has(body?.status) ? body.status : 'active',
     note:     cleanStr(body?.note),
   })
+  await emitHomeEvent(env.DB, {
+    app: 'goals',
+    action: 'created',
+    ref_id: row.id,
+    summary: `定下目标:${row.title}`,
+    icon: '🎯',
+  })
   return ok({ item: serialize(row) })
 }
 
@@ -77,6 +85,15 @@ export const updateGoalAction = async (request, env, id) => {
   }
 
   const row = await updateGoal(env.DB, id, patch)
+  if (row && row.status === 'done' && existing.status !== 'done') {
+    await emitHomeEvent(env.DB, {
+      app: 'goals',
+      action: 'completed',
+      ref_id: id,
+      summary: `完成目标:${existing.title}`,
+      icon: '🎯',
+    })
+  }
   return ok({ item: serialize(row) })
 }
 

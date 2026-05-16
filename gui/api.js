@@ -61,11 +61,14 @@ export const apiTokens = {
   remove: (id)   => api.delete(`/api/collab/tokens/${id}`),
 }
 
-export const apiFeed = {
-  list:   ({ offset = 0, limit = 30 } = {}) => api.get(`/api/feed?offset=${offset}&limit=${limit}`),
-  create: ({ content })                     => api.post('/api/feed', { content }),
-  update: (id, { content })                 => api.patch(`/api/feed/${id}`, { content }),
-  remove: (id)                              => api.delete(`/api/feed/${id}`),
+export const apiHome = {
+  list:         ({ offset = 0, limit = 30 } = {}) => api.get(`/api/home?offset=${offset}&limit=${limit}`),
+  events:       ({ before } = {})                 => api.get('/api/home/events' + (before ? `?before=${encodeURIComponent(before)}` : '')),
+  create:       ({ content })                     => api.post('/api/home', { content }),
+  update:       (id, { content })                 => api.patch(`/api/home/${id}`, { content }),
+  remove:       (id)                              => api.delete(`/api/home/${id}`),
+  getLayout:    ()                                => api.get('/api/home/layout'),
+  updateLayout: (layout)                          => api.patch('/api/home/layout', layout),
 }
 
 export const apiSearch = {

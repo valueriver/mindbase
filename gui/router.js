@@ -1,15 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { checkAuth, useAuth } from '@/composables/useAuth'
 
-const DEFAULT_PATH = '/feed'  // 登录后默认进的应用
+const DEFAULT_PATH = '/home'  // 登录后默认进的应用
 
 const routes = [
   { path: '/welcome',             name: 'welcome',     component: () => import('@/apps/welcome.vue'), meta: { guestOnly: true } },
   { path: '/',                    redirect: DEFAULT_PATH },
-  { path: '/notes',               name: 'home',        component: () => import('@/apps/notes/home.vue') },
+  { path: '/notes',               name: 'notes',       component: () => import('@/apps/notes/home.vue') },
   { path: '/notebook/:id',        name: 'notebook',    component: () => import('@/apps/notes/notebook.vue'),  props: true },
   { path: '/note/:id',            name: 'note',        component: () => import('@/apps/notes/detail.vue'), props: true },
-  { path: '/feed',                name: 'feed',        component: () => import('@/apps/feed/index.vue') },
+  { path: '/home',                name: 'home',        component: () => import('@/apps/home/index.vue') },
   { path: '/todos',               name: 'todos',       component: () => import('@/apps/todos/index.vue') },
   { path: '/ledger',              name: 'ledger',      component: () => import('@/apps/ledger/index.vue') },
   { path: '/search',              name: 'search',      component: () => import('@/apps/search/index.vue') },
@@ -54,6 +54,7 @@ const routes = [
   { path: '/chat',                name: 'chat',        component: () => import('@/apps/chat/index.vue') },
   { path: '/settings',            name: 'settings',    component: () => import('@/apps/settings/index.vue') },
   { path: '/collab',              name: 'collab',      component: () => import('@/apps/collab/index.vue') },
+  { path: '/layout',              name: 'layout',      component: () => import('@/apps/layout/index.vue') },
   { path: '/:pathMatch(.*)*',     redirect: DEFAULT_PATH },
 ]
 

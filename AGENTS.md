@@ -25,18 +25,22 @@
 
 ## 加一个新应用
 
-后端 4 文件 + 前端 1 文件,改 3 处中央注册表:
+后端 5 文件 + 前端 1 文件,改 3 处中央注册表:
 
-1. `server/apps/<name>/schema.sql` —— DDL,所有表带 `app_<name>_` 前缀
-2. `server/apps/<name>/repository.js` —— 纯 D1 查询,无校验、无副作用
-3. `server/apps/<name>/service.js` —— 业务逻辑、校验、`emitHomeEvent()` 调用
-4. `server/apps/<name>/api.js` —— HTTP 入口,标准 CRUD 路由
-5. `gui/apps/<name>/index.vue` —— 单个视图
+1. `server/apps/<name>/manifest.js` —— 声明 `name / label / icon / category / kind / tables / subpaths / summary / private`,是启动器、`GET /api/ai/apps` 和 SKILL 自发现的单一事实源
+2. `server/apps/<name>/schema.sql` —— DDL,所有表带 `app_<name>_` 前缀
+3. `server/apps/<name>/repository.js` —— 纯 D1 查询,无校验、无副作用
+4. `server/apps/<name>/service.js` —— 业务逻辑、校验、`emitHomeEvent()` 调用
+5. `server/apps/<name>/api.js` —— HTTP 入口,标准 CRUD 路由
+6. `gui/apps/<name>/index.vue` —— 单个视图
 
 中央注册:
 - `server/router.js` —— 加 import 和 `stripDispatch('/api/<name>', xxx)`
+- `server/apps/registry.js` —— 加 import 和加进 `APPS` 数组
 - `gui/router.js` —— 加路由
-- `gui/components/AppShell.vue` —— 加 launcher 入口
+- `gui/lib/apps.js` —— 加 manifest import 和加进 `CONTEXT_MANIFESTS` 数组
+
+`gui/components/AppShell.vue` 从 `APPS_META` 派生,不用再单独改 —— 启动器入口自动从 manifest 派生。
 
 `mindbase.sql` 是 build 脚本从各 `schema.sql` 拼出来的,**不要手改**。
 

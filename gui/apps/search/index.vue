@@ -21,12 +21,12 @@
         <div v-else-if="error" class="mt-8 text-center text-sm text-nt-danger">{{ error }}</div>
         <div v-else-if="empty" class="mt-8 text-center text-sm text-nt-soft">没找到相关内容</div>
         <div v-else class="mt-6 space-y-6">
-          <section v-if="feed.length">
-            <h2 class="mb-2 text-xs font-medium text-nt-soft">动态 · {{ feed.length }}</h2>
+          <section v-if="posts.length">
+            <h2 class="mb-2 text-xs font-medium text-nt-soft">主页 · {{ posts.length }}</h2>
             <ul class="space-y-1.5">
-              <li v-for="item in feed" :key="item.id">
+              <li v-for="item in posts" :key="item.id">
                 <router-link
-                  :to="{ name: 'feed' }"
+                  :to="{ name: 'home' }"
                   class="block rounded px-2 py-1.5 hover:bg-nt-hover"
                 >
                   <div class="text-[11px] text-nt-soft">{{ formatDate(item.created_at) }}</div>
@@ -82,12 +82,12 @@ import { apiSearch } from '@/api'
 const q         = ref('')
 const notebooks = ref([])
 const notes     = ref([])
-const feed      = ref([])
+const posts     = ref([])
 const loading   = ref(false)
 const error     = ref('')
 const inputEl   = ref(null)
 
-const empty = computed(() => !notebooks.value.length && !notes.value.length && !feed.value.length)
+const empty = computed(() => !notebooks.value.length && !notes.value.length && !posts.value.length)
 
 function formatDate(s) {
   if (!s) return ''
@@ -108,7 +108,7 @@ async function runSearch() {
   if (!v) {
     notebooks.value = []
     notes.value = []
-    feed.value = []
+    posts.value = []
     return
   }
   loading.value = true
@@ -117,7 +117,7 @@ async function runSearch() {
     const r = await apiSearch.run(v)
     notebooks.value = r.notebooks || []
     notes.value     = r.notes || []
-    feed.value      = r.feed || []
+    posts.value     = r.posts || []
   } catch (e) {
     error.value = e?.message || '搜索失败'
   } finally {

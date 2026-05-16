@@ -2,15 +2,15 @@
   <nav class="flex flex-wrap items-center gap-0.5 text-sm text-nt-muted">
     <!-- 首页:可作为根级 drop target -->
     <router-link
-      :to="{ name: 'home' }"
+      :to="{ name: 'notes' }"
       data-mb-drop
-      data-mb-drop-kind="home"
+      data-mb-drop-kind="root"
       class="rounded-sm px-1.5 py-0.5 transition-colors"
-      :class="dropTargetClass(homeDropState)"
-      @dragenter.prevent="onEnter('home', null, $event)"
-      @dragover.prevent="onOver('home', null, $event)"
-      @dragleave="onLeave('home', null)"
-      @drop.prevent="onDrop('home', null)"
+      :class="dropTargetClass(rootDropState)"
+      @dragenter.prevent="onEnter('root', null, $event)"
+      @dragover.prevent="onOver('root', null, $event)"
+      @dragleave="onLeave('root', null)"
+      @drop.prevent="onDrop('root', null)"
     >
       首页
     </router-link>
@@ -63,10 +63,10 @@ const emit = defineEmits(['move'])
 const enterCounts = reactive({})
 
 // hover 信号来源:桌面 native dragenter/leave(enterCounts)+ 移动端 touchmove(dragState.hoverTarget)
-const homeDropState = computed(() => ({
-  active: dragState.active && canDropTo('home', null),
-  hover: (enterCounts['__home__'] || 0) > 0
-    || dragState.hoverTarget?.kind === 'home',
+const rootDropState = computed(() => ({
+  active: dragState.active && canDropTo('root', null),
+  hover: (enterCounts['__root__'] || 0) > 0
+    || dragState.hoverTarget?.kind === 'root',
 }))
 
 const getDropState = (id) => ({
@@ -97,12 +97,12 @@ function canDropTo(targetKind, targetId) {
   if (dragState.kind === 'notebook' && dragState.id === targetId) return false
   // 已经在该 parent 下 → noop
   const currentParent = dragState.parentId // null = root
-  const targetParent = targetKind === 'home' ? null : targetId
+  const targetParent = targetKind === 'root' ? null : targetId
   if (currentParent === targetParent) return false
   return true
 }
 
-const keyOf = (kind, id) => kind === 'home' ? '__home__' : id
+const keyOf = (kind, id) => kind === 'root' ? '__root__' : id
 
 function onEnter(kind, id) {
   if (!canDropTo(kind, id)) return

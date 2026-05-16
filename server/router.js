@@ -2,7 +2,7 @@ import { fail } from './lib/utils/json.js'
 import { buildCorsHeaders } from './lib/utils/http.js'
 
 // 子路径式 app(默认导出 handle(req,env,sub,method,url),sub 是 prefix 之后的剩余路径)
-import feed      from './apps/feed/api.js'
+import home      from './apps/home/api.js'
 import todos     from './apps/todos/api.js'
 import ledger    from './apps/ledger/api.js'
 import notes     from './apps/notes/api.js'
@@ -86,7 +86,7 @@ export async function handleApiRoutes(request, env, url) {
 
     let r
     // sub-path apps
-    if ((r = await stripDispatch('/api/feed',      feed))        !== undefined) return r
+    if ((r = await stripDispatch('/api/home',      home))        !== undefined) return r
     if ((r = await stripDispatch('/api/todos',     todos))       !== undefined) return r
     if ((r = await stripDispatch('/api/ledger',    ledger))      !== undefined) return r
     if ((r = await stripDispatch('/api/notes',     notes))       !== undefined) return r

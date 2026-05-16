@@ -25,7 +25,7 @@ export const searchAction = async (request, env, url) => {
   if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
 
   const q = String(url.searchParams.get('q') || '').trim().slice(0, 120)
-  if (!q) return ok({ query: '', notebooks: [], notes: [], feed: [] })
+  if (!q) return ok({ query: '', notebooks: [], notes: [], posts: [] })
 
   const limit = Math.max(
     1,
@@ -33,7 +33,7 @@ export const searchAction = async (request, env, url) => {
   )
   const like = `%${q.replace(/[%_]/g, m => `\\${m}`)}%`
 
-  const [nbResult, noteResult, memoResult] = await Promise.all([
+  const [nbResult, noteResult, postResult] = await Promise.all([
     env.DB.prepare(
       `SELECT id, parent_id, name, icon, cover, updated_at
          FROM app_notes_notebooks
@@ -52,7 +52,7 @@ export const searchAction = async (request, env, url) => {
 
     env.DB.prepare(
       `SELECT id, content, created_at, updated_at
-         FROM app_feed_posts
+         FROM app_home_posts
         WHERE content LIKE ?1 ESCAPE '\\'
         ORDER BY created_at DESC
         LIMIT ?2`
@@ -68,17 +68,17 @@ export const searchAction = async (request, env, url) => {
     snippet:     makeSnippet(stripHtml(n.content), q),
   }))
 
-  const feed = (memoResult?.results || []).map(m => ({
-    id:         m.id,
-    created_at: m.created_at,
-    updated_at: m.updated_at,
-    snippet:    makeSnippet(String(m.content || ''), q),
+  const posts = (postResult?.results || []).map(p => ({
+    id:         p.id,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    snippet:    makeSnippet(String(p.content || ''), q),
   }))
 
   return ok({
     query:     q,
     notebooks: nbResult?.results || [],
     notes,
-    feed,
+    posts,
   })
 }

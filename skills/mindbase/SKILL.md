@@ -10,6 +10,16 @@ description: 读写用户的 MindBase——一个跟 AI 同步生活上下文的
 - **Base URL** —— 比如 `https://i.mindbase.me`,或自部署实例
 - **Bearer token** —— 以 `mb_` 开头。每次调 API 都带 `Authorization: Bearer <token>`
 
+### 应用清单
+
+不要假设固定。任何时候要列出所有可用应用,先调:
+
+```
+GET /api/ai/apps
+```
+
+返回 `{ apps: [{ name, label, icon, category, kind, tables, subpaths, summary, private }, ...] }`,这是单一事实源,新加的应用会立刻出现在这里。无需鉴权。
+
 ## 心智模型
 
 MindBase 把用户生活的方方面面拆成一组**应用**(app),每个应用一张或几张表,共享一份 D1 数据库。

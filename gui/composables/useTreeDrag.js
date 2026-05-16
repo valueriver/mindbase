@@ -21,7 +21,7 @@ export const dragState = reactive({
   /**
    * 移动端 touch 拖动期间共享的 hover target — 用于 Breadcrumb 高亮。
    * 桌面端 native dragenter/dragleave 已经在 Breadcrumb 内自管,这字段
-   * 主要给 touch 路径用。格式:{ kind: 'home' | 'notebook', id: string | null }
+   * 主要给 touch 路径用。格式:{ kind: 'root' | 'notebook', id: string | null }
    */
   hoverTarget: null,
 })

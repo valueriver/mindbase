@@ -153,7 +153,7 @@ async function load() {
     notes.value      = data.notes
     nameInput.value  = data.notebook.name
   } catch (e) {
-    if (e.status === 404) router.replace({ name: 'home' })
+    if (e.status === 404) router.replace({ name: 'notes' })
     else error.value = e.message || '加载失败'
   } finally {
     loading.value = false
@@ -247,10 +247,10 @@ async function onReorder(items) {
 
 /**
  * 拖到面包屑上 → 移动到目标父级。
- * payload: { kind: 'note'|'notebook', id, target: { kind: 'home'|'notebook', id } }
+ * payload: { kind: 'note'|'notebook', id, target: { kind: 'root'|'notebook', id } }
  */
 async function onMove({ kind, id, target }) {
-  const targetParent = target.kind === 'home' ? null : target.id
+  const targetParent = target.kind === 'root' ? null : target.id
   await doMove(kind, id, targetParent)
 }
 

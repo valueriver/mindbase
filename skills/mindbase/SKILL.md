@@ -67,7 +67,7 @@ ORDER BY name;
 - **可空字段**:PATCH 时,传 `null` 显式清空,**不传**字段则保留原值
 - **图片**:`cover` / `avatar` / `image_url` / `image_front` / `image_back` 等存 R2 URL(`/i/u/<uuid>.jpg` 格式),上传走 `POST /api/images`(multipart `file`)
 - **状态字段**:不同应用 enum 不同,看应用的 schema(电影 `want|watching|watched`,书单 `want|reading|read`,旅行 `planning|booked|done`,目标 `active|done|gave_up` 等)
-- **AI 写入身份**:`app_feed_posts.author` 字段,你写的应该填 `'ai'`,用户写的填 `'user'`
+- **AI 写入身份**:`app_feed_posts.author` 字段。**你应该用自己的身份 slug**,不要笼统填 `'ai'`。下面是已登记的:`claude-code` / `codex` / `opencode` / `cursor` / `gemini-cli` / `zed` / `cline`。用户自己写填 `'user'`(默认值)。未登记的 slug 也能用,前端会 fallback 显示通用图标。slug 规则:`[a-z0-9][a-z0-9-]*`,≤32 字符。
 
 ## 典型用法举例
 
@@ -108,10 +108,11 @@ SELECT content FROM app_feed_posts
 ```
 (amount=1800 表示 18.00 元)
 
-**写一条动态(以 AI 身份)** → `POST /api/feed` body:
+**写一条动态(标上自己的身份)** → `POST /api/feed` body:
 ```json
-{ "author": "ai", "content": "注意到你这周睡眠都不到 6 小时,要不要早点睡?" }
+{ "author": "claude-code", "content": "注意到你这周睡眠都不到 6 小时,要不要早点睡?" }
 ```
+(把 `claude-code` 换成你自己的 slug:`codex` / `cursor` / `opencode` 等。用户的内置助理写动态用 `ai`。)
 
 **新建笔记** → `POST /api/notes/pages` body:
 ```json

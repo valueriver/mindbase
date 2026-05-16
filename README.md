@@ -1,101 +1,91 @@
 # MindBase
 
-**同步你和 AI 的上下文。**
+**自建你和 AI 共同的生活上下文。**
+
+把记忆从一锅炖,拆成生活的形状。钱归"记账",书归"书单",看过的展览归"展览",在用的服务器归"服务器" —— 每个应用就是你生活的一面。你看见,AI 也看见。
 
 ---
 
-## 这是一个什么样的产品
+## 🧠 心智模型
 
 主流的 AI "记忆" 是这样工作的:把你的笔记、想法、偏好,**全部压成一段文本或向量**,丢给一个黑箱,AI 偶尔从里面摸点东西出来。你看不见、改不动,信不信全凭感觉。
 
-MindBase 走反方向 —— **把记忆从一锅炖,拆成生活的形状**。
-
-钱归"记账",书归"书单",看过的展览归"展览",在用的服务器归"服务器",每一个应用就是你生活的一面。AI 不再"语义摸索",而是用 SQL **看见**每一张表、每一条记录。你也看见。
+MindBase 走反方向 —— 每个应用都是生活的一面。**40+ 个应用共用一份 D1**。AI 通过 SQL 读 `app_<name>_*` 表前缀,你也通过 UI 读写。看见的就是它是什么,没有翻译那一步。
 
 > 🎯 **AI 时代的记忆不是 AI 的事,是你的事。**
 > 你的生活本来就有形状。MindBase 把这些形状还给你,顺便让 AI 看见。
-> **你看见什么,就是它是什么。**
 
 ---
 
-## 两条产品原则
+## 🌊 主页 = 时间轴
 
-### 1. 形状即意义
+主页是 MindBase 的入口,也是你和 AI 的会合点。
 
-Notion / 通用数据库的所有数据都长一样 —— 你必须读字段名才知道"这是什么"。MindBase 不这样:
+- **你手写的帖子**(`app_home_posts`):像微博一样的小卡,记一句话、贴张图、AI 也可以替你写。
+- **应用自动事件**(`app_home_events`):各应用在关键动作后由后端 `emitHomeEvent()` 写一条,例如"记了一笔咖啡 ¥18"、"读完《XX》"、"目标 +1"。
 
-- 🎬 电影是 **2:3 海报方块** —— 一眼就是电影
-- 📖 书是 **2:3 书脊** —— 一眼就是书
-- 💳 银行卡是 **`**** **** **** 1234`** —— 一眼就是卡
-- 🎯 目标是 **进度条 + 大圆 "+1" 按钮**
-- 🔐 密码是 **`•••` mask + "显示密码"**
-- 🖼️ 影集是 **照片网格**
-- 💰 记账是 **+ 绿 / − 红 + ¥ 数字**
-
-眼睛 = 大脑,**没有翻译那一步**。
-
-### 2. 自然的存在,自然的名字,应有的形状、交互、功能
-
-每个应用要满足两层:
-
-- **自然**(决定要不要做):用户脑中本来就有的概念才做("书"是有的,"内容容器"不是)
-- **应有**(决定怎么做):形状、交互、功能要一次给对(电影必须有海报,银行卡必须 mask,密码必须默认隐藏)
+两条流合并按时间排序,按"今天 / 昨天 / 之前"分组渲染 —— 事件是小条,帖子是完整卡。你看一眼就知道这一天过得怎么样,AI 也用同一个视角理解你。
 
 ---
 
-## 应用清单(40+)
+## 🧩 40+ 应用
 
 每个应用对应你生活的一面。表名带 `app_<name>_*` 前缀,AI 一眼就能扫到所有"上下文"。
 
 | 类别 | 应用 |
 |---|---|
-| **流水** | 🌊 动态 · ✅ 待办 · 💰 记账 · 📅 日程 · 🕰️ 回忆 · ❤️ 健康 |
-| **内容** | 📚 笔记 · 🪟 网页 · 📜 指令集 · ✍️ 文章 |
-| **品味** | 🎬 电影 · 📖 书单 · 🎵 音乐 · 🎮 游戏 · 🎨 展览 · 🎤 演唱会 |
-| **生活** | 🍳 菜谱 · 🖼️ 影集 · 🗺️ 足迹 · ✈️ 旅行 · 📂 项目 · 🎯 目标 · 🎁 心愿单 |
-| **资产** | 💎 资产 · 💳 银行卡 · 💸 订阅 · 📘 说明书 · 💻 设备 · 🛂 证件库 · 🌐 域名 |
-| **身份** | 🪪 个人档 · 📄 简历 · 👥 通讯录 · 📧 邮箱 · 🆔 网络账号 |
-| **凭据** | 🔐 密码箱 · 🔑 API · 🤖 大模型 · 🖥️ 服务器 |
-| **系统** | 💬 对话 · 🔗 协作 · ⚙️ 设置 |
+| 🌊 **流水** | 主页 · ✅ 待办 · 💰 记账 · 📅 日程 · 🕰️ 回忆 · ❤️ 健康 |
+| 📝 **内容** | 📚 笔记 · 🪟 网页 · 📜 指令集 · ✍️ 文章 |
+| 🎬 **品味** | 电影 · 📖 书单 · 🎵 音乐 · 🎮 游戏 · 🎨 展览 · 🎤 演唱会 |
+| 🍳 **生活** | 菜谱 · 🖼️ 影集 · 🗺️ 足迹 · ✈️ 旅行 · 📂 项目 · 🎯 目标 · 🎁 心愿单 |
+| 💎 **资产** | 资产 · 💳 银行卡 · 💸 订阅 · 📘 说明书 · 💻 设备 · 🛂 证件库 · 🌐 域名 |
+| 🪪 **身份** | 个人档 · 📄 简历 · 👥 通讯录 · 📧 邮箱 · 🆔 网络账号 |
+| 🔐 **凭据** | 密码箱 · 🔑 API · 🤖 大模型 · 🖥️ 服务器 |
+| ⚙️ **系统** | 💬 对话 · 🔗 协作 · 设置 |
 
-不是固定清单。你可以**自己加新应用** —— 见下面"自定义应用"。
-
----
-
-## 三种用 AI 的方式
-
-`设置 → 协作` 一键开启,拿到一把 token 之后:
-
-### 1️⃣ 粘消息给在线 AI(零安装,30 秒)
-
-复制快捷消息,粘到 ChatGPT / Claude / Gemini 任意聊天框 —— AI 自己 fetch OpenAPI schema 干活。
-
-### 2️⃣ 装技能包(长期使用)
-
-下载:
-
-```
-https://github.com/realuckyang/mindbase/raw/main/mindbase.zip
-```
-
-解压到 AI 运行时的 skills 目录:
-
-- **Claude Code**: `~/.claude/skills/mindbase/`
-- **其它支持 Anthropic Skills 的工具**:查它各自的 skills 路径
-
-zip 不含任何凭证,装好后用你的 Base URL + token 配上即可。
-
-### 3️⃣ 内嵌助理
-
-进 `对话` 模块,填好 OpenAI 兼容的 base URL / API key / model(支持 DeepSeek / SiliconFlow / 自部署 vLLM 等任何兼容端点)。
-
-内嵌助理拿到 D1 直连,**只有一把工具:`sql_query`**。它能聚合("上个月外卖花了多少")、跨应用整理("把今天动态整理成笔记")、批量更新 —— 所有 SQL 在对话里展开可见,**主动访问是可观测的**。
+不是固定清单。你可以**自己加新应用** —— 见下面"自己加应用"。
 
 ---
 
-## 自定义应用
+## 💬 对话 + 协作
 
-仓库根目录的 `AGENTS.md` 写明了"加一个新应用"的契约(后端 5 步、前端 4 步)。最高效用法:把 mindbase clone 到本地,告诉 Claude Code:
+> 一份数据,两种用法:在产品里跟内置助理对话,或把 token 给到外部 AI。
+
+### 内置助理(对话)
+
+进 `对话` 模块,填好 OpenAI 兼容的 base URL / API key / model(DeepSeek / SiliconFlow / 自部署 vLLM 等任何兼容端点都可以)。
+
+内置助理拿到 D1 直连,**只有一把工具:`sql_query`**。它能聚合("上个月外卖花了多少")、跨应用整理("把今天主页帖子整理成笔记")、批量更新 —— 所有 SQL 在对话里展开可见,**主动访问是可观测的**。
+
+### 外部协作(token)
+
+`设置 → 协作` 一键开启,拿到一把 `mb_` 开头的 token,把 base URL + token 给到任意外部 AI:
+
+- **粘消息给在线 AI** —— 复制快捷消息,粘到 ChatGPT / Claude / Gemini 任意聊天框,AI 自己 fetch OpenAPI schema 干活。
+- **装技能包(长期使用)** —— 从 github raw 下载 SKILL 包,解压到 AI 运行时的 skills 目录:
+  ```
+  https://github.com/realuckyang/mindbase/raw/main/mindbase.zip
+  ```
+  - Claude Code: `~/.claude/skills/mindbase/`
+  - 其它支持 Anthropic Skills 的工具:查它各自的 skills 路径
+  
+  zip 不含任何凭证,装好后用你的 Base URL + token 配上即可。
+
+外部 AI 走标准 REST(`/api/<name>` CRUD),完整 schema 在 `/api/ai/openapi.json`,高频应用精挑出来了,完整清单走 SQL 自发现。
+
+---
+
+## 🛠️ 自己加应用
+
+`AGENTS.md` 写明了"加一个新应用"的契约:5 个文件丢一捆,3 处中央注册表改一下,就接入了。
+
+```
+server/apps/<name>/{schema.sql, repository.js, service.js, api.js}
+gui/apps/<name>/index.vue
++ server/router.js · gui/router.js · gui/components/AppShell.vue
+```
+
+最高效用法:把 mindbase clone 到本地,告诉 Claude Code:
 
 > "按 AGENTS.md 加一个 plants 应用,记我的多肉:名字、买入日期、上次浇水、备注。"
 
@@ -103,7 +93,7 @@ zip 不含任何凭证,装好后用你的 Base URL + token 配上即可。
 
 ---
 
-## 自己部署一份
+## 🚀 自己部署
 
 需要:**Cloudflare 账号**、**Node 22+**
 
@@ -119,7 +109,7 @@ npx wrangler r2 bucket create mindbase
 cp wrangler.example.jsonc wrangler.jsonc
 # 改 account_id / database_id / JWT_SECRET(随便生成一串长字符串)
 
-# 3. 建表
+# 3. 建表(单一 SQL 文件,所有应用拼一起)
 npx wrangler d1 execute mindbase --remote --file=mindbase.sql --yes
 
 # 4. 部署
@@ -138,7 +128,7 @@ npx wrangler d1 export mindbase --remote --output backup-$(date +%Y%m%d).sql
 
 ---
 
-## 技术栈
+## 🧱 技术栈
 
 | 层 | 用了什么 |
 |---|---|
@@ -149,7 +139,7 @@ npx wrangler d1 export mindbase --remote --output backup-$(date +%Y%m%d).sql
 | AI | OpenAI 兼容 Chat Completions + 流式 + 工具调用 |
 | 标准 | OpenAPI 3.1 + Anthropic Skills |
 
-后端 `apps/<name>/` 一捆 `{api, service, repository, schema}`;`system/` 装跨切的 auth / utils / image / search 等。单一约束:**`app_<name>_*` 表前缀决定 AI 视野**。
+后端 `apps/<name>/` 一捆 `{api, service, repository, schema}`;`lib/` 装跨切的 auth / utils / events 等。单一约束:**`app_<name>_*` 表前缀决定 AI 视野**。
 
 ```
 mindbase/
@@ -158,8 +148,7 @@ mindbase/
   server/
     index.js                Worker 入口
     router.js               /api/<name> 统一分发
-    lib/                    auth / utils
-    system/                 user / image / search / openapi(平台 HTTP 模块)
+    lib/                    auth / utils / events
     apps/<name>/            每应用一捆
   gui/
     main.js  App.vue  router.js  api.js

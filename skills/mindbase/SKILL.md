@@ -12,14 +12,22 @@ description: 读写用户的 MindBase——一个跟 AI 同步生活上下文的
 
 ## 心智模型
 
-MindBase 把用户生活的方方面面拆成一组**应用**(app),每个应用一张表,共享一份 D1 数据库。
+MindBase 把用户生活的方方面面拆成一组**应用**(app),每个应用一张或几张表,共享一份 D1 数据库。
 
-- **上下文应用**(数十个,会持续增加):动态 / 待办 / 记账 / 笔记 / 收藏 / 音乐 / 电影 / 书单 / 网页 / 日程 / 旅行 / 项目 / 订阅 / 密码箱 / 简历 / 银行卡 / 网络账号 / 邮箱 / 回忆 / 域名 / 文章 / 资产 / 病例 / 游戏 / App / 影集 / 说明书 / 足迹 / 证件库 / 心愿单 / 通讯录 / 指令集 / 服务器 / 大模型 / API key / 健康 / 菜谱 / 设备 / 展览 / 演唱会 / 目标 / 个人档 ……
+- **上下文应用**(40+,持续增加):主页 / 待办 / 记账 / 笔记 / 收藏 / 音乐 / 电影 / 书单 / 网页 / 日程 / 旅行 / 项目 / 订阅 / 密码箱 / 简历 / 银行卡 / 网络账号 / 邮箱 / 回忆 / 域名 / 文章 / 资产 / 病例 / 游戏 / App / 影集 / 说明书 / 足迹 / 证件库 / 心愿单 / 通讯录 / 指令集 / 服务器 / 大模型 / API / 健康 / 菜谱 / 设备 / 展览 / 演唱会 / 目标 / 个人档 ……
 - **系统功能**:对话 / 协作 / 设置
 
 表名前缀规则:
 - **`app_<name>_*`** = 上下文应用的表(用户的生活数据,你应该看见)
 - 裸表名(如 `conversations`、`messages`、`tokens`、`settings`)= 系统表(对话历史、授权、配置;**不要主动暴露这些数据**)
+
+### 主要表
+
+- `app_home_posts(id, author, content, created_at, updated_at)` —— 主页帖子,用户和 AI 共写的时间线。`author` 区分谁写的(slug)。
+- `app_home_events(id, app, action, ref_id, summary, icon, created_at)` —— 跨应用事件流。各应用在关键动作(创建 / 状态跃迁 / 完成里程碑)后由后端 `emitHomeEvent()` 写一条,供主页时间轴渲染。**不要从这里 INSERT**——它由后端维护,你只读。
+- 各应用自己的表,前缀都是 `app_<name>_`。
+
+主页 = 用户手写的 posts + 各应用自动写入的 events,同一条时间线上按时间排序。
 
 ## 发现:先 SQL 看一眼
 
@@ -48,6 +56,7 @@ ORDER BY name;
 | 删除 | `DELETE /api/<name>/<id>` |
 
 少数应用有专属 sub-path:
+- `/api/home`(列 + 写帖子)、`/api/home/events?limit=&before=`(读事件流,只读)
 - `/api/notes/notebooks`、`/api/notes/pages`、`/api/notes/root`(笔记应用三个资源)
 - `/api/notes/items/reorder`(笔记拖拽排序)
 - `/api/ledger/stats?month=YYYY-MM`、`/api/ledger/categories`(记账统计/历史分类)
@@ -55,7 +64,7 @@ ORDER BY name;
 - `/api/vault/import`(密码 CSV 导入)、`/api/contacts/import`(vCard 导入)
 - `/api/profile`(个人档:多 block 列表 + CRUD)
 
-完整 schema:`GET /api/ai/openapi.json`(部分应用未覆盖,以 SQL 查表为准)。
+完整 schema:`GET /api/ai/openapi.json`(只列出高频应用,完整清单以 SQL 查表为准)。
 
 ### 字段约定
 
@@ -67,7 +76,7 @@ ORDER BY name;
 - **可空字段**:PATCH 时,传 `null` 显式清空,**不传**字段则保留原值
 - **图片**:`cover` / `avatar` / `image_url` / `image_front` / `image_back` 等存 R2 URL(`/i/u/<uuid>.jpg` 格式),上传走 `POST /api/images`(multipart `file`)
 - **状态字段**:不同应用 enum 不同,看应用的 schema(电影 `want|watching|watched`,书单 `want|reading|read`,旅行 `planning|booked|done`,目标 `active|done|gave_up` 等)
-- **AI 写入身份**:`app_feed_posts.author` 字段。**你应该用自己的身份 slug**,不要笼统填 `'ai'`。下面是已登记的:`claude-code` / `codex` / `opencode` / `cursor` / `gemini-cli` / `zed` / `cline`。用户自己写填 `'user'`(默认值)。未登记的 slug 也能用,前端会 fallback 显示通用图标。slug 规则:`[a-z0-9][a-z0-9-]*`,≤32 字符。
+- **AI 写入身份**:`app_home_posts.author` 字段。**用你自己的身份 slug**。下面是已登记的:`claude-code` / `codex` / `opencode` / `cursor` / `gemini-cli` / `zed` / `cline`。用户自己写填 `'user'`(默认值)。未登记的 slug 也能用,前端会 fallback 显示通用图标。slug 规则:`[a-z0-9][a-z0-9-]*`,≤32 字符。
 
 ## 典型用法举例
 
@@ -95,9 +104,9 @@ SELECT COUNT(*) FROM app_books_items
    AND strftime('%Y', updated_at) = '2026'
 ```
 
-**"整理今天动态成笔记"** —— 跨应用读写:
+**"整理今天主页帖子成笔记"** —— 跨应用读写:
 ```sql
-SELECT content FROM app_feed_posts
+SELECT content FROM app_home_posts
  WHERE date(created_at) = date('now') ORDER BY created_at;
 -- 然后整理成 HTML,POST /api/notes/pages 写入
 ```
@@ -108,11 +117,11 @@ SELECT content FROM app_feed_posts
 ```
 (amount=1800 表示 18.00 元)
 
-**写一条动态(标上自己的身份)** → `POST /api/feed` body:
+**写一条主页帖子(标上自己的身份)** → `POST /api/home` body:
 ```json
 { "author": "claude-code", "content": "注意到你这周睡眠都不到 6 小时,要不要早点睡?" }
 ```
-(把 `claude-code` 换成你自己的 slug:`codex` / `cursor` / `opencode` 等。用户的内置助理写动态用 `ai`。)
+(把 `claude-code` 换成你自己的 slug:`codex` / `cursor` / `opencode` 等。)
 
 **新建笔记** → `POST /api/notes/pages` body:
 ```json
@@ -143,5 +152,5 @@ SELECT content FROM app_feed_posts
 ## 限制
 
 - 你**不能**创建/列出/吊销 mb_ token —— 这是产品自己的事,token 操作给 mb_ 凭证返 403
-- 跟用户讨论隐私时,默认假设**密码箱 / 银行卡 / 证件库 / API key / 大模型 key** 这些内容用户不希望你主动复述,除非他明确问
-- 用户可能随时通过 Claude Code / Codex **加新应用**(目前 41+ 个,在长)。每次开新会话,先 SQL 扫一遍 `app_%` 表清单,不要假设固定
+- 跟用户讨论隐私时,默认假设**密码箱 / 银行卡 / 证件库 / API key / 大模型 key / 网络账号 / 邮箱** 这些内容用户不希望你主动复述,除非他明确问
+- 用户可能随时通过 Claude Code / Codex **加新应用**(目前 40+ 个,在长)。每次开新会话,先 SQL 扫一遍 `app_%` 表清单,不要假设固定

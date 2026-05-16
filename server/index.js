@@ -1,5 +1,5 @@
-import handleApiRoutes from './api/index.js'
-import { serveImageAction } from './service/image.js'
+import handleApiRoutes from './router.js'
+import { serveImageAction } from './apps/image/service.js'
 
 export default {
   async fetch(request, env) {

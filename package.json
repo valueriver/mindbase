@@ -1,7 +1,7 @@
 {
 	"name": "mindbase",
 	"version": "0.1.0",
-	"description": "自建笔记 · AI 协作 · Notion 风格",
+	"description": "同步你和AI的上下文",
 	"license": "MIT",
 	"private": true,
 	"type": "module",

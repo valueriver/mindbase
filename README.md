@@ -156,10 +156,18 @@
 
 ### 2. 装技能包(Anthropic Skills,长期使用)
 
-下载 `mindbase-skill.zip`,放进 AI 运行时的 skills 目录:
+下载 zip:
+
+```
+https://github.com/realuckyang/mindbase/raw/main/mindbase.zip
+```
+
+解压放进 AI 运行时的 skills 目录:
 
 - **Claude Code**: `~/.claude/skills/mindbase/`
 - **其它支持 Skills 的工具**(Claude Desktop / Cursor 扩展 / Cline / 自建 agent 框架等):查它各自的 skills 路径
+
+zip 不含任何凭证 —— 用之前在「设置 → 协作」拿到的 Base URL + token,跟着 SKILL.md 的引导贴给 AI 即可。
 
 底层是 OpenAPI 3.1 schema(`/api/ai/openapi.json`),GPT Actions / Claude Custom Connector / 任何支持 OpenAPI 的工具都能 import。
 

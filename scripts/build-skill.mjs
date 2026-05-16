@@ -1,6 +1,7 @@
-// 把 skills/mindbase/* 打成 public/skills/mindbase.zip,前端再原样下发给用户。
-// 在 npm run build 之前跑一次,zip 进入 dist/client/skills/ 经 vite 静态资产输出。
-import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+// 把 skills/mindbase/* 打成项目根的 mindbase.zip,提交到仓库。
+// 用户从 github.com/realuckyang/mindbase/raw/main/mindbase.zip 下载,
+// 不走 Worker 静态资产,避免暴露 owner 的私有实例域名。
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import JSZip from 'jszip'
@@ -9,8 +10,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
 
 const SRC_DIR = join(root, 'skills', 'mindbase')
-const OUT_DIR = join(root, 'public', 'skills')
-const OUT_FILE = join(OUT_DIR, 'mindbase.zip')
+const OUT_FILE = join(root, 'mindbase.zip')
 
 function walk(dir) {
   const out = []
@@ -40,6 +40,5 @@ const buf = await zip.generateAsync({
   compressionOptions: { level: 9 },
 })
 
-mkdirSync(OUT_DIR, { recursive: true })
 writeFileSync(OUT_FILE, buf)
 console.log(`[build-skill] wrote ${relative(root, OUT_FILE)} (${buf.length} bytes, ${files.length} files)`)

@@ -1,21 +1,36 @@
 <template>
   <div>
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-20 md:px-12 md:pt-10">
-      <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">协作</h1>
-      <p class="mt-2 text-sm text-nt-soft">授权外部 AI 接入这台 MindBase,共享同一份事实。</p>
+      <header class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h1 class="text-3xl md:text-[40px] font-bold leading-tight tracking-tight text-nt">协作</h1>
+          <p class="mt-2 text-sm text-nt-soft">授权外部 AI 接入这台 MindBase,共享同一份事实。</p>
+        </div>
+
+        <div v-if="!loading" class="shrink-0 pt-2">
+          <button
+            v-if="!current"
+            type="button"
+            :disabled="busy"
+            class="rounded-md bg-nt px-4 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
+            @click="onEnable"
+          >{{ busy ? '开启中…' : '开启协作' }}</button>
+          <button
+            v-else
+            type="button"
+            :disabled="busy"
+            class="rounded-md border border-nt-divider px-3 py-1.5 text-xs text-nt-muted hover:bg-nt-danger-bg hover:text-nt-danger disabled:opacity-50"
+            @click="onDisable"
+          >{{ busy ? '关闭中…' : '关闭协作' }}</button>
+        </div>
+      </header>
 
       <section class="mt-6">
         <div v-if="loading" class="py-6 text-sm text-nt-soft">加载中…</div>
 
-        <div v-else-if="!current">
-          <p class="text-sm text-nt-muted">开启协作后会生成一把访问凭证,用于授权外部 AI 读写本实例的数据。</p>
-          <button
-            type="button"
-            :disabled="busy"
-            class="mt-4 rounded-md bg-nt px-5 py-2.5 text-sm text-white hover:bg-black disabled:opacity-50"
-            @click="onEnable"
-          >{{ busy ? '开启中…' : '开启协作' }}</button>
-        </div>
+        <p v-else-if="!current" class="text-sm leading-relaxed text-nt-muted">
+          开启协作后会生成一把访问凭证,用于授权外部 AI 读写本实例的数据。关闭后凭证立即作废;重新开启会生成新凭证,旧凭证同时失效。
+        </p>
 
         <template v-else>
           <div class="rounded-md border border-amber-300 bg-amber-50 px-3.5 py-3 text-xs leading-relaxed text-amber-900">
@@ -115,16 +130,6 @@
               工具集会随实例装的应用自动扩展。
             </p>
           </section>
-
-          <div class="mt-8">
-            <button
-              type="button"
-              :disabled="busy"
-              class="rounded-md border border-nt-divider px-3 py-1.5 text-xs text-nt-muted hover:bg-nt-danger-bg hover:text-nt-danger disabled:opacity-50"
-              @click="onDisable"
-            >{{ busy ? '关闭中…' : '关闭协作' }}</button>
-            <p class="mt-1.5 text-[11px] text-nt-soft">关闭后凭证立即作废;重新开启会生成新凭证,旧凭证同时失效。</p>
-          </div>
         </template>
       </section>
     </main>

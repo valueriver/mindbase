@@ -24,11 +24,13 @@
 按 https://mindbase.me/packages/photos.README.md 的步骤,把 photos 应用集成进我本地的 mindbase 仓库,然后 npm run deploy。
 ```
 
+**源文件位置**:本包的所有源文件已随主仓库一同 clone,位于 `packages/photos/` 目录;也可从 [https://mindbase.me/packages/photos.zip](https://mindbase.me/packages/photos.zip) 下载解压获得。
+
 AI 会依据主仓库根 `AGENTS.md` 的契约与本包文件,完成以下步骤:
 
-1. 将 `server/` 下的 4 个文件(`manifest / repository / service / api`)复制到 `server/apps/photos/`
-2. 将 `gui/` 中的 `index.vue`(及可选的 `components/`)复制到 `gui/apps/photos/`
-3. 把本包根目录 `schema.sql` 中的 `CREATE TABLE` 段追加到主仓库根 `schema.sql` 的"应用"段(主仓库 schema 集中在一个文件,作为单一事实源),并对 D1 执行新增的建表语句
+1. 将 `packages/photos/server/` 下的 4 个文件(`manifest / repository / service / api`)复制到 `server/apps/photos/`
+2. 将 `packages/photos/gui/` 中的 `index.vue`(及可选的 `components/`)复制到 `gui/apps/photos/`
+3. 把 `packages/photos/schema.sql` 中的 `CREATE TABLE` 段追加到主仓库根 `schema.sql` 的"应用"段(主仓库 schema 集中在一个文件,作为单一事实源),并对 D1 执行新增的建表语句
 4. 在 `server/apps/registry.js` 的 `ENTRIES` 数组中追加一行 entry(`import` manifest 与 api)
 5. `npm run deploy`
 

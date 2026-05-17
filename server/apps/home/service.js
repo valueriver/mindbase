@@ -1,8 +1,8 @@
-import { ok, fail } from '../../lib/utils/json.js'
-import { readJsonBody } from '../../lib/utils/body.js'
-import { createPostId } from '../../lib/utils/id.js'
-import { isAuthenticated } from '../../lib/auth/index.js'
-import { deleteR2Keys, diffRemovedKeys, extractR2Keys } from '../../apps/image/refs.js'
+import { ok, fail } from "../../system/utils/json.js"
+import { readJsonBody } from "../../system/utils/body.js"
+import { createPostId } from "../../system/utils/id.js"
+import { isAuthenticated } from "../../system/auth/index.js"
+import { deleteR2Keys, diffRemovedKeys, extractR2Keys } from "../../system/image/refs.js"
 import {
   listPosts,
   findPostById,

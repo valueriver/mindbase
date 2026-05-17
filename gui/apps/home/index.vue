@@ -183,10 +183,10 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import PostItem from '@/apps/home/components/PostItem.vue'
 import EventItem from '@/apps/home/components/EventItem.vue'
-import Popover from '@/components/Popover.vue'
-import { apiHome } from '@/api'
-import { uploadImage } from '@/lib/image'
-import { authorMeta } from '@/lib/authors'
+import Popover from '@/system/components/Popover.vue'
+import { api } from '@/api'
+import { uploadImage } from '@/system/lib/image'
+import { authorMeta } from '@/system/lib/authors'
 
 // 时间轴 = 用户 posts + 应用事件,按 created_at 倒序混排。
 // posts 用 offset 分页,events 一次性拉(默认 200 条上限够用)。
@@ -207,8 +207,8 @@ async function loadInitial() {
   error.value = ''
   try {
     const [postResp, eventResp] = await Promise.all([
-      apiHome.list({ offset: 0, limit: PAGE_SIZE }),
-      apiHome.events(),
+      api.get(`/api/home?offset=0&limit=${PAGE_SIZE}`),
+      api.get('/api/home/events'),
     ])
     posts.value  = postResp.items || []
     events.value = eventResp.items || []
@@ -225,7 +225,7 @@ async function loadMorePosts() {
   if (loadingMore.value || !hasMore.value) return
   loadingMore.value = true
   try {
-    const resp = await apiHome.list({ offset: offset.value, limit: PAGE_SIZE })
+    const resp = await api.get(`/api/home?offset=${offset.value}&limit=${PAGE_SIZE}`)
     const list = resp.items || []
     posts.value.push(...list)
     offset.value += list.length
@@ -324,7 +324,7 @@ async function onSubmit() {
   if (!content || busy.value) return
   busy.value = true
   try {
-    const resp = await apiHome.create({ content })
+    const resp = await api.post('/api/home', { content })
     if (resp.post) posts.value.unshift(resp.post)
     draft.value = ''
     pendingImages.value = []
@@ -366,7 +366,7 @@ async function onEditSave(m) {
   if (!content || editBusy.value) return
   editBusy.value = true
   try {
-    const resp = await apiHome.update(m.id, { content })
+    const resp = await api.patch(`/api/home/${m.id}`, { content })
     const i = posts.value.findIndex(x => x.id === m.id)
     if (i >= 0 && resp.post) posts.value[i] = resp.post
     onEditCancel()
@@ -428,7 +428,7 @@ function onMenuDelete() {
 async function onDelete(m) {
   if (!window.confirm('删除这条?')) return
   try {
-    await apiHome.remove(m.id)
+    await api.delete(`/api/home/${m.id}`)
     posts.value = posts.value.filter(x => x.id !== m.id)
   } catch (e) {
     alert(e?.message || '删除失败')

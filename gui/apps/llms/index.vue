@@ -18,6 +18,19 @@
       <ul v-else class="mt-6 divide-y divide-nt-divider rounded-md border border-nt-divider bg-white">
         <li v-for="it in items" :key="it.id" class="px-3 py-3 hover:bg-nt-hover">
           <div class="flex items-start gap-3">
+            <!-- 厂商 icon -->
+            <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-nt-divider bg-white">
+              <img
+                v-if="providerIcon(it.provider)"
+                :src="providerIcon(it.provider)"
+                :alt="it.provider"
+                class="h-5 w-5 object-contain"
+                referrerpolicy="no-referrer"
+                @error="onIconError"
+              />
+              <span v-else class="text-xs font-semibold text-nt-soft">{{ providerInitial(it.provider, it.name) }}</span>
+            </div>
+
             <div class="min-w-0 flex-1 cursor-pointer" @click="openEdit(it)">
               <div class="flex flex-wrap items-center gap-2">
                 <span class="truncate text-sm font-medium text-nt">{{ it.name }}</span>
@@ -117,6 +130,54 @@ const error   = ref('')
 const busy    = ref(false)
 const revealed = ref(new Set())
 const copiedId = ref('')
+
+// provider 别名 → 官网域名(用 Google s2 favicon 自动取 logo)
+const PROVIDER_DOMAIN = {
+  openai:    'openai.com',
+  anthropic: 'anthropic.com',
+  deepseek:  'deepseek.com',
+  moonshot:  'moonshot.cn',
+  kimi:      'moonshot.cn',
+  google:    'google.com',
+  gemini:    'google.com',
+  xai:       'x.ai',
+  grok:      'x.ai',
+  aliyun:    'aliyun.com',
+  qwen:      'aliyun.com',
+  ollama:    'ollama.com',
+  meta:      'meta.com',
+  llama:     'meta.com',
+  zhipu:     'zhipuai.cn',
+  glm:       'zhipuai.cn',
+  doubao:    'doubao.com',
+  bytedance: 'bytedance.com',
+  mistral:   'mistral.ai',
+  perplexity:'perplexity.ai',
+  cohere:    'cohere.com',
+}
+
+const failedIcons = ref(new Set())
+function providerIcon(provider) {
+  if (!provider) return null
+  const key = String(provider).toLowerCase().trim()
+  const domain = PROVIDER_DOMAIN[key]
+  if (!domain) return null
+  if (failedIcons.value.has(domain)) return null
+  return `https://www.google.com/s2/favicons?sz=64&domain=${domain}`
+}
+function providerInitial(provider, name) {
+  const s = (provider || name || '?').trim()
+  return s.charAt(0).toUpperCase()
+}
+function onIconError(e) {
+  const url = e?.target?.src || ''
+  const m = url.match(/domain=([^&]+)/)
+  if (m) {
+    const s = new Set(failedIcons.value)
+    s.add(m[1])
+    failedIcons.value = s
+  }
+}
 
 const formOpen   = ref(false)
 const formReveal = ref(false)

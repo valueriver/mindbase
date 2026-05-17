@@ -24,9 +24,6 @@ const routes = [
   ...Object.entries(userPages).map(toRoute),
   ...Object.entries(systemPages).filter(([p]) => !p.endsWith('/user/index.vue')).map(toRoute),
 
-  // 系统页(无应用归属)
-  { path: '/create',          name: 'create', component: () => import('@/system/create/index.vue') },
-
   // 笔记的子路由(notes 应用是多视图,glob 派生只覆盖 /notes 列表页)
   { path: '/notebook/:id',    name: 'notebook', component: () => import('@/apps/notes/notebook.vue'), props: true },
   { path: '/note/:id',        name: 'note',     component: () => import('@/apps/notes/detail.vue'),   props: true },

@@ -22,21 +22,6 @@
       </button>
 
       <Popover :open="launcherOpen" :anchor="launcherAnchor" :width="320" @close="launcherOpen = false">
-        <div class="flex items-center justify-between px-2 pt-1 pb-2">
-          <span class="text-[11px] font-medium text-nt">应用</span>
-          <button
-            type="button"
-            class="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
-            title="创建新应用"
-            @click="onCreate"
-          >
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-              <path d="M8 3 V13 M3 8 H13"/>
-            </svg>
-            <span>创建</span>
-          </button>
-        </div>
-
         <div class="max-h-[60vh] overflow-y-auto overscroll-contain px-1 pt-1">
           <div class="grid grid-cols-3 gap-1">
             <button
@@ -135,10 +120,5 @@ function goTo(app) {
   launcherOpen.value = false
   if (!app.to) return
   router.push(app.to)
-}
-
-function onCreate() {
-  launcherOpen.value = false
-  router.push({ name: 'create' })
 }
 </script>

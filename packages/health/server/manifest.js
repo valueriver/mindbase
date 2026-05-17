@@ -2,7 +2,6 @@ export default {
   name:     'health',
   label:    '健康',
   icon:     '❤️',
-  category: '流水',
   kind:     'context',
   tables:   ["app_health_entries"],
   subpaths: [],

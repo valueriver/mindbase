@@ -15,12 +15,12 @@
 1. **主仓库根 `AGENTS.md`** —— MindBase 全局契约:目录结构、命名规则(`app_<name>_*` 表前缀)、`apps/` 与 `system/apps/` 的分层、schema 集中策略、registry 注册方式。最重要的一份。
 2. **本包 `README.md`** —— 装这个包的步骤(给人和 AI 同看),装包流程以此为准。
 3. **本包 `schema.sql`** —— 本应用建立的表。
-4. **本包 `server/manifest.js`** —— name / label / icon / category / tables / subpaths 的事实源。
+4. **本包 `server/manifest.js`** —— name / label / icon / tables / subpaths 的事实源。
 
 ## 这个包的形态
 
 - **slug**:`photos`
-- **类别**:生活(上下文应用,数据进入 AI 视野)
+- **类型**:上下文应用(数据进入 AI 视野)
 - **表**(`app_photos_*` 前缀):
   - `app_photos_items`
 - **路由**:

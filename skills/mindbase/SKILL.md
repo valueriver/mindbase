@@ -18,7 +18,7 @@ description: 读写用户的 MindBase——一个跟 AI 同步生活上下文的
 GET /api/ai/apps
 ```
 
-返回 `{ apps: [{ name, label, icon, category, kind, tables, subpaths, summary }, ...] }`,这是单一事实源,新装的应用会立刻出现在这里。无需鉴权。
+返回 `{ apps: [{ name, label, icon, kind, tables, subpaths, summary }, ...] }`,这是单一事实源,新装的应用会立刻出现在这里。无需鉴权。
 
 ## 心智模型
 

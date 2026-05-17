@@ -2,7 +2,6 @@ export default {
   name:     'projects',
   label:    '项目',
   icon:     '📂',
-  category: '生活',
   kind:     'context',
   tables:   ["app_projects_items"],
   subpaths: [],

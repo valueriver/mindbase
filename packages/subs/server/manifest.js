@@ -2,7 +2,6 @@ export default {
   name:     'subs',
   label:    '订阅',
   icon:     '💸',
-  category: '资产',
   kind:     'context',
   tables:   ["app_subs_services"],
   subpaths: [],

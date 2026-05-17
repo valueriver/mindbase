@@ -2,7 +2,6 @@ export default {
   name:     'settings',
   label:    '设置',
   icon:     '⚙️',
-  category: '系统',
   kind:     'system',
   tables:   ["settings"],
   subpaths: [],

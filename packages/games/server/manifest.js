@@ -2,7 +2,6 @@ export default {
   name:     'games',
   label:    '游戏',
   icon:     '🎮',
-  category: '品味',
   kind:     'context',
   tables:   ["app_games_items"],
   subpaths: [],

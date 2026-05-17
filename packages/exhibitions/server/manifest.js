@@ -2,7 +2,6 @@ export default {
   name:     'exhibitions',
   label:    '展览',
   icon:     '🎨',
-  category: '品味',
   kind:     'context',
   tables:   ["app_exhibitions_visits"],
   subpaths: [],

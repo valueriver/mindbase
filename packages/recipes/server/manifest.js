@@ -2,7 +2,6 @@ export default {
   name:     'recipes',
   label:    '菜谱',
   icon:     '🍳',
-  category: '生活',
   kind:     'context',
   tables:   ["app_recipes_items"],
   subpaths: [],

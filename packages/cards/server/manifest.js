@@ -2,7 +2,6 @@ export default {
   name:     'cards',
   label:    '银行卡',
   icon:     '💳',
-  category: '资产',
   kind:     'context',
   tables:   ["app_cards_items"],
   subpaths: [],

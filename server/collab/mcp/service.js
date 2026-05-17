@@ -35,7 +35,7 @@ const TOOLS = [
   {
     name: 'apps_list',
     description:
-      '列出用户 MindBase 实例当前装了哪些应用。返回每个应用的 name / label / category / kind / tables / subpaths / summary,作为后续查询的索引。',
+      '列出用户 MindBase 实例当前装了哪些应用。返回每个应用的 name / label / kind / tables / subpaths / summary,作为后续查询的索引。',
     inputSchema: {
       type: 'object',
       properties: {},

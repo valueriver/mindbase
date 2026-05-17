@@ -2,7 +2,6 @@ export default {
   name:     'calendar',
   label:    '日程',
   icon:     '📅',
-  category: '流水',
   kind:     'context',
   tables:   ["app_calendar_events"],
   subpaths: [],

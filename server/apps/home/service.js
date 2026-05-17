@@ -15,18 +15,6 @@ import {
 const MAX_LEN = 20_000
 const AUTHOR_RE = /^[a-z0-9][a-z0-9-]{0,31}$/
 
-// 启动器布局默认值。首次访问 / 用户没存过 layout 时返回这套。
-// 和 gui/lib/apps.js 里的 DEFAULT_LAYOUT 必须保持一致。
-const DEFAULT_LAYOUT = {
-  groups: [
-    { name: '日常', apps: ['home', 'todos', 'ledger', 'footprints'] },
-    { name: '内容', apps: ['notes', 'projects', 'prompts'] },
-    { name: '身份', apps: ['profile', 'emails', 'domains'] },
-    { name: '凭据', apps: ['apikeys', 'llms'] },
-  ],
-  hidden: [],
-}
-
 // 把任意 author 字段规范化:小写、trim、限定 [a-z0-9-]、最长 32 位。无效就返 null(用默认 'user')。
 const normAuthor = (v) => {
   if (v == null) return null
@@ -88,32 +76,6 @@ export const deletePostAction = async (request, env, id) => {
   await deletePost(env.DB, id)
   if (keys.length > 0) await deleteR2Keys(env, keys)
   return ok({})
-}
-
-export const getLayoutAction = async (request, env) => {
-  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
-  const row = await env.DB.prepare(`SELECT value FROM settings WHERE key = 'app_layout'`).first()
-  let layout = null
-  if (row?.value) {
-    try { layout = JSON.parse(row.value) } catch {}
-  }
-  return ok({ layout: layout || DEFAULT_LAYOUT })
-}
-
-export const updateLayoutAction = async (request, env) => {
-  if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
-  const body = await readJsonBody(request)
-  if (!body?.groups || !Array.isArray(body.groups)) return fail('layout_invalid', 400)
-  for (const g of body.groups) {
-    if (typeof g?.name !== 'string' || !Array.isArray(g?.apps)) return fail('layout_invalid', 400)
-  }
-  const hidden = Array.isArray(body.hidden) ? body.hidden : []
-  const payload = JSON.stringify({ groups: body.groups, hidden })
-  await env.DB.prepare(
-    `INSERT INTO settings (key, value, updated_at) VALUES ('app_layout', ?1, datetime('now'))
-     ON CONFLICT(key) DO UPDATE SET value = ?1, updated_at = datetime('now')`
-  ).bind(payload).run()
-  return ok({ layout: JSON.parse(payload) })
 }
 
 export const listEventsAction = async (request, env, url) => {

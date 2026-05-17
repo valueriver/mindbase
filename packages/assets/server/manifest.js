@@ -2,7 +2,6 @@ export default {
   name:     'assets',
   label:    '资产',
   icon:     '💎',
-  category: '资产',
   kind:     'context',
   tables:   ["app_assets_items"],
   subpaths: [],

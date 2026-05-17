@@ -2,7 +2,6 @@ export default {
   name:     'vault',
   label:    '密码箱',
   icon:     '🔐',
-  category: '凭据',
   kind:     'context',
   tables:   ["app_vault_entries"],
   subpaths: ["/import"],

@@ -2,7 +2,6 @@ export default {
   name:     'goals',
   label:    '目标',
   icon:     '🎯',
-  category: '生活',
   kind:     'context',
   tables:   ["app_goals_items"],
   subpaths: [],

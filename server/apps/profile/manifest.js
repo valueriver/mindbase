@@ -2,7 +2,6 @@ export default {
   name:     'profile',
   label:    '个人档',
   icon:     '🪪',
-  category: '身份',
   kind:     'context',
   tables:   ["app_profile_blocks"],
   subpaths: ["/reorder"],

@@ -2,7 +2,6 @@ export default {
   name:     'bookmarks',
   label:    '收藏',
   icon:     '🔖',
-  category: '内容',
   kind:     'context',
   tables:   ["app_bookmarks_items"],
   subpaths: [],

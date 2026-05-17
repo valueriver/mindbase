@@ -2,7 +2,6 @@ export default {
   name:     'todos',
   label:    '待办',
   icon:     '✅',
-  category: '流水',
   kind:     'context',
   tables:   ["app_todos_items"],
   subpaths: [],

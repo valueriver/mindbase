@@ -45,7 +45,6 @@ AI 会依据主仓库根 `AGENTS.md` 的契约与本包文件,完成以下步骤
   "name": "resume",
   "icon": "📄",
   "label": "简历",
-  "category": "身份",
   "kind": "context",
   "tables": [
     "app_resume_entries"

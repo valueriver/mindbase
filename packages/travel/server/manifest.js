@@ -2,7 +2,6 @@ export default {
   name:     'travel',
   label:    '旅行',
   icon:     '✈️',
-  category: '生活',
   kind:     'context',
   tables:   ["app_travel_trips"],
   subpaths: [],

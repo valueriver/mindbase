@@ -2,7 +2,6 @@ export default {
   name:     'photos',
   label:    '影集',
   icon:     '🖼️',
-  category: '生活',
   kind:     'context',
   tables:   ["app_photos_items"],
   subpaths: [],

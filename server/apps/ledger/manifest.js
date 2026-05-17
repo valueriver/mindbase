@@ -2,7 +2,6 @@ export default {
   name:     'ledger',
   label:    '记账',
   icon:     '💰',
-  category: '流水',
   kind:     'context',
   tables:   ["app_ledger_entries"],
   subpaths: ["/stats","/categories"],

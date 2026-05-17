@@ -2,7 +2,6 @@ export default {
   name:     'books',
   label:    '书单',
   icon:     '📖',
-  category: '品味',
   kind:     'context',
   tables:   ["app_books_items"],
   subpaths: [],

@@ -2,7 +2,6 @@ export default {
   name:     'apps',
   label:    'App',
   icon:     '📱',
-  category: '资产',
   kind:     'context',
   tables:   ["app_apps_items"],
   subpaths: [],

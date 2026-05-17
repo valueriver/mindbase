@@ -7,7 +7,6 @@ const AppSchema = {
   properties: {
     name:     { type: 'string', description: '应用 slug,如 ledger / books / todos' },
     label:    { type: 'string', description: '中文显示名,如"记账"' },
-    category: { type: 'string', description: '生活类别,如"流水" / "品味" / "资产"' },
     kind:     { type: 'string', description: 'context = 用户上下文应用;system = 平台基础设施' },
     icon:     { type: 'string', description: '单 emoji' },
     summary:  { type: 'string', description: '一句话功能描述' },

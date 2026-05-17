@@ -23,61 +23,42 @@
 
       <Popover :open="launcherOpen" :anchor="launcherAnchor" :width="320" @close="launcherOpen = false">
         <div class="flex items-center justify-between px-2 pt-1 pb-2">
-          <span class="text-[11px] font-medium text-nt">应用中心</span>
-          <div class="flex items-center gap-0.5">
-            <button
-              type="button"
-              class="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
-              title="整理应用"
-              @click="onOrganize"
-            >
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M11.5 1.5 L14.5 4.5 L5 14 H2 V11 Z"/>
-                <path d="M9.5 3.5 L12.5 6.5"/>
-              </svg>
-              <span>整理</span>
-            </button>
-            <button
-              type="button"
-              class="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
-              title="创建新应用"
-              @click="onCreate"
-            >
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-                <path d="M8 3 V13 M3 8 H13"/>
-              </svg>
-              <span>创建</span>
-            </button>
-          </div>
+          <span class="text-[11px] font-medium text-nt">应用</span>
+          <button
+            type="button"
+            class="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-nt-muted hover:bg-nt-hover hover:text-nt"
+            title="创建新应用"
+            @click="onCreate"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <path d="M8 3 V13 M3 8 H13"/>
+            </svg>
+            <span>创建</span>
+          </button>
         </div>
         <div class="border-t border-nt-divider"></div>
 
         <div class="max-h-[60vh] overflow-y-auto overscroll-contain px-1 pt-1">
-          <section v-for="group in renderedGroups" :key="group.name" class="mb-2 last:mb-0">
-            <div class="px-1.5 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-nt-soft">
-              {{ group.name }}
-            </div>
-            <div class="grid grid-cols-3 gap-1">
-              <button
-                v-for="app in group.items"
-                :key="app.name"
-                type="button"
-                :disabled="!app.to"
-                :class="[
-                  'flex flex-col items-center justify-center gap-1 rounded-md py-3 transition',
-                  isActive(app)
-                    ? 'bg-nt-hover-strong text-nt'
-                    : app.to
-                      ? 'text-nt hover:bg-nt-hover'
-                      : 'cursor-not-allowed text-nt opacity-40',
-                ]"
-                @click="goTo(app)"
-              >
-                <span class="text-2xl leading-none">{{ app.icon }}</span>
-                <span class="text-[11px] font-medium">{{ app.label }}</span>
-              </button>
-            </div>
-          </section>
+          <div class="grid grid-cols-3 gap-1">
+            <button
+              v-for="app in APPS_META"
+              :key="app.name"
+              type="button"
+              :disabled="!app.to"
+              :class="[
+                'flex flex-col items-center justify-center gap-1 rounded-md py-3 transition',
+                isActive(app)
+                  ? 'bg-nt-hover-strong text-nt'
+                  : app.to
+                    ? 'text-nt hover:bg-nt-hover'
+                    : 'cursor-not-allowed text-nt opacity-40',
+              ]"
+              @click="goTo(app)"
+            >
+              <span class="text-2xl leading-none">{{ app.icon }}</span>
+              <span class="text-[11px] font-medium">{{ app.label }}</span>
+            </button>
+          </div>
         </div>
 
         <div class="mt-2 border-t border-nt-divider"></div>
@@ -108,16 +89,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Popover from './Popover.vue'
-import { APPS_META, DEFAULT_LAYOUT, appMeta } from '@/system/lib/apps.js'
-import { api } from '@/api'
+import { APPS_META } from '@/system/lib/apps.js'
 
 const route   = useRoute()
 const router  = useRouter()
 
-// 系统级别 — 不是上下文,是产品功能,固定在启动器底部,不参与布局。
+// 系统级别 —— 产品功能,固定在启动器底部。
 // 直接 glob 派生 server/system/apps/*/manifest.js,过掉 infra(如 user 登录)。
 const systemManifests = import.meta.glob(
   '../../../server/system/apps/*/manifest.js',
@@ -132,43 +112,6 @@ const systems = Object.values(systemManifests)
     to:    { name: m.name },
     match: (p) => p === `/${m.name}` || p.startsWith(`/${m.name}/`),
   }))
-
-// 用户布局。拉接口失败时兜底用默认布局,正常情况以服务端为准。
-const layout = ref(DEFAULT_LAYOUT)
-
-onMounted(async () => {
-  try {
-    const data = await api.get('/api/home/layout')
-    if (data?.layout?.groups) layout.value = data.layout
-  } catch {
-    // 401 / 网络失败:保持默认布局,不弹错。
-  }
-})
-
-// 按布局组装出渲染用的分组,过滤掉隐藏的,丢弃无法识别的 slug。
-// 未在任何分组、也没被隐藏的应用(新加的)自动归到末尾"未分组",提示用户去 /layout 收编。
-const renderedGroups = computed(() => {
-  const hidden = new Set(layout.value.hidden || [])
-  const used   = new Set()
-  const groups = []
-
-  for (const g of layout.value.groups || []) {
-    const items = []
-    for (const slug of g.apps || []) {
-      if (hidden.has(slug)) { used.add(slug); continue }
-      const meta = appMeta(slug)
-      if (!meta) continue
-      used.add(slug)
-      items.push(meta)
-    }
-    if (items.length) groups.push({ name: g.name, items })
-  }
-
-  const orphans = APPS_META.filter((a) => !used.has(a.name) && !hidden.has(a.name))
-  if (orphans.length) groups.push({ name: '未分组', items: orphans })
-
-  return groups
-})
 
 function isActive(app) {
   return app.match(route.path)
@@ -193,11 +136,6 @@ function goTo(app) {
   launcherOpen.value = false
   if (!app.to) return
   router.push(app.to)
-}
-
-function onOrganize() {
-  launcherOpen.value = false
-  router.push({ name: 'layout' })
 }
 
 function onCreate() {

@@ -2,7 +2,6 @@ export default {
   name:     'articles',
   label:    '文章',
   icon:     '✍️',
-  category: '内容',
   kind:     'context',
   tables:   ["app_articles_items"],
   subpaths: [],

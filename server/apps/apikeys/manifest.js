@@ -2,7 +2,6 @@ export default {
   name:     'apikeys',
   label:    'API',
   icon:     '🔑',
-  category: '凭据',
   kind:     'context',
   tables:   ["app_apikeys_items"],
   subpaths: [],

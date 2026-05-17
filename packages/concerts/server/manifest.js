@@ -2,7 +2,6 @@ export default {
   name:     'concerts',
   label:    '演唱会',
   icon:     '🎤',
-  category: '品味',
   kind:     'context',
   tables:   ["app_concerts_shows"],
   subpaths: [],

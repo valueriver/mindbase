@@ -2,7 +2,6 @@ export default {
   name:     'webs',
   label:    '网页',
   icon:     '🪟',
-  category: '内容',
   kind:     'context',
   tables:   ["app_webs_pages"],
   subpaths: [],

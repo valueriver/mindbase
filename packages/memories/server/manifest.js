@@ -2,7 +2,6 @@ export default {
   name:     'memories',
   label:    '回忆',
   icon:     '🕰️',
-  category: '流水',
   kind:     'context',
   tables:   ["app_memories_days"],
   subpaths: [],

@@ -99,12 +99,12 @@ const agentsMd = (m) => {
 1. **主仓库根 \`AGENTS.md\`** —— MindBase 全局契约:目录结构、命名规则(\`app_<name>_*\` 表前缀)、\`apps/\` 与 \`system/apps/\` 的分层、schema 集中策略、registry 注册方式。最重要的一份。
 2. **本包 \`README.md\`** —— 装这个包的步骤(给人和 AI 同看),装包流程以此为准。
 3. **本包 \`schema.sql\`** —— 本应用建立的表。
-4. **本包 \`server/manifest.js\`** —— name / label / icon / category / tables / subpaths 的事实源。
+4. **本包 \`server/manifest.js\`** —— name / label / icon / tables / subpaths 的事实源。
 
 ## 这个包的形态
 
 - **slug**:\`${m.name}\`
-- **类别**:${m.category}(${m.kind === 'context' ? '上下文应用,数据进入 AI 视野' : '系统应用,平台基础设施'})
+- **类型**:${m.kind === 'context' ? '上下文应用(数据进入 AI 视野)' : '系统应用(平台基础设施)'}
 - **表**(\`app_${m.name}_*\` 前缀):
 ${tableLines}
 - **路由**:
@@ -150,7 +150,6 @@ const readmeMd = (m) => {
     name: m.name,
     icon: m.icon,
     label: m.label,
-    category: m.category,
     kind: m.kind,
     tables: m.tables || [],
     subpaths: m.subpaths || [],

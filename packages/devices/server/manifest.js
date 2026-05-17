@@ -2,7 +2,6 @@ export default {
   name:     'devices',
   label:    '设备',
   icon:     '💻',
-  category: '资产',
   kind:     'context',
   tables:   ["app_devices_items"],
   subpaths: [],

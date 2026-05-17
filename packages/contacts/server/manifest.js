@@ -2,7 +2,6 @@ export default {
   name:     'contacts',
   label:    '通讯录',
   icon:     '👥',
-  category: '身份',
   kind:     'context',
   tables:   ["app_contacts_people"],
   subpaths: ["/import"],

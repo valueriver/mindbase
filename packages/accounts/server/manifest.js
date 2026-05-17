@@ -2,7 +2,6 @@ export default {
   name:     'accounts',
   label:    '网络账号',
   icon:     '🆔',
-  category: '身份',
   kind:     'context',
   tables:   ["app_accounts_services"],
   subpaths: [],

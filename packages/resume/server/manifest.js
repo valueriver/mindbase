@@ -2,7 +2,6 @@ export default {
   name:     'resume',
   label:    '简历',
   icon:     '📄',
-  category: '身份',
   kind:     'context',
   tables:   ["app_resume_entries"],
   subpaths: [],

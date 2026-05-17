@@ -2,7 +2,6 @@ export default {
   name:     'collab',
   label:    '协作',
   icon:     '🔗',
-  category: '系统',
   kind:     'system',
   tables:   ["tokens"],
   subpaths: ["/tokens"],

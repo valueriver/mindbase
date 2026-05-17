@@ -2,7 +2,6 @@ export default {
   name:     'movies',
   label:    '电影',
   icon:     '🎬',
-  category: '品味',
   kind:     'context',
   tables:   ["app_movies_items"],
   subpaths: [],

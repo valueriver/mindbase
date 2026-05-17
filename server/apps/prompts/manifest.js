@@ -2,7 +2,6 @@ export default {
   name:     'prompts',
   label:    '指令集',
   icon:     '📜',
-  category: '内容',
   kind:     'context',
   tables:   ["app_prompts_items"],
   subpaths: [],

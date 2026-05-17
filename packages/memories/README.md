@@ -45,7 +45,6 @@ AI 会依据主仓库根 `AGENTS.md` 的契约与本包文件,完成以下步骤
   "name": "memories",
   "icon": "🕰️",
   "label": "回忆",
-  "category": "流水",
   "kind": "context",
   "tables": [
     "app_memories_days"

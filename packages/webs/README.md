@@ -45,7 +45,6 @@ AI 会依据主仓库根 `AGENTS.md` 的契约与本包文件,完成以下步骤
   "name": "webs",
   "icon": "🪟",
   "label": "网页",
-  "category": "内容",
   "kind": "context",
   "tables": [
     "app_webs_pages"

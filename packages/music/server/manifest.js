@@ -2,7 +2,6 @@ export default {
   name:     'music',
   label:    '音乐',
   icon:     '🎵',
-  category: '品味',
   kind:     'context',
   tables:   ["app_music_tracks"],
   subpaths: [],

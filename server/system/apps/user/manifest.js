@@ -4,7 +4,6 @@ export default {
   name:     'user',
   label:    '账号',
   icon:     '👤',
-  category: '系统',
   kind:     'infra',
   tables:   [],
   subpaths: ['/auth/status', '/auth/setup', '/login', '/logout', '/me', '/password'],

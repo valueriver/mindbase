@@ -28,6 +28,10 @@ const routes = [
   { path: '/create',          name: 'create', component: () => import('@/system/create/index.vue') },
   { path: '/layout',          name: 'layout', component: () => import('@/system/layout/index.vue') },
 
+  // 笔记的子路由(notes 应用是多视图,glob 派生只覆盖 /notes 列表页)
+  { path: '/notebook/:id',    name: 'notebook', component: () => import('@/apps/notes/notebook.vue'), props: true },
+  { path: '/note/:id',        name: 'note',     component: () => import('@/apps/notes/detail.vue'),   props: true },
+
   { path: '/:pathMatch(.*)*', redirect: DEFAULT_PATH },
 ]
 

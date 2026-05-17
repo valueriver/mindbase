@@ -78,3 +78,83 @@ CREATE TABLE app_home_events (
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX idx_app_home_events_created ON app_home_events(created_at DESC);
+
+
+-- ---- todos ----
+-- 待办:单层清单。
+CREATE TABLE app_todos_items (
+  id          TEXT PRIMARY KEY,
+  title       TEXT NOT NULL DEFAULT '',
+  done        INTEGER NOT NULL DEFAULT 0,
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_todos_items_done ON app_todos_items(done, sort_order);
+
+-- ---- notes ----
+-- 笔记:无限嵌套笔记本 + 笔记。
+CREATE TABLE app_notes_notebooks (
+  id          TEXT PRIMARY KEY,
+  parent_id   TEXT REFERENCES app_notes_notebooks(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  icon        TEXT,
+  cover       TEXT,
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_notes_notebooks_parent ON app_notes_notebooks(parent_id);
+
+CREATE TABLE app_notes_pages (
+  id           TEXT PRIMARY KEY,
+  notebook_id  TEXT REFERENCES app_notes_notebooks(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL DEFAULT '',
+  content      TEXT NOT NULL DEFAULT '',
+  icon         TEXT,
+  cover        TEXT,
+  sort_order   INTEGER NOT NULL DEFAULT 0,
+  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_notes_pages_notebook ON app_notes_pages(notebook_id);
+
+-- ---- ledger ----
+-- 记账:逐笔流水。amount 单位"分"避免浮点。
+CREATE TABLE app_ledger_entries (
+  id          TEXT PRIMARY KEY,
+  type        TEXT NOT NULL DEFAULT 'expense',   -- 'expense' | 'income'
+  amount      INTEGER NOT NULL,
+  category    TEXT NOT NULL DEFAULT '',
+  note        TEXT NOT NULL DEFAULT '',
+  happened_at TEXT NOT NULL,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_ledger_entries_happened ON app_ledger_entries(happened_at DESC, id DESC);
+CREATE INDEX idx_app_ledger_entries_type_cat ON app_ledger_entries(type, category);
+
+-- ---- projects ----
+-- 个人项目(博客/副业/实验)。status ∈ { active, paused, done, abandoned }。
+CREATE TABLE app_projects_items (
+  id         TEXT PRIMARY KEY,
+  title      TEXT NOT NULL,
+  status     TEXT NOT NULL DEFAULT 'active',
+  note       TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_projects_items_status  ON app_projects_items(status);
+CREATE INDEX idx_app_projects_items_created ON app_projects_items(created_at DESC);
+
+-- ---- profile ----
+-- 个人档:多 block 组成,每个 block 有标题 + 内容。
+CREATE TABLE app_profile_blocks (
+  id          TEXT PRIMARY KEY,
+  title       TEXT NOT NULL DEFAULT '',
+  content     TEXT NOT NULL DEFAULT '',
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_profile_blocks_sort ON app_profile_blocks(sort_order);

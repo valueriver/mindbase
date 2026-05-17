@@ -36,7 +36,6 @@
             <span>创建</span>
           </button>
         </div>
-        <div class="border-t border-nt-divider"></div>
 
         <div class="max-h-[60vh] overflow-y-auto overscroll-contain px-1 pt-1">
           <div class="grid grid-cols-3 gap-1">

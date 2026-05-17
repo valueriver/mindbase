@@ -158,3 +158,88 @@ CREATE TABLE app_profile_blocks (
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX idx_app_profile_blocks_sort ON app_profile_blocks(sort_order);
+
+-- ---- llms ----
+-- 大模型:在用的 LLM API key 配置。
+CREATE TABLE app_llms_keys (
+  id            TEXT PRIMARY KEY,
+  provider      TEXT NOT NULL DEFAULT '',
+  name          TEXT NOT NULL,
+  api_key       TEXT NOT NULL DEFAULT '',
+  base_url      TEXT NOT NULL DEFAULT '',
+  default_model TEXT NOT NULL DEFAULT '',
+  quota_note    TEXT NOT NULL DEFAULT '',
+  note          TEXT NOT NULL DEFAULT '',
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ---- prompts ----
+-- 指令集:常用 prompt 模板。
+CREATE TABLE app_prompts_items (
+  id          TEXT PRIMARY KEY,
+  title       TEXT NOT NULL,
+  content     TEXT NOT NULL DEFAULT '',
+  tags        TEXT NOT NULL DEFAULT '',
+  model       TEXT NOT NULL DEFAULT '',
+  note        TEXT NOT NULL DEFAULT '',
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ---- apikeys ----
+-- 各种服务的 API key。
+CREATE TABLE app_apikeys_items (
+  id          TEXT PRIMARY KEY,
+  service     TEXT NOT NULL,
+  name        TEXT NOT NULL DEFAULT '',
+  api_key     TEXT NOT NULL DEFAULT '',
+  scope       TEXT NOT NULL DEFAULT '',
+  expire_at   TEXT,
+  note        TEXT NOT NULL DEFAULT '',
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_apikeys_items_expire ON app_apikeys_items(expire_at);
+
+-- ---- emails ----
+-- 邮箱地址簿。
+CREATE TABLE app_emails_addresses (
+  id         TEXT PRIMARY KEY,
+  address    TEXT NOT NULL,
+  label      TEXT NOT NULL DEFAULT '',
+  provider   TEXT NOT NULL DEFAULT '',
+  note       TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_emails_addresses_created ON app_emails_addresses(created_at DESC);
+
+-- ---- domains ----
+-- 域名:记录持有的域名、注册商、过期日期。
+CREATE TABLE app_domains_items (
+  id          TEXT PRIMARY KEY,
+  domain      TEXT NOT NULL,
+  registrar   TEXT NOT NULL DEFAULT '',
+  expire_date TEXT,
+  status      TEXT NOT NULL DEFAULT 'active',
+  note        TEXT NOT NULL DEFAULT '',
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_domains_items_expire ON app_domains_items(expire_date);
+
+-- ---- footprints ----
+-- 足迹。
+CREATE TABLE app_footprints_visits (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  country     TEXT NOT NULL DEFAULT '',
+  city        TEXT NOT NULL DEFAULT '',
+  visited_at  TEXT,
+  note        TEXT NOT NULL DEFAULT '',
+  cover       TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_footprints_visits_visited ON app_footprints_visits(visited_at DESC);

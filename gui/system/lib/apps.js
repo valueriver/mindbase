@@ -27,9 +27,10 @@ export const APPS_META = CONTEXT_MANIFESTS.map((m) => ({
 // 和 server/apps/home/service.js 的 DEFAULT_LAYOUT 内容保持一致。
 export const DEFAULT_LAYOUT = {
   groups: [
-    { name: '日常', apps: ['home', 'todos', 'ledger'] },
-    { name: '内容', apps: ['notes', 'projects'] },
-    { name: '身份', apps: ['profile'] },
+    { name: '日常', apps: ['home', 'todos', 'ledger', 'footprints'] },
+    { name: '内容', apps: ['notes', 'projects', 'prompts'] },
+    { name: '身份', apps: ['profile', 'emails', 'domains'] },
+    { name: '凭据', apps: ['apikeys', 'llms'] },
   ],
   hidden: [],
 }

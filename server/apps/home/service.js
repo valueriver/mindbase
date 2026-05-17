@@ -19,9 +19,10 @@ const AUTHOR_RE = /^[a-z0-9][a-z0-9-]{0,31}$/
 // 和 gui/lib/apps.js 里的 DEFAULT_LAYOUT 必须保持一致。
 const DEFAULT_LAYOUT = {
   groups: [
-    { name: '日常', apps: ['home', 'todos', 'ledger'] },
-    { name: '内容', apps: ['notes', 'projects'] },
-    { name: '身份', apps: ['profile'] },
+    { name: '日常', apps: ['home', 'todos', 'ledger', 'footprints'] },
+    { name: '内容', apps: ['notes', 'projects', 'prompts'] },
+    { name: '身份', apps: ['profile', 'emails', 'domains'] },
+    { name: '凭据', apps: ['apikeys', 'llms'] },
   ],
   hidden: [],
 }

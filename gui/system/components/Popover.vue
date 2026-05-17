@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="fixed inset-0 z-40" @mousedown.self="$emit('close')" @click.self="$emit('close')" @touchstart.self.passive="$emit('close')">
+    <div v-if="open" class="fixed inset-0 z-40" @click.self="$emit('close')">
       <div
         class="absolute rounded-lg border border-nt-divider bg-white p-2 shadow-2xl"
         :style="pos"

@@ -1,12 +1,14 @@
 <template>
-  <div v-if="open" class="fixed inset-0 z-40" @mousedown.self="$emit('close')" @click.self="$emit('close')" @touchstart.self.passive="$emit('close')">
-    <div
-      class="absolute rounded-lg border border-nt-divider bg-white p-2 shadow-2xl"
-      :style="pos"
-    >
-      <slot />
+  <Teleport to="body">
+    <div v-if="open" class="fixed inset-0 z-40" @mousedown.self="$emit('close')" @click.self="$emit('close')" @touchstart.self.passive="$emit('close')">
+      <div
+        class="absolute rounded-lg border border-nt-divider bg-white p-2 shadow-2xl"
+        :style="pos"
+      >
+        <slot />
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>

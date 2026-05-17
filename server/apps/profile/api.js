@@ -11,7 +11,7 @@ const handle = async (request, env, sub, method) => {
   if (sub === '' && method === 'POST') return createBlockAction(request, env)
   if (sub === '/reorder' && method === 'POST') return reorderBlocksAction(request, env)
 
-  const m = sub.match(/^\/([0-9A-Za-z-]+)$/)
+  const m = sub.match(/^\/([\w-]+)$/)
   if (m) {
     const id = m[1]
     if (method === 'PATCH')  return updateBlockAction(request, env, id)

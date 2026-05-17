@@ -14,7 +14,7 @@ const handle = async (request, env, sub, method, url) => {
   if (sub === '/stats'      && method === 'GET')  return statsLedgerAction(request, env, url)
   if (sub === '/categories' && method === 'GET')  return categoriesLedgerAction(request, env)
 
-  const m = sub.match(/^\/([0-9A-Za-z]+)$/)
+  const m = sub.match(/^\/([\w-]+)$/)
   if (m) {
     const id = m[1]
     if (method === 'GET')    return getLedgerAction(request, env, id)

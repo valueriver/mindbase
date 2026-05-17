@@ -9,7 +9,7 @@ const handle = async (request, env, sub, method, url) => {
   if (sub === '' && method === 'GET')  return listLlmsAction(request, env, url)
   if (sub === '' && method === 'POST') return createLlmAction(request, env)
 
-  const m = sub.match(/^\/([0-9A-Za-z-]+)$/)
+  const m = sub.match(/^\/([\w-]+)$/)
   if (m) {
     const id = m[1]
     if (method === 'PATCH')  return updateLlmAction(request, env, id)

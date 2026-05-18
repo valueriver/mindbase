@@ -7,7 +7,7 @@
     />
 
     <main class="mx-auto w-full max-w-3xl px-4 pt-6 pb-32 md:px-12 md:pt-10">
-      <Breadcrumb :items="breadcrumbItems" />
+      <Breadcrumb :items="breadcrumbItems" @move="onMove" />
 
       <div v-if="loading" class="py-10 text-sm text-nt-soft">加载中…</div>
       <div v-else-if="error" class="py-10 text-sm text-nt-danger">{{ error }}</div>
@@ -239,6 +239,14 @@ async function onDelete() {
     await apiNote.remove(props.id)
     router.back()
   } catch (e) { alert(e.message || '删除失败') }
+}
+
+async function onMove({ id, target }) {
+  const notebook_id = target.kind === 'root' ? null : target.id
+  try {
+    await apiNote.update(id, { notebook_id })
+    await load()
+  } catch (e) { alert(e.message || '移动失败'); await load() }
 }
 
 onBeforeUnmount(() => clearTimeout(saveTimer))

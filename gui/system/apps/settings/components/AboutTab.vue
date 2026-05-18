@@ -4,14 +4,14 @@
       <img src="/favicon.svg" alt="" class="h-12 w-12" />
       <div>
         <h2 class="text-lg font-semibold text-nt">MindBase</h2>
-        <p class="text-xs text-nt-soft">你的私有个人知识库</p>
+        <p class="text-xs text-nt-soft">开源的个人记忆中心，同步你与 AI 的上下文</p>
       </div>
     </div>
 
     <p class="text-sm leading-relaxed text-nt-muted">
-      MindBase 是一个开源的个人知识库工具,设计目标是单人单机自部署。
-      基于 Cloudflare Workers + D1 + R2,部署成本接近零。
-      数据完全握在自己手里,助理通过 sql_query 工具直接读写本地数据库,无需任何向量化或第三方服务。
+      MindBase 是一个开源的记忆中心——同步你与 AI 的上下文。
+      内置可查询数据的 agent，提供 OpenAPI、MCP、Skill 三种方式打通你与 code agent 的互通。
+      基于 Cloudflare Workers + D1 + R2，数据掌握在自己手里。
     </p>
 
     <div class="rounded-md border border-nt-divider p-4">

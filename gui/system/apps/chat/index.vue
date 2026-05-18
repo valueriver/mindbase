@@ -50,13 +50,13 @@
           <div v-else-if="item.kind === 'tool'" class="flex justify-start">
             <details class="max-w-[90%] flex-1 rounded-md border border-nt-divider bg-nt-hover/50 overflow-hidden" :open="item.open ?? false">
               <summary class="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs text-nt-muted hover:bg-nt-hover">
-                <span class="font-medium text-nt truncate">{{ item.reason || '查询' }}</span>
-                <span v-if="item.status === 'running'" class="ml-auto inline-flex items-center gap-1 text-nt-soft">
+                <span class="min-w-0 font-medium text-nt truncate">{{ item.reason || '查询' }}</span>
+                <span v-if="item.status === 'running'" class="ml-auto shrink-0 inline-flex items-center gap-1 text-nt-soft">
                   <svg class="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                   执行中
                 </span>
-                <span v-else-if="item.status === 'error'" class="ml-auto text-nt-danger">失败</span>
-                <span v-else /><!-- 完成态不显示 -->
+                <span v-else-if="item.status === 'error'" class="ml-auto shrink-0 text-nt-danger">失败</span>
+                <span v-else class="ml-auto shrink-0 text-nt-soft">完成</span>
               </summary>
               <div class="border-t border-nt-divider bg-white px-3 py-2 space-y-2">
                 <div v-if="item.args">

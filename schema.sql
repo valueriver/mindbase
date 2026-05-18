@@ -65,6 +65,10 @@ CREATE TABLE app_home_posts (
 );
 CREATE INDEX idx_app_home_posts_created ON app_home_posts(created_at DESC);
 
+INSERT INTO app_home_posts (id, author, content) VALUES
+  ('welcome-1', 'system', '👋 欢迎使用 MindBase —— 你与 AI 的记忆中心。在这里记录生活，所有 AI 共享同一份上下文。'),
+  ('welcome-2', 'system', '💡 点击右上角打开应用中心，进入设置，在「协作」里拿到 token，让你的 AI 也能读写这里的数据。');
+
 -- 各应用 service.js 在关键动作后往这里 INSERT 一条
 -- (直接 import home/repository.js 的 insertEvent,或自己写 SQL)。
 -- 仅用于主页时间轴渲染,无副作用。
@@ -92,6 +96,11 @@ CREATE TABLE app_todos_items (
 );
 CREATE INDEX idx_app_todos_items_done ON app_todos_items(done, sort_order);
 
+INSERT INTO app_todos_items (id, title, sort_order) VALUES
+  ('seed-todo-1', '在设置中配置大模型', 1),
+  ('seed-todo-2', '在 Codex 中配置 MindBase Skill', 2),
+  ('seed-todo-3', '在 Claude Code 中配置 MindBase Skill', 3);
+
 -- ---- notes ----
 -- 笔记:无限嵌套笔记本 + 笔记。
 CREATE TABLE app_notes_notebooks (
@@ -118,6 +127,9 @@ CREATE TABLE app_notes_pages (
   updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX idx_app_notes_pages_notebook ON app_notes_pages(notebook_id);
+
+INSERT INTO app_notes_pages (id, notebook_id, title, content, sort_order) VALUES
+  ('seed-note-1', NULL, '什么是 MindBase', '<h1>什么是 MindBase</h1><div><br></div><div>MindBase 是一个开源的记忆中心——同步你与 AI 的上下文。</div><div><br></div><h2>🤖 AI 互通</h2><div>内置可查询数据的 agent，兼容大多数模型与各种 coding plan。</div><div>提供 OpenAPI、MCP、Skill 三种方式打通你与 code agent 的互通。</div><div>你的 code agent 在工作中能了解你的上下文，记录做过什么，积累经验，更新项目状态，记住你的偏好。</div><div><br></div><h2>🌱 记忆有形状</h2><div>记忆不是一条条抽象的数据，而是有自己形状、自己交互、自己功能的应用。</div><div>内置 12 个应用，另有 40+ 免费模板可选，你还可以让 AI 快速开发属于你的记忆应用。</div><div><br></div><h2>☁️ 数据在你手里</h2><div>快速部署在 Cloudflare 上，底层依托 Workers、D1、R2，免费额度足够日常使用。</div><div>D1 内建 30 天时间点恢复，兜住 AI 误操作，让你更放心地让 AI 读写你的数据。</div>', 1);
 
 -- ---- ledger ----
 -- 记账:逐笔流水。amount 单位"分"避免浮点。
@@ -186,6 +198,42 @@ CREATE TABLE app_prompts_items (
   created_at  TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+INSERT INTO app_prompts_items (id, title, content, tags) VALUES
+  ('seed-prompt-1', 'MindBase 应用开发指令', '# mindbase
+
+个人数据库 / 同步用户与 AI 的上下文。
+
+- origin: `https://github.com/realuckyang/mindbase.git`
+- Node:`^20.19.0 || >=22.12.0`
+
+## 命名规则
+
+| 层 | 用户应用 | 系统应用 |
+|---|---|---|
+| DB 表 | `app_<name>_*` | 裸表名 |
+| 后端 | `server/apps/<name>/` | `server/system/apps/<name>/` |
+| 前端 | `gui/apps/<name>/` | `gui/system/apps/<name>/` |
+| HTTP | `/api/<name>` | `/api/<name>` |
+
+## 加一个新应用
+
+后端 `server/apps/<name>/{manifest,repository,service,api}.js` + 前端 `gui/apps/<name>/index.vue` + 在 `schema.sql` 的"应用"段加表（全部 `app_<name>_*` 前缀）。
+
+中央注册只剩 `server/apps/registry.js` 一行手写 entry。前端 `router.js` / `lib/apps.js` / `AppShell` 全部用 `import.meta.glob` 自动派生。
+
+`schema.sql` 是单一事实源。
+
+## 事件流约定
+
+关键动作后往 `app_home_events` 写一条 —— `import { insertEvent } from ''../home/repository.js''`。事件失败时主操作继续（try/catch 吞掉）。
+
+## 原则
+
+- 一致性：前后端、数据库命名统一，改名就所有地方一起改干净
+- 直接迭代：DDL 即单一事实源，跳过兼容层
+- 轻量工程：按需求做事，所见即所得
+- 面向用户：产品文案只面向用户，技术细节藏在代码里', '开发,AGENTS');
 
 -- ---- apikeys ----
 -- 各种服务的 API key。

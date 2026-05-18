@@ -1,4 +1,4 @@
-import { listContexts } from '../../../system/contexts/repository.js'
+import { listContexts } from '../contexts/repository.js'
 
 export const buildContextsSection = async (env) => {
   try {

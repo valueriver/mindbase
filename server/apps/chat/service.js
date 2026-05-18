@@ -10,8 +10,8 @@ import {
   createConversation,
   ensureConversation,
 } from './repository.js'
-import { chat } from './ai/handler.js'
-import { buildSystemPrompt } from './prompt/index.js'
+import { chat } from '../../system/ai/handler.js'
+import { buildSystemPrompt } from '../../system/prompt/index.js'
 
 // 单一全局对话(向后兼容旧的 'main' 标识)。
 const CONVERSATION_ID = 'main'

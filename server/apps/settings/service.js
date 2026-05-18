@@ -2,7 +2,7 @@ import { ok, fail } from "../../system/utils/json.js"
 import { readJsonBody } from "../../system/utils/body.js"
 import { isAuthenticated } from "../../system/auth/index.js"
 import { getAllSettings, setSetting } from './repository.js'
-import { DEFAULT_SYSTEM_PROMPT } from '../chat/prompt/default.js'
+import { DEFAULT_SYSTEM_PROMPT } from '../../system/prompt/default.js'
 
 const ROUND_CHOICES = [30, 100, 500]
 const DEFAULT_ROUNDS = 100

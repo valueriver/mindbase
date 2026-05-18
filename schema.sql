@@ -50,6 +50,19 @@ CREATE TABLE settings (
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- ---- contexts:系统级上下文 —— 用户 / 各应用 pin 进来的内容,所有 AI 协作首先读取 ----
+CREATE TABLE contexts (
+  id          TEXT PRIMARY KEY,
+  content     TEXT NOT NULL DEFAULT '',
+  source_app  TEXT NOT NULL DEFAULT '',
+  source_id   TEXT,
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(source_app, source_id)
+);
+CREATE INDEX idx_contexts_sort ON contexts(sort_order ASC);
+
 
 -- ============================================================
 -- 应用 (apps/*)

@@ -10,17 +10,20 @@
 import chatManifest     from './chat/manifest.js'
 import collabManifest   from './collab/manifest.js'
 import settingsManifest from './settings/manifest.js'
+import contextsManifest from './contexts/manifest.js'
 import userManifest     from './user/manifest.js'
 
 import chatApi     from './chat/api.js'
 import collabApi   from './collab/api.js'
 import settingsApi from './settings/api.js'
+import contextsApi from './contexts/api.js'
 import { handleUserApi } from './user/api.js'
 
 const ENTRIES = [
   { manifest: chatManifest,     api: chatApi,       style: 'sub'  },
   { manifest: collabManifest,   api: collabApi,     style: 'sub'  },
   { manifest: settingsManifest, api: settingsApi,   style: 'sub'  },
+  { manifest: contextsManifest, api: contextsApi,   style: 'sub'  },
   { manifest: userManifest,     api: handleUserApi, style: 'full' },
 ]
 

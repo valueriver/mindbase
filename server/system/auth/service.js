@@ -1,5 +1,5 @@
-import { readJsonBody } from "../../system/utils/body.js"
-import { ok, fail } from "../../system/utils/json.js"
+import { readJsonBody } from "../utils/body.js"
+import { ok, fail } from "../utils/json.js"
 import {
   isAuthenticated,
   hashPassword,
@@ -7,8 +7,8 @@ import {
   signJwt,
   buildAuthCookie,
   clearAuthCookie,
-} from "../../system/auth/index.js"
-import { getSetting, setSetting } from '../settings/repository.js'
+} from "./index.js"
+import { getSetting, setSetting } from '../../apps/settings/repository.js'
 
 const KEYS = {
   username: 'auth_username',
@@ -60,7 +60,7 @@ export const setupAuthAction = async (request, env, url) => {
   return ok({ initialized: true }, 200, issueCookie(token, url))
 }
 
-// POST /api/user/login
+// POST /api/auth/login
 export const passwordLoginAction = async (request, env, url) => {
   const a = await readAuth(env.DB)
   if (!a.username || !a.hash) return fail('not_initialized', 409)
@@ -86,7 +86,7 @@ export const meAction = async (request, env) => {
   return ok({ authenticated: true })
 }
 
-// POST /api/user/password — 已登录用户改密码;需要旧密码
+// POST /api/auth/password — 已登录用户改密码;需要旧密码
 export const changePasswordAction = async (request, env) => {
   if (!(await isAuthenticated(request, env))) return fail('unauthorized', 401)
   const a = await readAuth(env.DB)

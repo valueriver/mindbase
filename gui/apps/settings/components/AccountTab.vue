@@ -48,7 +48,7 @@ async function onSave() {
 
   busy.value = true
   try {
-    await api.post('/api/user/password', { old_password: form.old, new_password: form.next })
+    await api.post('/api/auth/password', { old_password: form.old, new_password: form.next })
     form.old = ''; form.next = ''; form.next2 = ''
     saved.value = true
     setTimeout(() => { saved.value = false }, 1500)

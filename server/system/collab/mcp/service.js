@@ -7,8 +7,8 @@
 //   - sql_query —— 对实例的 D1 执行 SQL,读写用户数据
 //   - apps_list —— 列出当前装了哪些应用及其表与子路径
 
-import { isAuthenticated } from '../../system/auth/index.js'
-import { APPS } from '../../apps/registry.js'
+import { isAuthenticated } from '../../auth/index.js'
+import { APPS } from '../../../apps/registry.js'
 
 const PROTOCOL_VERSION = '2024-11-05'
 const SERVER_INFO = { name: 'mindbase', version: '1.0.0' }

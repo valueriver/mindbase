@@ -16,11 +16,11 @@ const toRoute = ([path, loader]) => {
 
 const routes = [
   // 登录页(无需认证)
-  { path: '/welcome',         name: 'welcome', component: () => import('@/apps/user/welcome.vue'), meta: { guestOnly: true } },
+  { path: '/welcome',         name: 'welcome', component: () => import('@/system/auth/welcome.vue'), meta: { guestOnly: true } },
   { path: '/',                redirect: DEFAULT_PATH },
 
-  // 应用路由(自动派生),user 是基础设施,不映射到 /user
-  ...Object.entries(userPages).filter(([p]) => !p.endsWith('/user/index.vue')).map(toRoute),
+  // 应用路由(自动派生)
+  ...Object.entries(userPages).map(toRoute),
 
   // 笔记的子路由(notes 应用是多视图,glob 派生只覆盖 /notes 列表页)
   { path: '/notebook/:id',    name: 'notebook', component: () => import('@/apps/notes/notebook.vue'), props: true },

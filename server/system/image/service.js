@@ -1,13 +1,13 @@
-import { ok, fail } from "../../system/utils/json.js"
-import { isAuthenticated } from "../../system/auth/index.js"
+import { ok, fail } from "../utils/json.js"
+import { isAuthenticated } from "../auth/index.js"
 
-const MAX_SIZE  = 10 * 1024 * 1024 // 10MB
-const ALLOWED   = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'])
-const EXT_MAP   = {
-  'image/png':  'png',
+const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+const ALLOWED = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'])
+const EXT_MAP = {
+  'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
-  'image/gif':  'gif',
+  'image/gif': 'gif',
   'image/svg+xml': 'svg',
 }
 
@@ -30,8 +30,8 @@ export const uploadImageAction = async (request, env) => {
 
   const file = formData.get('file')
   if (!(file instanceof File)) return fail('file_required', 400)
-  if (file.size === 0)         return fail('file_empty', 400)
-  if (file.size > MAX_SIZE)    return fail(`file_too_large:max_${MAX_SIZE}`, 400)
+  if (file.size === 0) return fail('file_empty', 400)
+  if (file.size > MAX_SIZE) return fail(`file_too_large:max_${MAX_SIZE}`, 400)
 
   const type = (file.type || '').toLowerCase()
   if (!ALLOWED.has(type)) return fail(`unsupported_type:${type || 'unknown'}`, 400)
@@ -45,7 +45,7 @@ export const uploadImageAction = async (request, env) => {
   })
 
   return ok({
-    url:  `/i/${key}`,
+    url: `/i/${key}`,
     key,
     size: file.size,
     type,
@@ -54,7 +54,7 @@ export const uploadImageAction = async (request, env) => {
 
 // GET /i/<key>  — key 是多段(u/<uuid>.<ext>;老 key 形如 u/<userId>/<uuid>.<ext>)
 export const serveImageAction = async (request, env, key) => {
-  if (!env.IMAGES)           return new Response('r2_not_configured', { status: 500 })
+  if (!env.IMAGES) return new Response('r2_not_configured', { status: 500 })
   if (!key || key.length > 256) return new Response('bad_key', { status: 400 })
 
   // If-None-Match 优先走条件请求,节省带宽

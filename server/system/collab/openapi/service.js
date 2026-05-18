@@ -1,8 +1,8 @@
-import { ok, fail } from '../../system/utils/json.js'
-import { readJsonBody } from '../../system/utils/body.js'
-import { isAuthenticated } from '../../system/auth/index.js'
-import { APPS } from '../../apps/registry.js'
-import { listContexts } from '../../system/contexts/repository.js'
+import { ok, fail } from '../../utils/json.js'
+import { readJsonBody } from '../../utils/body.js'
+import { isAuthenticated } from '../../auth/index.js'
+import { APPS } from '../../../apps/registry.js'
+import { listContexts } from '../../contexts/repository.js'
 
 // 与 MCP 工具对齐 —— OpenAPI 也只暴露同样的两把:
 //   GET  /api/ai/apps  → apps_list (含 contexts)

@@ -143,7 +143,7 @@ async function doLogin() {
 
 onMounted(async () => {
   try {
-    const r = await api.get('/api/user/auth/status')
+    const r = await api.get('/api/auth/status')
     initialized.value = !!r.initialized
   } catch {
     initialized.value = true

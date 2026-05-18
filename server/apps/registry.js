@@ -41,8 +41,8 @@ import collabManifest     from './collab/manifest.js'
 import collabApi          from './collab/api.js'
 import settingsManifest   from './settings/manifest.js'
 import settingsApi        from './settings/api.js'
-import userManifest       from './user/manifest.js'
-import { handleUserApi }     from './user/api.js'
+import authManifest       from '../system/auth/manifest.js'
+import { handleAuthApi }     from '../system/auth/api.js'
 import { handleContextsApi } from '../system/contexts/api.js'
 
 const ENTRIES = [
@@ -65,11 +65,11 @@ const ENTRIES = [
   { manifest: settingsManifest,   api: settingsApi,       style: 'sub'  },
 
   // 基础设施 / 系统模块(不进启动器):
-  { manifest: userManifest,       api: handleUserApi,     style: 'full' },
+  { manifest: authManifest,       api: handleAuthApi,     style: 'full' },
   { prefix: '/api/contexts',      api: handleContextsApi, style: 'sub'  },
 ]
 
-// 启动器:过滤掉 infra(user)和无 api 也无 manifest 的纯路由(contexts)。
+// 启动器:过滤掉 infra(auth)和无 api 也无 manifest 的纯路由(contexts)。
 export const APPS = ENTRIES
   .filter((e) => e.manifest && e.manifest.kind !== 'infra')
   .map((e) => e.manifest)

@@ -10,7 +10,7 @@ export async function checkAuth() {
   if (inflight) return inflight
   inflight = (async () => {
     try {
-      await api.get('/api/user/me')
+      await api.get('/api/auth/me')
       authed.value = true
     } catch {
       authed.value = false
@@ -24,19 +24,19 @@ export async function checkAuth() {
 }
 
 export async function login(username, password) {
-  await api.post('/api/user/login', { username, password })
+  await api.post('/api/auth/login', { username, password })
   authed.value = true
   ready.value = true
 }
 
 export async function setupAuth(username, password) {
-  await api.post('/api/user/auth/setup', { username, password })
+  await api.post('/api/auth/setup', { username, password })
   authed.value = true
   ready.value = true
 }
 
 export async function logout() {
-  try { await api.post('/api/user/logout') } catch {}
+  try { await api.post('/api/auth/logout') } catch {}
   authed.value = false
   ready.value = true
 }

@@ -5,8 +5,8 @@ import { buildCorsHeaders } from './system/utils/http.js'
 import { APP_ROUTES } from './apps/registry.js'
 
 // 协作层(对外 AI 接入)
-import { handleAiApi }  from './collab/openapi/api.js'
-import { handleMcpApi } from './collab/mcp/api.js'
+import { handleAiApi }  from './system/collab/openapi/api.js'
+import { handleMcpApi } from './system/collab/mcp/api.js'
 
 // 基础设施(有 URL 但不算 app)
 import { handleImageApi } from './system/image/api.js'

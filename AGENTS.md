@@ -22,7 +22,15 @@
 | 前端 | `gui/apps/<name>/index.vue` |
 | HTTP | `/api/<name>` |
 
-`server/system/` 下只放纯基础设施（auth / utils / image / contexts），不放应用。
+`server/system/` 下只放纯基础设施：
+
+- `auth/` —— 鉴权 lib + 登录/注册 HTTP endpoint（`/api/auth/*`），manifest `kind: 'infra'` 不进启动器
+- `ai/` —— Agent loop（tool calling / runner / functions）
+- `llm/` —— LLM provider 抽象（OpenAI / Anthropic / ...）
+- `prompt/` —— System prompt 拼装（default / environment / contexts / profile）
+- `collab/` —— 对外协作协议入口（OpenAPI `/api/ai/*` + MCP `/api/mcp`）
+- `contexts/` —— 系统级置顶上下文
+- `image/`、`utils/` —— 通用基础设施
 
 启动器底部 dock 默认显示 `chat / collab / settings` 这 3 个 —— 在 `gui/system/lib/apps.js` 的 `DOCK` 常量里硬编码,未来可改成用户偏好。
 

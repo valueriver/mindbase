@@ -48,8 +48,8 @@ const router = useRouter()
 const tabs = [
   { id: 'account', label: '账户' },
   { id: 'model',   label: '模型' },
-  { id: 'prompt',  label: '提示词' },
   { id: 'context',  label: '对话' },
+  { id: 'prompt',  label: '提示词' },
   { id: 'contexts', label: '上下文' },
   { id: 'create',   label: '新建应用' },
   { id: 'about',   label: '关于' },

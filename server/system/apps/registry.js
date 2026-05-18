@@ -10,25 +10,24 @@
 import chatManifest     from './chat/manifest.js'
 import collabManifest   from './collab/manifest.js'
 import settingsManifest from './settings/manifest.js'
-import contextsManifest from './contexts/manifest.js'
 import userManifest     from './user/manifest.js'
 
 import chatApi     from './chat/api.js'
 import collabApi   from './collab/api.js'
 import settingsApi from './settings/api.js'
-import contextsApi from './contexts/api.js'
-import { handleUserApi } from './user/api.js'
+import { handleUserApi }    from './user/api.js'
+import { handleContextsApi } from '../contexts-api.js'
 
 const ENTRIES = [
-  { manifest: chatManifest,     api: chatApi,       style: 'sub'  },
-  { manifest: collabManifest,   api: collabApi,     style: 'sub'  },
-  { manifest: settingsManifest, api: settingsApi,   style: 'sub'  },
-  { manifest: contextsManifest, api: contextsApi,   style: 'sub'  },
-  { manifest: userManifest,     api: handleUserApi, style: 'full' },
+  { manifest: chatManifest,     api: chatApi,           style: 'sub'  },
+  { manifest: collabManifest,   api: collabApi,         style: 'sub'  },
+  { manifest: settingsManifest, api: settingsApi,       style: 'sub'  },
+  { manifest: userManifest,     api: handleUserApi,     style: 'full' },
+  { prefix: '/api/contexts',    api: handleContextsApi, style: 'sub', manifest: null },
 ]
 
 export const APPS = ENTRIES
-  .filter((e) => e.manifest.kind !== 'infra')
+  .filter((e) => e.manifest && e.manifest.kind !== 'infra')
   .map((e) => e.manifest)
 
 export const APPS_BY_NAME = Object.fromEntries(APPS.map((a) => [a.name, a]))

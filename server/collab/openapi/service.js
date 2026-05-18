@@ -3,7 +3,7 @@ import { readJsonBody } from '../../system/utils/body.js'
 import { isAuthenticated } from '../../system/auth/index.js'
 import { APPS as USER_APPS }   from '../../apps/registry.js'
 import { APPS as SYSTEM_APPS } from '../../system/apps/registry.js'
-import { listContexts }        from '../../system/apps/contexts/repository.js'
+import { listContexts }        from '../../system/contexts/repository.js'
 
 // 与 MCP 工具对齐 —— OpenAPI 也只暴露同样的两把:
 //   GET  /api/ai/apps  → apps_list (含 contexts)

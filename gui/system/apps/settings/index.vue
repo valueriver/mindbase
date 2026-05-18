@@ -23,8 +23,9 @@
       <AccountTab v-if="tab === 'account'" />
       <ModelTab   v-else-if="tab === 'model'"   :form="form" :loading="loading" />
       <PromptTab  v-else-if="tab === 'prompt'"  :form="form" :loading="loading" :default-prompt="defaultPrompt" />
-      <ContextTab v-else-if="tab === 'context'" :form="form" :loading="loading" />
-      <CreateTab  v-else-if="tab === 'create'" />
+      <ContextTab  v-else-if="tab === 'context'"  :form="form" :loading="loading" />
+      <ContextsTab v-else-if="tab === 'contexts'" />
+      <CreateTab   v-else-if="tab === 'create'" />
       <AboutTab   v-else-if="tab === 'about'" />
     </main>
   </div>
@@ -37,8 +38,9 @@ import { api } from '@/api'
 import AccountTab from '@/system/apps/settings/components/AccountTab.vue'
 import ModelTab   from '@/system/apps/settings/components/ModelTab.vue'
 import PromptTab  from '@/system/apps/settings/components/PromptTab.vue'
-import ContextTab from '@/system/apps/settings/components/ContextTab.vue'
-import CreateTab  from '@/system/apps/settings/components/CreateTab.vue'
+import ContextTab  from '@/system/apps/settings/components/ContextTab.vue'
+import ContextsTab from '@/system/apps/settings/components/ContextsTab.vue'
+import CreateTab   from '@/system/apps/settings/components/CreateTab.vue'
 import AboutTab   from '@/system/apps/settings/components/AboutTab.vue'
 
 const route  = useRoute()
@@ -47,8 +49,9 @@ const tabs = [
   { id: 'account', label: '账户' },
   { id: 'model',   label: '模型' },
   { id: 'prompt',  label: '提示词' },
-  { id: 'context', label: '上下文' },
-  { id: 'create',  label: '新建应用' },
+  { id: 'context',  label: '对话' },
+  { id: 'contexts', label: '上下文' },
+  { id: 'create',   label: '新建应用' },
   { id: 'about',   label: '关于' },
 ]
 const VALID = new Set(tabs.map(t => t.id))

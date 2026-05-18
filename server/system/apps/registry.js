@@ -16,7 +16,7 @@ import chatApi     from './chat/api.js'
 import collabApi   from './collab/api.js'
 import settingsApi from './settings/api.js'
 import { handleUserApi }    from './user/api.js'
-import { handleContextsApi } from '../contexts-api.js'
+import { handleContextsApi } from '../contexts/api.js'
 
 const ENTRIES = [
   { manifest: chatManifest,     api: chatApi,           style: 'sub'  },

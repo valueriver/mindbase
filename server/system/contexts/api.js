@@ -1,7 +1,7 @@
 import {
   listContextsAction, createContextAction, updateContextAction, deleteContextAction,
   pinContextAction, unpinContextAction,
-} from './contexts/service.js'
+} from './service.js'
 
 export const handleContextsApi = async (request, env, sub, method) => {
   if (sub === ''       && method === 'GET')  return listContextsAction(request, env)

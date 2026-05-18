@@ -56,7 +56,7 @@
                   执行中
                 </span>
                 <span v-else-if="item.status === 'error'" class="ml-auto text-nt-danger">失败</span>
-                <span v-else class="ml-auto text-nt-soft">完成</span>
+                <span v-else /><!-- 完成态不显示 -->
               </summary>
               <div class="border-t border-nt-divider bg-white px-3 py-2 space-y-2">
                 <div v-if="item.args">

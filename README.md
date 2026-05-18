@@ -1,6 +1,6 @@
 # MindBase
 
-**开源的记忆中心——同步你与 AI 的上下文。**
+**MindBase 是一个开源的记忆中心——同步你与 AI 的上下文。**
 
 🤖 **AI 互通** — 内置可查询数据的 agent，兼容大多数模型与市面上的各种 coding plan。同时提供 OpenAPI、MCP、Skill 三种方式打通你与 code agent 的互通——你的 code agent 在工作中能了解你的上下文，记录做过什么，积累经验，更新项目状态，记住你的偏好等。
 

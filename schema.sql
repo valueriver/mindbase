@@ -291,3 +291,36 @@ CREATE TABLE app_footprints_visits (
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX idx_app_footprints_visits_visited ON app_footprints_visits(visited_at DESC);
+
+-- ---- broadcast ----
+-- 广播:把一篇内容同步发布到多个平台,跟踪每个平台的发布状态。
+CREATE TABLE app_broadcast_posts (
+  id          TEXT PRIMARY KEY,
+  title       TEXT NOT NULL DEFAULT '',
+  note        TEXT NOT NULL DEFAULT '',
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_broadcast_posts_created ON app_broadcast_posts(created_at DESC);
+
+CREATE TABLE app_broadcast_platforms (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL DEFAULT '',
+  url         TEXT NOT NULL DEFAULT '',
+  sort_order  INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_app_broadcast_platforms_sort ON app_broadcast_platforms(sort_order ASC);
+
+CREATE TABLE app_broadcast_statuses (
+  id          TEXT PRIMARY KEY,
+  post_id     TEXT NOT NULL REFERENCES app_broadcast_posts(id) ON DELETE CASCADE,
+  platform_id TEXT NOT NULL REFERENCES app_broadcast_platforms(id) ON DELETE CASCADE,
+  status      TEXT NOT NULL DEFAULT 'pending',
+  pub_url     TEXT NOT NULL DEFAULT '',
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(post_id, platform_id)
+);
+CREATE INDEX idx_app_broadcast_statuses_post ON app_broadcast_statuses(post_id);

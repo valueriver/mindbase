@@ -27,8 +27,10 @@ import emailsManifest     from './emails/manifest.js'
 import emailsApi          from './emails/api.js'
 import domainsManifest    from './domains/manifest.js'
 import domainsApi         from './domains/api.js'
-import footprintsManifest from './footprints/manifest.js'
-import footprintsApi      from './footprints/api.js'
+import footprintsManifest  from './footprints/manifest.js'
+import footprintsApi       from './footprints/api.js'
+import broadcastManifest   from './broadcast/manifest.js'
+import broadcastApi        from './broadcast/api.js'
 
 const ENTRIES = [
   { manifest: homeManifest,       api: homeApi,       style: 'sub' },
@@ -43,6 +45,7 @@ const ENTRIES = [
   { manifest: emailsManifest,     api: emailsApi,     style: 'sub' },
   { manifest: domainsManifest,    api: domainsApi,    style: 'sub' },
   { manifest: footprintsManifest, api: footprintsApi, style: 'sub' },
+  { manifest: broadcastManifest,  api: broadcastApi,  style: 'sub' },
 ]
 
 export const APPS = ENTRIES.map((e) => e.manifest)

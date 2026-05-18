@@ -8,10 +8,7 @@
 //   - apps_list —— 列出当前装了哪些应用及其表与子路径
 
 import { isAuthenticated } from '../../system/auth/index.js'
-import { APPS as USER_APPS }   from '../../apps/registry.js'
-import { APPS as SYSTEM_APPS } from '../../system/apps/registry.js'
-
-const APPS = [...USER_APPS, ...SYSTEM_APPS]
+import { APPS } from '../../apps/registry.js'
 
 const PROTOCOL_VERSION = '2024-11-05'
 const SERVER_INFO = { name: 'mindbase', version: '1.0.0' }
@@ -21,9 +18,9 @@ const TOOLS = [
     name: 'sql_query',
     description:
       '对用户 MindBase 实例的 SQLite 执行一条 SQL 语句(末尾无分号),支持查询与写入。' +
-      '用户应用的表以 `app_<name>_*` 开头(如 app_ledger_entries),建议先用 ' +
-      '`SELECT name FROM sqlite_master WHERE name LIKE \'app_%\'` 查看当前装了哪些应用,再针对性查询。' +
-      '平台表使用 conversations / messages / tokens / settings 等名称,涉及凭证字段时仅在用户明确要求下访问。',
+      '应用表以 `<name>_*` 命名(如 ledger_entries),建议先用 ' +
+      '`SELECT name FROM sqlite_master WHERE type=\'table\'` 查看当前有哪些表。' +
+      '`conversations / messages / tokens / settings / contexts` 是系统表,涉及凭证字段时仅在用户明确要求下访问。',
     inputSchema: {
       type: 'object',
       properties: {

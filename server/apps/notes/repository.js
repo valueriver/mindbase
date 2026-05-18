@@ -1,23 +1,23 @@
-// Combined repository for notebooks (app_notes_notebooks) + pages (app_notes_pages).
+// Combined repository for notebooks (notes_notebooks) + pages (notes_pages).
 
 // ---------- Notebooks ----------
 const NB_COLS = 'id, parent_id, name, icon, cover, sort_order, created_at, updated_at'
 
 export const createNotebook = async (db, { id, parentId, name, icon, cover }) => {
   await db.prepare(
-    `INSERT INTO app_notes_notebooks (id, parent_id, name, icon, cover, sort_order, created_at, updated_at)
+    `INSERT INTO notes_notebooks (id, parent_id, name, icon, cover, sort_order, created_at, updated_at)
      VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'), datetime('now'))`
   ).bind(id, parentId ?? null, name, icon ?? null, cover ?? null, Date.now()).run()
   return findNotebookById(db, id)
 }
 
 export const findNotebookById = (db, id) =>
-  db.prepare(`SELECT ${NB_COLS} FROM app_notes_notebooks WHERE id = ?1`).bind(id).first()
+  db.prepare(`SELECT ${NB_COLS} FROM notes_notebooks WHERE id = ?1`).bind(id).first()
 
 export const listNotebooksUnder = async (db, parentId) => {
   const sql = parentId
-    ? `SELECT ${NB_COLS} FROM app_notes_notebooks WHERE parent_id = ?1 ORDER BY sort_order ASC, created_at ASC`
-    : `SELECT ${NB_COLS} FROM app_notes_notebooks WHERE parent_id IS NULL ORDER BY sort_order ASC, created_at ASC`
+    ? `SELECT ${NB_COLS} FROM notes_notebooks WHERE parent_id = ?1 ORDER BY sort_order ASC, created_at ASC`
+    : `SELECT ${NB_COLS} FROM notes_notebooks WHERE parent_id IS NULL ORDER BY sort_order ASC, created_at ASC`
   const stmt = parentId ? db.prepare(sql).bind(parentId) : db.prepare(sql)
   const { results } = await stmt.all()
   return results || []
@@ -27,7 +27,7 @@ const nullableFlag = (value) => (value === undefined ? 0 : 1)
 
 export const updateNotebook = async (db, id, { name, icon, cover, parentId, sortOrder }) => {
   await db.prepare(
-    `UPDATE app_notes_notebooks
+    `UPDATE notes_notebooks
         SET name       = COALESCE(?2, name),
             icon       = CASE WHEN ?3 = 1 THEN ?4  ELSE icon       END,
             cover      = CASE WHEN ?5 = 1 THEN ?6  ELSE cover      END,
@@ -47,7 +47,7 @@ export const updateNotebook = async (db, id, { name, icon, cover, parentId, sort
 }
 
 export const deleteNotebook = (db, id) =>
-  db.prepare('DELETE FROM app_notes_notebooks WHERE id = ?1').bind(id).run()
+  db.prepare('DELETE FROM notes_notebooks WHERE id = ?1').bind(id).run()
 
 export const getNotebookAncestors = async (db, id) => {
   const chain = []
@@ -80,21 +80,21 @@ const NOTE_COLS = 'id, notebook_id, title, content, icon, cover, sort_order, cre
 
 export const createNote = async (db, { id, notebookId, title, content, icon, cover }) => {
   await db.prepare(
-    `INSERT INTO app_notes_pages (id, notebook_id, title, content, icon, cover, sort_order, created_at, updated_at)
+    `INSERT INTO notes_pages (id, notebook_id, title, content, icon, cover, sort_order, created_at, updated_at)
      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'), datetime('now'))`
   ).bind(id, notebookId, title ?? '', content ?? '', icon ?? null, cover ?? null, Date.now()).run()
   return findNoteById(db, id)
 }
 
 export const findNoteById = (db, id) =>
-  db.prepare(`SELECT ${NOTE_COLS} FROM app_notes_pages WHERE id = ?1`).bind(id).first()
+  db.prepare(`SELECT ${NOTE_COLS} FROM notes_pages WHERE id = ?1`).bind(id).first()
 
 export const listNotesIn = async (db, notebookId) => {
   const sql = notebookId
-    ? `SELECT ${NOTE_COLS} FROM app_notes_pages
+    ? `SELECT ${NOTE_COLS} FROM notes_pages
          WHERE notebook_id = ?1
          ORDER BY sort_order ASC, created_at ASC`
-    : `SELECT ${NOTE_COLS} FROM app_notes_pages
+    : `SELECT ${NOTE_COLS} FROM notes_pages
          WHERE notebook_id IS NULL
          ORDER BY sort_order ASC, created_at ASC`
   const stmt = notebookId ? db.prepare(sql).bind(notebookId) : db.prepare(sql)
@@ -104,7 +104,7 @@ export const listNotesIn = async (db, notebookId) => {
 
 export const updateNote = async (db, id, { title, content, icon, cover, notebookId, sortOrder }) => {
   await db.prepare(
-    `UPDATE app_notes_pages
+    `UPDATE notes_pages
         SET title       = COALESCE(?2, title),
             content     = COALESCE(?3, content),
             icon        = CASE WHEN ?4 = 1 THEN ?5  ELSE icon        END,
@@ -126,4 +126,4 @@ export const updateNote = async (db, id, { title, content, icon, cover, notebook
 }
 
 export const deleteNote = (db, id) =>
-  db.prepare('DELETE FROM app_notes_pages WHERE id = ?1').bind(id).run()
+  db.prepare('DELETE FROM notes_pages WHERE id = ?1').bind(id).run()

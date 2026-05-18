@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { TOKEN_COOKIE, TOKEN_EXPIRATION, TOKEN_MAX_AGE } from '../../config.js'
 import { isApiTokenShape } from './api-token.js'
-import { findTokenByValue, touchToken } from '../apps/collab/repository.js'
+import { findTokenByValue, touchToken } from '../../apps/collab/repository.js'
 
 const ALG = 'HS256'
 

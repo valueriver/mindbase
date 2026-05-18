@@ -1,6 +1,6 @@
-import { ok, fail } from "../../utils/json.js"
-import { readJsonBody } from "../../utils/body.js"
-import { isAuthenticated } from "../../auth/index.js"
+import { ok, fail } from "../../system/utils/json.js"
+import { readJsonBody } from "../../system/utils/body.js"
+import { isAuthenticated } from "../../system/auth/index.js"
 import { getAllSettings } from '../settings/repository.js'
 import {
   insertMessage,

@@ -1,11 +1,11 @@
-// 读个人档(profile 包提供的 app_profile_blocks 表)拼进 system prompt。
+// 读个人档(profile 包提供的 profile_blocks 表)拼进 system prompt。
 // 用户没装 profile 包就跳过,不报错。
 
 export const buildProfileSection = async (env) => {
   let blocks = []
   try {
     const r = await env.DB.prepare(
-      `SELECT id, title, content, sort_order FROM app_profile_blocks
+      `SELECT id, title, content, sort_order FROM profile_blocks
         ORDER BY sort_order ASC, created_at ASC`
     ).all()
     blocks = r?.results || []

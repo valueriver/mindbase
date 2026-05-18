@@ -1,5 +1,5 @@
-import { readJsonBody } from "../../utils/body.js"
-import { ok, fail } from "../../utils/json.js"
+import { readJsonBody } from "../../system/utils/body.js"
+import { ok, fail } from "../../system/utils/json.js"
 import {
   isAuthenticated,
   hashPassword,
@@ -7,7 +7,7 @@ import {
   signJwt,
   buildAuthCookie,
   clearAuthCookie,
-} from "../../auth/index.js"
+} from "../../system/auth/index.js"
 import { getSetting, setSetting } from '../settings/repository.js'
 
 const KEYS = {

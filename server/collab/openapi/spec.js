@@ -10,7 +10,7 @@ const AppSchema = {
     kind:     { type: 'string', description: 'context = 用户上下文应用;system = 平台基础设施' },
     icon:     { type: 'string', description: '单 emoji' },
     summary:  { type: 'string', description: '一句话功能描述' },
-    tables:   { type: 'array', items: { type: 'string' }, description: '本应用涉及的表名(用户应用一律 app_<name>_* 前缀)' },
+    tables:   { type: 'array', items: { type: 'string' }, description: '本应用涉及的表名(`<name>_*` 命名,跟应用同名)' },
     subpaths: { type: 'array', items: { type: 'string' }, description: '标准 CRUD 之外的子路径,如 /stats /categories' },
   },
 }
@@ -37,7 +37,7 @@ const buildSpec = (origin) => ({
     description:
       '和 AI 同步生活上下文的个人数据库。每个应用是用户生活的一面(记账 / 待办 / 笔记 / 健康 / 收藏 …),共用同一份 SQLite。\n\n' +
       '通过这份 API,外部 AI 可以查询和写入用户授权的内容,作为长期记忆参与对话与任务。\n\n' +
-      '**数据形态**:用户应用的表全部以 `app_<name>_*` 开头(`app_ledger_entries`、`app_books_items` 等),平台表使用 `conversations` / `messages` / `tokens` / `settings` 等名称。\n\n' +
+      '**数据形态**:应用表统一以 `<name>_*` 命名(`ledger_entries`、`books_items` 等),系统公共表使用 `conversations` / `messages` / `tokens` / `settings` / `contexts` 这些名称。\n\n' +
       '**推荐流程**:先调用 `GET /api/ai/apps` 取得当前装了哪些应用,再用 `POST /api/ai/sql` 针对相关表查询或写入。',
     version: '2.0.0',
   },

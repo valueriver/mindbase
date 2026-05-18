@@ -4,7 +4,7 @@ import { ok, fail } from '../../system/utils/json.js'
 import { createNotebookId, createNoteId } from '../../system/utils/id.js'
 import { isAuthenticated } from '../../system/auth/index.js'
 import { deleteR2Keys, diffRemovedKeys, extractR2Keys } from '../../system/image/refs.js'
-import { getAllSettings, setSetting } from '../../system/apps/settings/repository.js'
+import { getAllSettings, setSetting } from '../settings/repository.js'
 import {
   createNotebook,
   deleteNotebook,
@@ -256,14 +256,14 @@ export const reorderItemsAction = async (request, env) => {
 
     if (kind === 'notebook') {
       stmts.push(env.DB.prepare(
-        `UPDATE app_notes_notebooks
+        `UPDATE notes_notebooks
             SET sort_order = ?1, updated_at = datetime('now')
           WHERE id = ?2
             AND (parent_id IS ?3 OR parent_id = ?3)`
       ).bind(i, id, parentId))
     } else {
       stmts.push(env.DB.prepare(
-        `UPDATE app_notes_pages
+        `UPDATE notes_pages
             SET sort_order = ?1, updated_at = datetime('now')
           WHERE id = ?2
             AND (notebook_id IS ?3 OR notebook_id = ?3)`

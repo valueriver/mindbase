@@ -9,7 +9,7 @@ export const listLedger = (db, { month = null, type = null, limit = 500 } = {}) 
   if (month) { binds.push(`${month}%`); where.push(`happened_at LIKE ?${binds.length}`) }
   if (type)  { binds.push(type);        where.push(`type = ?${binds.length}`) }
   binds.push(limit)
-  const sql = `SELECT ${COLS} FROM app_ledger_entries
+  const sql = `SELECT ${COLS} FROM ledger_entries
                 ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
                ORDER BY happened_at DESC, id DESC
                LIMIT ?${binds.length}`
@@ -17,11 +17,11 @@ export const listLedger = (db, { month = null, type = null, limit = 500 } = {}) 
 }
 
 export const findLedgerById = (db, id) =>
-  db.prepare(`SELECT ${COLS} FROM app_ledger_entries WHERE id = ?1`).bind(id).first()
+  db.prepare(`SELECT ${COLS} FROM ledger_entries WHERE id = ?1`).bind(id).first()
 
 export const insertLedger = async (db, { id, type, amount, category, note, happenedAt }) => {
   await db.prepare(
-    `INSERT INTO app_ledger_entries (id, type, amount, category, note, happened_at, created_at, updated_at)
+    `INSERT INTO ledger_entries (id, type, amount, category, note, happened_at, created_at, updated_at)
      VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'), datetime('now'))`
   ).bind(id, type, amount, category, note, happenedAt).run()
   return findLedgerById(db, id)
@@ -29,7 +29,7 @@ export const insertLedger = async (db, { id, type, amount, category, note, happe
 
 export const updateLedger = async (db, id, { type, amount, category, note, happenedAt }) => {
   await db.prepare(
-    `UPDATE app_ledger_entries
+    `UPDATE ledger_entries
         SET type        = COALESCE(?2, type),
             amount      = COALESCE(?3, amount),
             category    = COALESCE(?4, category),
@@ -42,7 +42,7 @@ export const updateLedger = async (db, id, { type, amount, category, note, happe
 }
 
 export const deleteLedger = async (db, id) => {
-  await db.prepare(`DELETE FROM app_ledger_entries WHERE id = ?1`).bind(id).run()
+  await db.prepare(`DELETE FROM ledger_entries WHERE id = ?1`).bind(id).run()
   return { success: true }
 }
 
@@ -50,7 +50,7 @@ export const deleteLedger = async (db, id) => {
 export const monthlyTotals = async (db, month) => {
   const r = await db.prepare(
     `SELECT type, COALESCE(SUM(amount), 0) AS sum
-       FROM app_ledger_entries WHERE happened_at LIKE ?1
+       FROM ledger_entries WHERE happened_at LIKE ?1
       GROUP BY type`
   ).bind(`${month}%`).all()
   let expense = 0, income = 0
@@ -65,7 +65,7 @@ export const monthlyTotals = async (db, month) => {
 export const distinctCategories = (db) =>
   db.prepare(
     `SELECT category, COUNT(*) AS cnt
-       FROM app_ledger_entries
+       FROM ledger_entries
       WHERE category != ''
       GROUP BY category
       ORDER BY cnt DESC, category ASC`

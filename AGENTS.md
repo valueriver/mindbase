@@ -9,36 +9,40 @@
 
 - **在用中**,核心承载用户的"和 AI 同步的生活上下文"。
 - 主页是入口:用户手写 posts + 各应用自动事件流,合成一条时间轴。
-- 核心默认只装 home 一个应用,其它在 [mindbase.me](https://mindbase.me) 应用商店按需装(本机就是把对应目录丢进 `apps/` 然后 redeploy)。
+- 核心默认装一组常用应用,其它在 [mindbase.me](https://mindbase.me) 应用商店按需装(本机就是把对应目录丢进 `apps/` 然后 redeploy)。
 
 ## 命名规则
 
-| 层 | 用户应用 | 系统应用 |
-|---|---|---|
-| DB 表 | `app_<name>_*` | 裸表名(`conversations / messages / tokens / settings / contexts`) |
-| 后端 | `server/apps/<name>/` | `server/system/apps/<name>/` |
-| 前端 | `gui/apps/<name>/` | `gui/system/apps/<name>/` |
-| HTTP | `/api/<name>` | `/api/<name>`(同) |
+所有应用一视同仁，没有"用户/系统"之分：
 
-两边形态完全一致,只是身份不同 —— 用户应用走 `apps/registry.js`,系统应用走 `system/apps/registry.js`,router 合并两个 registry 后用同一个循环分发。
+| 层 | 路径 |
+|---|---|
+| DB 表 | `<name>_*`（公共表用裸名：settings / tokens / contexts / conversations / messages） |
+| 后端 | `server/apps/<name>/{manifest,repository,service,api}.js` |
+| 前端 | `gui/apps/<name>/index.vue` |
+| HTTP | `/api/<name>` |
+
+`server/system/` 下只放纯基础设施（auth / utils / image / contexts），不放应用。
+
+启动器底部 dock 默认显示 `chat / collab / settings` 这 3 个 —— 在 `gui/system/lib/apps.js` 的 `DOCK` 常量里硬编码,未来可改成用户偏好。
 
 ## 加一个新应用
 
-后端 `server/apps/<name>/{manifest,repository,service,api}.js` + 前端 `gui/apps/<name>/index.vue` + 在 `schema.sql` 的"应用"段加表(全部 `app_<name>_*` 前缀)。
+后端 `server/apps/<name>/{manifest,repository,service,api}.js` + 前端 `gui/apps/<name>/index.vue` + 在 `schema.sql` 的"应用"段加表（`<name>_*` 命名）+ 在 `server/apps/registry.js` 加一行 entry。
 
-中央注册只剩 `server/apps/registry.js` 一行手写 entry(Workers runtime 必须静态 import)。前端 `router.js` / `lib/apps.js` / `AppShell` 全部用 `import.meta.glob` 自动派生,不用碰。
+前端 `router.js` / `lib/apps.js` / `AppShell` 全部用 `import.meta.glob` 自动派生,不用手动碰。
 
 `schema.sql` 是单一事实源,初始化 D1 用 `wrangler d1 execute mindbase --remote --file=schema.sql --yes`。
 
 ## 事件流约定
 
-有"完成度语义"的关键动作(创建一笔账、读完一本书、目标 +1、达到里程碑)后,往 `app_home_events` 写一条 —— 直接 `import { insertEvent } from '../home/repository.js'`。事件失败时主操作继续完成(try/catch 吞掉)。主页时间轴会自动渲染。
+有"完成度语义"的关键动作(创建一笔账、读完一本书、目标 +1、达到里程碑)后,往 `home_events` 写一条 —— 直接 `import { insertEvent } from '../home/repository.js'`。事件失败时主操作继续完成(try/catch 吞掉)。主页时间轴会自动渲染。
 
 密码箱性质的应用(银行卡 / 证件 / 密码 / API key 等)的数据保留在本应用,时间轴只展示主动公开的事件 —— 这是应用作者的判断,由约定承担。
 
 ## 上下文 pin 约定
 
-`contexts` 是系统级上下文表(裸表名,非 `app_` 前缀)。所有 AI 协作(内部 agent 的 system prompt + 外部协作的 `/api/ai/apps` 响应)都会首先读取这里的内容。
+`contexts` 是系统级上下文表(裸表名)。所有 AI 协作(内部 agent 的 system prompt + 外部协作的 `/api/ai/apps` 响应)都会首先读取这里的内容。
 
 **应用何时 pin**:当应用里有"用户当前最关键的状态"需要让所有 AI 始终知晓时。例如:
 - 目标应用:当前 active 目标

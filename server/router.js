@@ -2,10 +2,7 @@ import { fail } from './system/utils/json.js'
 import { buildCorsHeaders } from './system/utils/http.js'
 
 // 应用层 —— 从 registry 派生,不用手写每条
-import { APP_ROUTES as USER_APP_ROUTES }   from './apps/registry.js'
-import { APP_ROUTES as SYSTEM_APP_ROUTES } from './system/apps/registry.js'
-
-const APP_ROUTES = [...USER_APP_ROUTES, ...SYSTEM_APP_ROUTES]
+import { APP_ROUTES } from './apps/registry.js'
 
 // 协作层(对外 AI 接入)
 import { handleAiApi }  from './collab/openapi/api.js'

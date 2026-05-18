@@ -3,7 +3,7 @@ export default {
   label:    '项目',
   icon:     '📂',
   kind:     'context',
-  tables:   ["app_projects_items"],
+  tables:   ["projects_items"],
   subpaths: [],
   summary:  '正在做的个人项目清单,带状态与简介。',
 }

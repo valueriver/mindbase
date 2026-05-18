@@ -1,20 +1,20 @@
-// app_profile_blocks:个人档的 block 列表。
+// profile_blocks:个人档的 block 列表。
 const COLS = `id, title, content, sort_order, created_at, updated_at`
 
 export const listBlocks = async (db) => {
   const result = await db.prepare(
-    `SELECT ${COLS} FROM app_profile_blocks
+    `SELECT ${COLS} FROM profile_blocks
       ORDER BY sort_order ASC, created_at ASC`
   ).all()
   return result?.results || []
 }
 
 export const getBlock = (db, id) =>
-  db.prepare(`SELECT ${COLS} FROM app_profile_blocks WHERE id = ?1`).bind(id).first()
+  db.prepare(`SELECT ${COLS} FROM profile_blocks WHERE id = ?1`).bind(id).first()
 
 export const insertBlock = async (db, { id, title = '', content = '', sort_order = 0 }) => {
   await db.prepare(
-    `INSERT INTO app_profile_blocks (id, title, content, sort_order, created_at, updated_at)
+    `INSERT INTO profile_blocks (id, title, content, sort_order, created_at, updated_at)
      VALUES (?1, ?2, ?3, ?4, datetime('now'), datetime('now'))`
   ).bind(id, String(title ?? ''), String(content ?? ''), Number(sort_order) || 0).run()
   return getBlock(db, id)
@@ -39,18 +39,18 @@ export const updateBlock = async (db, id, patch = {}) => {
   sets.push(`updated_at = datetime('now')`)
   binds.push(id)
   await db.prepare(
-    `UPDATE app_profile_blocks SET ${sets.join(', ')} WHERE id = ?${i}`
+    `UPDATE profile_blocks SET ${sets.join(', ')} WHERE id = ?${i}`
   ).bind(...binds).run()
   return getBlock(db, id)
 }
 
 export const deleteBlock = (db, id) =>
-  db.prepare(`DELETE FROM app_profile_blocks WHERE id = ?1`).bind(id).run()
+  db.prepare(`DELETE FROM profile_blocks WHERE id = ?1`).bind(id).run()
 
 export const reorderBlocks = async (db, ids) => {
   if (!Array.isArray(ids) || ids.length === 0) return
   const stmts = ids.map((id, idx) =>
-    db.prepare(`UPDATE app_profile_blocks SET sort_order = ?1, updated_at = datetime('now') WHERE id = ?2`)
+    db.prepare(`UPDATE profile_blocks SET sort_order = ?1, updated_at = datetime('now') WHERE id = ?2`)
       .bind(idx, id)
   )
   await db.batch(stmts)

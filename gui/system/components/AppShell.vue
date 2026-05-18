@@ -25,7 +25,7 @@
         <div class="max-h-[60vh] overflow-y-auto overscroll-contain px-1 pt-1">
           <div class="grid grid-cols-3 gap-1">
             <button
-              v-for="app in APPS_META"
+              v-for="app in LAUNCHER_APPS"
               :key="app.name"
               type="button"
               :disabled="!app.to"
@@ -48,7 +48,7 @@
         <div class="mt-2 border-t border-nt-divider"></div>
         <div class="grid grid-cols-3 gap-1 px-1 pt-1 pb-1">
           <button
-            v-for="sys in systems"
+            v-for="sys in DOCK_APPS"
             :key="sys.name"
             type="button"
             :class="[
@@ -76,33 +76,17 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Popover from './Popover.vue'
-import { APPS_META } from '@/system/lib/apps.js'
+import { APPS_META, LAUNCHER_APPS, DOCK_APPS } from '@/system/lib/apps.js'
 
 const route   = useRoute()
 const router  = useRouter()
-
-// 系统级别 —— 产品功能,固定在启动器底部。
-// 直接 glob 派生 server/system/apps/*/manifest.js,过掉 infra(如 user 登录)。
-const systemManifests = import.meta.glob(
-  '../../../server/system/apps/*/manifest.js',
-  { eager: true, import: 'default' },
-)
-const systems = Object.values(systemManifests)
-  .filter((m) => m.kind !== 'infra')
-  .map((m) => ({
-    name:  m.name,
-    icon:  m.icon,
-    label: m.label,
-    to:    { name: m.name },
-    match: (p) => p === `/${m.name}` || p.startsWith(`/${m.name}/`),
-  }))
 
 function isActive(app) {
   return app.match(route.path)
 }
 
 const currentApp = computed(() => {
-  const a = [...APPS_META, ...systems].find(isActive)
+  const a = APPS_META.find(isActive)
   return a || { icon: '🧠', label: 'MindBase' }
 })
 

@@ -3,16 +3,16 @@ const COLS = `id, domain, registrar, expire_date, status, note, created_at, upda
 
 export const listDomains = (db) =>
   db.prepare(
-    `SELECT ${COLS} FROM app_domains_items
+    `SELECT ${COLS} FROM domains_items
      ORDER BY (expire_date IS NULL), expire_date ASC, domain ASC`
   ).all()
 
 export const findDomainById = (db, id) =>
-  db.prepare(`SELECT ${COLS} FROM app_domains_items WHERE id = ?1`).bind(id).first()
+  db.prepare(`SELECT ${COLS} FROM domains_items WHERE id = ?1`).bind(id).first()
 
 export const insertDomain = async (db, { id, domain, registrar, expire_date, status, note }) => {
   await db.prepare(
-    `INSERT INTO app_domains_items (id, domain, registrar, expire_date, status, note, created_at, updated_at)
+    `INSERT INTO domains_items (id, domain, registrar, expire_date, status, note, created_at, updated_at)
      VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'), datetime('now'))`
   ).bind(id, domain, registrar, expire_date, status, note).run()
   return findDomainById(db, id)
@@ -20,7 +20,7 @@ export const insertDomain = async (db, { id, domain, registrar, expire_date, sta
 
 export const updateDomain = async (db, id, { domain, registrar, expire_date, status, note }) => {
   await db.prepare(
-    `UPDATE app_domains_items
+    `UPDATE domains_items
         SET domain      = COALESCE(?2, domain),
             registrar   = COALESCE(?3, registrar),
             expire_date = CASE WHEN ?5 = 1 THEN ?4 ELSE expire_date END,
@@ -41,4 +41,4 @@ export const updateDomain = async (db, id, { domain, registrar, expire_date, sta
 }
 
 export const deleteDomain = (db, id) =>
-  db.prepare(`DELETE FROM app_domains_items WHERE id = ?1`).bind(id).run()
+  db.prepare(`DELETE FROM domains_items WHERE id = ?1`).bind(id).run()

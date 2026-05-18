@@ -3,17 +3,17 @@ const COLS = `id, name, country, city, visited_at, note, cover, created_at, upda
 
 export const listFootprints = (db, { limit = 200, offset = 0 } = {}) =>
   db.prepare(
-    `SELECT ${COLS} FROM app_footprints_visits
+    `SELECT ${COLS} FROM footprints_visits
       ORDER BY visited_at IS NULL, visited_at DESC, created_at DESC
       LIMIT ?1 OFFSET ?2`
   ).bind(limit, offset).all()
 
 export const findFootprintById = (db, id) =>
-  db.prepare(`SELECT ${COLS} FROM app_footprints_visits WHERE id = ?1`).bind(id).first()
+  db.prepare(`SELECT ${COLS} FROM footprints_visits WHERE id = ?1`).bind(id).first()
 
 export const insertFootprint = async (db, { id, name, country = '', city = '', visited_at = null, note = '', cover = null }) => {
   await db.prepare(
-    `INSERT INTO app_footprints_visits (id, name, country, city, visited_at, note, cover, created_at, updated_at)
+    `INSERT INTO footprints_visits (id, name, country, city, visited_at, note, cover, created_at, updated_at)
      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'), datetime('now'))`
   ).bind(id, name, country, city, visited_at, note, cover).run()
   return findFootprintById(db, id)
@@ -31,10 +31,10 @@ export const updateFootprint = async (db, id, patch) => {
   if (patch.cover      !== undefined) push('cover', patch.cover)
   if (sets.length) {
     sets.push(`updated_at = datetime('now')`)
-    await db.prepare(`UPDATE app_footprints_visits SET ${sets.join(', ')} WHERE id = ?1`).bind(...binds).run()
+    await db.prepare(`UPDATE footprints_visits SET ${sets.join(', ')} WHERE id = ?1`).bind(...binds).run()
   }
   return findFootprintById(db, id)
 }
 
 export const deleteFootprint = (db, id) =>
-  db.prepare(`DELETE FROM app_footprints_visits WHERE id = ?1`).bind(id).run()
+  db.prepare(`DELETE FROM footprints_visits WHERE id = ?1`).bind(id).run()

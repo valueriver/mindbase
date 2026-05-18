@@ -3,12 +3,11 @@ import { checkAuth, useAuth } from '@/system/composables/useAuth'
 
 const DEFAULT_PATH = '/home'  // 登录后默认进的应用
 
-// 文件系统即路由表 —— `apps/<name>/index.vue` 和 `system/apps/<name>/index.vue`
-// 各自映射到 `/<name>`。装一个新包,把目录丢进去就有路由,不用改 router。
+// 文件系统即路由表 —— `apps/<name>/index.vue` 自动映射到 `/<name>`。
+// 装一个新包，把目录丢进 `gui/apps/` 就有路由。
 //
-// 例外:welcome(登录)、layout、create —— 不属于上下文应用,显式列出。
-const userPages   = import.meta.glob('@/apps/*/index.vue')
-const systemPages = import.meta.glob('@/system/apps/*/index.vue')
+// 例外:welcome(登录)、笔记子路由 —— 显式列出。
+const userPages = import.meta.glob('@/apps/*/index.vue')
 
 const toRoute = ([path, loader]) => {
   const name = path.match(/\/([^/]+)\/index\.vue$/)[1]
@@ -17,12 +16,11 @@ const toRoute = ([path, loader]) => {
 
 const routes = [
   // 登录页(无需认证)
-  { path: '/welcome',         name: 'welcome', component: () => import('@/system/apps/user/welcome.vue'), meta: { guestOnly: true } },
+  { path: '/welcome',         name: 'welcome', component: () => import('@/apps/user/welcome.vue'), meta: { guestOnly: true } },
   { path: '/',                redirect: DEFAULT_PATH },
 
-  // 应用路由(自动派生)
-  ...Object.entries(userPages).map(toRoute),
-  ...Object.entries(systemPages).filter(([p]) => !p.endsWith('/user/index.vue')).map(toRoute),
+  // 应用路由(自动派生),user 是基础设施,不映射到 /user
+  ...Object.entries(userPages).filter(([p]) => !p.endsWith('/user/index.vue')).map(toRoute),
 
   // 笔记的子路由(notes 应用是多视图,glob 派生只覆盖 /notes 列表页)
   { path: '/notebook/:id',    name: 'notebook', component: () => import('@/apps/notes/notebook.vue'), props: true },

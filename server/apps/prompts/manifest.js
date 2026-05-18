@@ -3,7 +3,7 @@ export default {
   label:    '指令集',
   icon:     '📜',
   kind:     'context',
-  tables:   ["app_prompts_items"],
+  tables:   ["prompts_items"],
   subpaths: [],
   summary:  '常用 AI 提示词与指令模板的私人收藏。',
 }

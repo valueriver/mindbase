@@ -1,7 +1,7 @@
-import { readJsonBody } from "../../utils/body.js"
-import { ok, fail } from "../../utils/json.js"
-import { createNotebookId } from "../../utils/id.js" // 复用 12 位 id 生成器
-import { generateApiToken, getAuth } from "../../auth/index.js"
+import { readJsonBody } from "../../system/utils/body.js"
+import { ok, fail } from "../../system/utils/json.js"
+import { createNotebookId } from "../../system/utils/id.js" // 复用 12 位 id 生成器
+import { generateApiToken, getAuth } from "../../system/auth/index.js"
 import {
   createToken,
   deleteAllTokens,

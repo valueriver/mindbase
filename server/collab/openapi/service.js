@@ -1,9 +1,8 @@
 import { ok, fail } from '../../system/utils/json.js'
 import { readJsonBody } from '../../system/utils/body.js'
 import { isAuthenticated } from '../../system/auth/index.js'
-import { APPS as USER_APPS }   from '../../apps/registry.js'
-import { APPS as SYSTEM_APPS } from '../../system/apps/registry.js'
-import { listContexts }        from '../../system/contexts/repository.js'
+import { APPS } from '../../apps/registry.js'
+import { listContexts } from '../../system/contexts/repository.js'
 
 // 与 MCP 工具对齐 —— OpenAPI 也只暴露同样的两把:
 //   GET  /api/ai/apps  → apps_list (含 contexts)
@@ -17,7 +16,7 @@ export const aiAppsAction = async (request, env) => {
       contexts = (r?.results || []).map((c) => ({ id: c.id, content: c.content, source_app: c.source_app, source_id: c.source_id }))
     } catch { /* non-fatal */ }
   }
-  return ok({ apps: [...USER_APPS, ...SYSTEM_APPS], contexts })
+  return ok({ apps: APPS, contexts })
 }
 
 export const aiSqlAction = async (request, env) => {

@@ -35,13 +35,13 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api'
-import AccountTab from '@/system/apps/settings/components/AccountTab.vue'
-import ModelTab   from '@/system/apps/settings/components/ModelTab.vue'
-import PromptTab  from '@/system/apps/settings/components/PromptTab.vue'
-import ContextTab  from '@/system/apps/settings/components/ContextTab.vue'
-import ContextsTab from '@/system/apps/settings/components/ContextsTab.vue'
-import CreateTab   from '@/system/apps/settings/components/CreateTab.vue'
-import AboutTab   from '@/system/apps/settings/components/AboutTab.vue'
+import AccountTab from '@/apps/settings/components/AccountTab.vue'
+import ModelTab   from '@/apps/settings/components/ModelTab.vue'
+import PromptTab  from '@/apps/settings/components/PromptTab.vue'
+import ContextTab  from '@/apps/settings/components/ContextTab.vue'
+import ContextsTab from '@/apps/settings/components/ContextsTab.vue'
+import CreateTab   from '@/apps/settings/components/CreateTab.vue'
+import AboutTab   from '@/apps/settings/components/AboutTab.vue'
 
 const route  = useRoute()
 const router = useRouter()

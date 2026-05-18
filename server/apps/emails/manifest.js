@@ -3,7 +3,7 @@ export default {
   label:    '邮箱',
   icon:     '📧',
   kind:     'context',
-  tables:   ["app_emails_addresses"],
+  tables:   ["emails_addresses"],
   subpaths: [],
   summary:  '名下邮箱地址登记表,标注用途与归属。',
 }

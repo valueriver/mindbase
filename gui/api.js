@@ -1,6 +1,5 @@
 // HTTP 原语 —— 跨应用共享。
-// 各应用自己的 `apiXxx` 在 `apps/<name>/api.js` 或 `system/apps/<name>/api.js`,
-// 不要再往这里堆。
+// 各应用自己的 `apiXxx` 在 `apps/<name>/api.js`,不要再往这里堆。
 
 async function request(method, path, body) {
   const res = await fetch(path, {

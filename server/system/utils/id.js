@@ -7,9 +7,8 @@ const randomId = (length) => {
   return out
 }
 
-export const createNotebookId    = () => randomId(12)
-export const createPostId        = () => randomId(12)
-export const createTodoId        = () => randomId(12)
-export const createNoteId        = () => randomId(12)
-export const createLedgerId      = () => randomId(12)
-export const createBroadcastId   = () => randomId(12)
+export const createNotebookId = () => randomId(12)
+export const createPostId     = () => randomId(12)
+export const createTodoId     = () => randomId(12)
+export const createNoteId     = () => randomId(12)
+export const createLedgerId   = () => randomId(12)

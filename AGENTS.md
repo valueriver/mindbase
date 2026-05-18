@@ -15,7 +15,7 @@
 
 | 层 | 用户应用 | 系统应用 |
 |---|---|---|
-| DB 表 | `app_<name>_*` | 裸表名(`conversations / messages / tokens / settings`) |
+| DB 表 | `app_<name>_*` | 裸表名(`conversations / messages / tokens / settings / contexts`) |
 | 后端 | `server/apps/<name>/` | `server/system/apps/<name>/` |
 | 前端 | `gui/apps/<name>/` | `gui/system/apps/<name>/` |
 | HTTP | `/api/<name>` | `/api/<name>`(同) |
@@ -35,6 +35,30 @@
 有"完成度语义"的关键动作(创建一笔账、读完一本书、目标 +1、达到里程碑)后,往 `app_home_events` 写一条 —— 直接 `import { insertEvent } from '../home/repository.js'`。事件失败时主操作继续完成(try/catch 吞掉)。主页时间轴会自动渲染。
 
 密码箱性质的应用(银行卡 / 证件 / 密码 / API key 等)的数据保留在本应用,时间轴只展示主动公开的事件 —— 这是应用作者的判断,由约定承担。
+
+## 上下文 pin 约定
+
+`contexts` 是系统级上下文表(裸表名,非 `app_` 前缀)。所有 AI 协作(内部 agent 的 system prompt + 外部协作的 `/api/ai/apps` 响应)都会首先读取这里的内容。
+
+**应用何时 pin**:当应用里有"用户当前最关键的状态"需要让所有 AI 始终知晓时。例如:
+- 目标应用:当前 active 目标
+- 项目应用:正在进行的项目简介
+- 书单:正在读的书
+- 健康:用户设定的健康目标
+
+**pin / unpin API**:
+
+```js
+// pin(upsert,同一 source_app+source_id 只存一条)
+POST /api/contexts/pin
+{ source_app: 'goals', source_id: '<id>', content: '2026年目标:...' }
+
+// unpin
+POST /api/contexts/unpin
+{ source_app: 'goals', source_id: '<id>' }
+```
+
+`content` 是快照文本,原始数据变更后需主动重新 pin 以刷新。pin / unpin 失败不阻断主操作(try/catch 吞掉)。
 
 ## 凭证
 

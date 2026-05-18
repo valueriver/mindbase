@@ -39,6 +39,7 @@
 - 字段变更时所有相关位置同步更新,保持单一事实源
 - service 中具备"完成度语义"的关键动作(创建一笔、读完一本、状态跃迁)发生后,向 `app_home_events` 写入一条事件 —— `import { insertEvent } from '../home/repository.js'`,事件写入失败时主操作继续完成
 - 密码箱性质的应用(银行卡 / 证件 / 密码 / API key)的数据保留在本应用,时间轴仅展示主动公开的事件
+- 应用有"用户当前最关键状态"需让所有 AI 始终知晓时,调用 `POST /api/contexts/pin` 写入快照(`{ source_app, source_id, content }`);状态解除时调用 `POST /api/contexts/unpin`。pin/unpin 失败不阻断主操作。详见根 `AGENTS.md` 的"上下文 pin 约定"
 - 凭证由本机环境维护,代码中通过 `env.` 读取
 
 **本包特有约定**:

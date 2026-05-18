@@ -66,21 +66,16 @@
 
 <table>
   <tr>
-    <td width="33%"><img src="docs/screenshots/notes.png" alt="笔记" /></td>
+    <td width="33%"><img src="docs/screenshots/llms.png" alt="大模型" /></td>
     <td width="33%"><img src="docs/screenshots/footprints.png" alt="足迹" /></td>
-    <td width="33%"><img src="docs/screenshots/profile.png" alt="个人档" /></td>
+    <td width="33%"><img src="docs/screenshots/todos.png" alt="待办" /></td>
   </tr>
   <tr>
-    <td align="center"><sub>笔记 · 嵌套结构 + 封面</sub></td>
-    <td align="center"><sub>足迹 · 地点封面图</sub></td>
-    <td align="center"><sub>个人档 · 事实块</sub></td>
+    <td align="center"><sub>大模型</sub></td>
+    <td align="center"><sub>足迹</sub></td>
+    <td align="center"><sub>待办</sub></td>
   </tr>
 </table>
-
-<p align="center">
-  <img src="docs/screenshots/create.png" alt="新建应用" width="720" />
-</p>
-<p align="center"><sub>设置 → 新建应用 · 写下需求，自动拼出 prompt，复制给 AI 即可</sub></p>
 
 ---
 
